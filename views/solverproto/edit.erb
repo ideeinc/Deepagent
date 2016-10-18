@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<%#include "solverproto.h" %>
+<% tfetch(QVariantMap, solverProto); %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+<p style="color: red"><%=$ error %></p>
+<p style="color: green"><%=$ notice %></p>
+
+<h1>Editing Solver Proto</h1>
+
+<%== formTag(urla("save", solverProto["id"]), Tf::Post) %>
+  <p>
+    <label>ID<br /><input type="text" name="solverProto[id]" value="<%= solverProto["id"] %>" readonly="readonly" /></label>
+  </p>
+  <p>
+    <label>Net<br /><input type="text" name="solverProto[net]" value="<%= solverProto["net"] %>" /></label>
+  </p>
+  <p>
+    <label>Test Iter<br /><input type="text" name="solverProto[testIter]" value="<%= solverProto["testIter"] %>" /></label>
+  </p>
+  <p>
+    <label>Test Interval<br /><input type="text" name="solverProto[testInterval]" value="<%= solverProto["testInterval"] %>" /></label>
+  </p>
+  <p>
+    <label>Base Lr<br /><input type="text" name="solverProto[baseLr]" value="<%= solverProto["baseLr"] %>" /></label>
+  </p>
+  <p>
+    <label>Momentum<br /><input type="text" name="solverProto[momentum]" value="<%= solverProto["momentum"] %>" /></label>
+  </p>
+  <p>
+    <label>Weight Decay<br /><input type="text" name="solverProto[weightDecay]" value="<%= solverProto["weightDecay"] %>" /></label>
+  </p>
+  <p>
+    <label>Lr Policy<br /><input type="text" name="solverProto[lrPolicy]" value="<%= solverProto["lrPolicy"] %>" /></label>
+  </p>
+  <p>
+    <label>Gamma<br /><input type="text" name="solverProto[gamma]" value="<%= solverProto["gamma"] %>" /></label>
+  </p>
+  <p>
+    <label>Power<br /><input type="text" name="solverProto[power]" value="<%= solverProto["power"] %>" /></label>
+  </p>
+  <p>
+    <label>Display<br /><input type="text" name="solverProto[display]" value="<%= solverProto["display"] %>" /></label>
+  </p>
+  <p>
+    <label>Max Iter<br /><input type="text" name="solverProto[maxIter]" value="<%= solverProto["maxIter"] %>" /></label>
+  </p>
+  <p>
+    <label>Snapshot<br /><input type="text" name="solverProto[snapshot]" value="<%= solverProto["snapshot"] %>" /></label>
+  </p>
+  <p>
+    <label>Snapshot Prefix<br /><input type="text" name="solverProto[snapshotPrefix]" value="<%= solverProto["snapshotPrefix"] %>" /></label>
+  </p>
+  <p>
+    <label>Solver Mode<br /><input type="text" name="solverProto[solverMode]" value="<%= solverProto["solverMode"] %>" /></label>
+  </p>
+  <p>
+    <input type="submit" value="Update" />
+  </p>
+</form>
+
+<%== linkTo("Show", urla("show", solverProto["id"])) %> |
+<%== linkTo("Back", urla("index")) %>
+</body>
+</html>

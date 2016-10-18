@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<%#include "solverproto.h" %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+
+<h1>Listing Solver Proto</h1>
+
+<%== linkTo("New entry", urla("entry")) %><br />
+<br />
+<table border="1" cellpadding="5" style="border: 1px #d0d0d0 solid; border-collapse: collapse;">
+  <tr>
+    <th>ID</th>
+    <th>Net</th>
+    <th>Test Iter</th>
+    <th>Test Interval</th>
+    <th>Base Lr</th>
+    <th>Momentum</th>
+    <th>Weight Decay</th>
+    <th>Lr Policy</th>
+    <th>Gamma</th>
+    <th>Power</th>
+    <th>Display</th>
+    <th>Max Iter</th>
+    <th>Snapshot</th>
+    <th>Snapshot Prefix</th>
+    <th>Solver Mode</th>
+  </tr>
+<% tfetch(QList<SolverProto>, solverProtoList); %>
+<% for (const auto &i : solverProtoList) { %>
+  <tr>
+    <td><%= i.id() %></td>
+    <td><%= i.net() %></td>
+    <td><%= i.testIter() %></td>
+    <td><%= i.testInterval() %></td>
+    <td><%= i.baseLr() %></td>
+    <td><%= i.momentum() %></td>
+    <td><%= i.weightDecay() %></td>
+    <td><%= i.lrPolicy() %></td>
+    <td><%= i.gamma() %></td>
+    <td><%= i.power() %></td>
+    <td><%= i.display() %></td>
+    <td><%= i.maxIter() %></td>
+    <td><%= i.snapshot() %></td>
+    <td><%= i.snapshotPrefix() %></td>
+    <td><%= i.solverMode() %></td>
+    <td>
+      <%== linkTo("Show", urla("show", i.id())) %>
+      <%== linkTo("Edit", urla("edit", i.id())) %>
+      <%== linkTo("Remove", urla("remove", i.id()), Tf::Post, "confirm('Are you sure?')") %>
+    </td>
+  </tr>
+<% } %>
+</table>
+
+</body>
+</html>

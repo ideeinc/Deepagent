@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<%#include "solverproto.h" %>
+<% tfetch(SolverProto, solverProto); %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+<p style="color: red"><%=$ error %></p>
+<p style="color: green"><%=$ notice %></p>
+
+<h1>Showing Solver Proto</h1>
+<dt>ID</dt><dd><%= solverProto.id() %></dd><br />
+<dt>Net</dt><dd><%= solverProto.net() %></dd><br />
+<dt>Test Iter</dt><dd><%= solverProto.testIter() %></dd><br />
+<dt>Test Interval</dt><dd><%= solverProto.testInterval() %></dd><br />
+<dt>Base Lr</dt><dd><%= solverProto.baseLr() %></dd><br />
+<dt>Momentum</dt><dd><%= solverProto.momentum() %></dd><br />
+<dt>Weight Decay</dt><dd><%= solverProto.weightDecay() %></dd><br />
+<dt>Lr Policy</dt><dd><%= solverProto.lrPolicy() %></dd><br />
+<dt>Gamma</dt><dd><%= solverProto.gamma() %></dd><br />
+<dt>Power</dt><dd><%= solverProto.power() %></dd><br />
+<dt>Display</dt><dd><%= solverProto.display() %></dd><br />
+<dt>Max Iter</dt><dd><%= solverProto.maxIter() %></dd><br />
+<dt>Snapshot</dt><dd><%= solverProto.snapshot() %></dd><br />
+<dt>Snapshot Prefix</dt><dd><%= solverProto.snapshotPrefix() %></dd><br />
+<dt>Solver Mode</dt><dd><%= solverProto.solverMode() %></dd><br />
+
+<%== linkTo("Edit", urla("edit", solverProto.id())) %> |
+<%== linkTo("Back", urla("index")) %>
+
+<p>
+Text data<br>
+==========<br>
+<%== solverProto.toText().replace("\n", "<br>") %>
+</p>
+
+</body>
+</html>

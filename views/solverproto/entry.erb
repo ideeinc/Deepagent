@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<%#include "solverproto.h" %>
+<% tfetch(QVariantMap, solverProto); %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+<p style="color: red"><%=$ error %></p>
+<p style="color: green"><%=$ notice %></p>
+
+<h1>New Solver Proto</h1>
+
+<%== formTag(urla("create"), Tf::Post) %>
+  <p>
+    <label>Net<br /><input name="solverProto[net]" value="<%= solverProto["net"] %>" /></label>
+  </p>
+  <p>
+    <label>Test Iter<br /><input name="solverProto[testIter]" value="<%= solverProto["testIter"] %>" /></label>
+  </p>
+  <p>
+    <label>Test Interval<br /><input name="solverProto[testInterval]" value="<%= solverProto["testInterval"] %>" /></label>
+  </p>
+  <p>
+    <label>Base Lr<br /><input name="solverProto[baseLr]" value="<%= solverProto["baseLr"] %>" /></label>
+  </p>
+  <p>
+    <label>Momentum<br /><input name="solverProto[momentum]" value="<%= solverProto["momentum"] %>" /></label>
+  </p>
+  <p>
+    <label>Weight Decay<br /><input name="solverProto[weightDecay]" value="<%= solverProto["weightDecay"] %>" /></label>
+  </p>
+  <p>
+    <label>Lr Policy<br /><input name="solverProto[lrPolicy]" value="<%= solverProto["lrPolicy"] %>" /></label>
+  </p>
+  <p>
+    <label>Gamma<br /><input name="solverProto[gamma]" value="<%= solverProto["gamma"] %>" /></label>
+  </p>
+  <p>
+    <label>Power<br /><input name="solverProto[power]" value="<%= solverProto["power"] %>" /></label>
+  </p>
+  <p>
+    <label>Display<br /><input name="solverProto[display]" value="<%= solverProto["display"] %>" /></label>
+  </p>
+  <p>
+    <label>Max Iter<br /><input name="solverProto[maxIter]" value="<%= solverProto["maxIter"] %>" /></label>
+  </p>
+  <p>
+    <label>Snapshot<br /><input name="solverProto[snapshot]" value="<%= solverProto["snapshot"] %>" /></label>
+  </p>
+  <p>
+    <label>Snapshot Prefix<br /><input name="solverProto[snapshotPrefix]" value="<%= solverProto["snapshotPrefix"] %>" /></label>
+  </p>
+  <p>
+    <label>Solver Mode<br /><input name="solverProto[solverMode]" value="<%= solverProto["solverMode"] %>" /></label>
+  </p>
+  <p>
+    <input type="submit" value="Create" />
+  </p>
+</form>
+
+<%== linkTo("Back", urla("index")) %>
+
+</body>
+</html>

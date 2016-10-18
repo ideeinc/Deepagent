@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+<script>
+function escapeHtml(text) {
+    return text.replace(/["&'<>\n\r]/g,
+        function(ch) { return { '"':'&quot;', '&':'&amp;', '\'':'&#39;', '<':'&lt;', '>':'&gt;', '\n':'<br>', '\r':'<br>' }[ ch ]; });
+}
+
+function scrollToBottom() {
+      //$("#log").stop();
+	  //console.log("height: %d", $(document).height());
+      //$('body').delay(100).animate({scrollTop: $("#log").height()"}, 500);
+      //$('body').delay(100).animate({scrollTop: '+=' + $(document).height()}, 1500);
+      //$("#log").delay(100).animate({scrollTop: 9999}, 500);
+	  $("html,body").animate({scrollTop:$('#buttom').offset().top});
+}
+
+$(function(){
+    // create WebSocket to 'chat' entpoint
+    ws = new WebSocket("ws://" + location.host + "/logtail");
+ 
+    // message received
+    ws.onmessage = function(message){
+        var msg = escapeHtml(message.data);
+        $("#log").append(msg);
+        scrollToBottom();
+    }
+ 
+    // error event
+    ws.onerror = function(){
+        $("#log").append("[ Error occurred. Try reloading. ]");
+    }
+ 
+    // onclose event
+    ws.onclose = function(){
+        $("#log").append("[ Connection closed. Try reloading. ]");
+    }
+});
+</script>
+<body>
+hello
+<input type="text" id="pos"/>
+<button onclick="scrollToBottom(); return false;">POS</button>
+
+<button>Follow log</button>
+<br>
+<br>
+<div id="log" style="background-color: #ddd; padding: 2px 2px"><%==$log %></div>
+<div id="buttom"></div>
+</body>
+</html>
