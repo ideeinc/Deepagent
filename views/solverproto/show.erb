@@ -26,6 +26,9 @@
 <dt>Snapshot</dt><dd><%= solverProto.snapshot() %></dd><br />
 <dt>Snapshot Prefix</dt><dd><%= solverProto.snapshotPrefix() %></dd><br />
 <dt>Solver Mode</dt><dd><%= solverProto.solverMode() %></dd><br />
+<dt>Created at</dt><dd><%= solverProto.createdAt() %></dd><br />
+<dt>Updated at</dt><dd><%= solverProto.updatedAt() %></dd><br />
+<dt>Lock Revision</dt><dd><%= solverProto.lockRevision() %></dd><br />
 
 <%== linkTo("Edit", urla("edit", solverProto.id())) %> |
 <%== linkTo("Back", urla("index")) %>

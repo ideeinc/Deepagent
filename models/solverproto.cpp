@@ -165,6 +165,21 @@ void SolverProto::setSolverMode(const QString &solverMode)
     d->solver_mode = solverMode;
 }
 
+QDateTime SolverProto::createdAt() const
+{
+    return d->created_at;
+}
+
+QDateTime SolverProto::updatedAt() const
+{
+    return d->updated_at;
+}
+
+int SolverProto::lockRevision() const
+{
+    return d->lock_revision;
+}
+
 SolverProto &SolverProto::operator=(const SolverProto &other)
 {
     d = other.d;  // increments the reference count of the data
@@ -185,6 +200,15 @@ SolverProto SolverProto::get(int id)
 {
     TSqlORMapper<SolverProtoObject> mapper;
     return SolverProto(mapper.findByPrimaryKey(id));
+}
+
+SolverProto SolverProto::get(int id, int lockRevision)
+{
+    TSqlORMapper<SolverProtoObject> mapper;
+    TCriteria cri;
+    cri.add(SolverProtoObject::Id, id);
+    cri.add(SolverProtoObject::LockRevision, lockRevision);
+    return SolverProto(mapper.findFirst(cri));
 }
 
 int SolverProto::count()

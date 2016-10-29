@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<%#include "caffecontext.h" %>
+<% tfetch(QVariantMap, caffeContext); %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+<p style="color: red"><%=$ error %></p>
+<p style="color: green"><%=$ notice %></p>
+
+<h1>New Caffe Context</h1>
+
+<%== formTag(urla("create"), Tf::Post) %>
+  <p>
+    <label>Solver Proto ID<br /><input name="caffeContext[solverProtoId]" value="<%= caffeContext["solverProtoId"] %>" /></label>
+  </p>
+  <p>
+    <label>Neural Net ID<br /><input name="caffeContext[neuralNetId]" value="<%= caffeContext["neuralNetId"] %>" /></label>
+  </p>
+  <p>
+    <label>Caffe Pid<br /><input name="caffeContext[caffePid]" value="<%= caffeContext["caffePid"] %>" /></label>
+  </p>
+  <p>
+    <label>Topic<br /><input name="caffeContext[topic]" value="<%= caffeContext["topic"] %>" /></label>
+  </p>
+  <p>
+    <label>Log Path<br /><input name="caffeContext[logPath]" value="<%= caffeContext["logPath"] %>" /></label>
+  </p>
+  <p>
+    <input type="submit" value="Create" />
+  </p>
+</form>
+
+<%== linkTo("Back", urla("index")) %>
+
+</body>
+</html>

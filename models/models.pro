@@ -15,3 +15,14 @@ include(../appbase.pri)
 HEADERS += sqlobjects/solverprotoobject.h
 HEADERS += solverproto.h
 SOURCES += solverproto.cpp
+HEADERS += sqlobjects/caffecontextobject.h
+HEADERS += caffecontext.h
+SOURCES += caffecontext.cpp
+HEADERS += service/caffeprocess.h
+SOURCES += service/caffeprocess.cpp
+HEADERS += sqlobjects/workspaceobject.h
+HEADERS += workspace.h
+SOURCES += workspace.cpp
+HEADERS += sqlobjects/neuralnetworkobject.h
+HEADERS += neuralnetwork.h
+SOURCES += neuralnetwork.cpp

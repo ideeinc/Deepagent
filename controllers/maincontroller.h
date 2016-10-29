@@ -14,7 +14,6 @@ public:
 
 public slots:
     void index();
-    void train();
     void train(const QString &no);
 };
 

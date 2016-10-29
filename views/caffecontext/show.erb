@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<%#include "caffecontext.h" %>
+<% tfetch(CaffeContext, caffeContext); %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+<p style="color: red"><%=$ error %></p>
+<p style="color: green"><%=$ notice %></p>
+
+<h1>Showing Caffe Context</h1>
+<dt>ID</dt><dd><%= caffeContext.id() %></dd><br />
+<dt>Solver Proto ID</dt><dd><%= caffeContext.solverProtoId() %></dd><br />
+<dt>Neural Net ID</dt><dd><%= caffeContext.neuralNetId() %></dd><br />
+<dt>Caffe Pid</dt><dd><%= caffeContext.caffePid() %></dd><br />
+<dt>Topic</dt><dd><%= caffeContext.topic() %></dd><br />
+<dt>Log Path</dt><dd><%= caffeContext.logPath() %></dd><br />
+<dt>Created at</dt><dd><%= caffeContext.createdAt() %></dd><br />
+<dt>Lock Revision</dt><dd><%= caffeContext.lockRevision() %></dd><br />
+
+<%== linkTo("Edit", urla("edit", caffeContext.id())) %> |
+<%== linkTo("Back", urla("index")) %>
+
+</body>
+</html>

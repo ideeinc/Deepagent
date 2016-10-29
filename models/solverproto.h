@@ -50,6 +50,9 @@ public:
     void setSnapshotPrefix(const QString &snapshotPrefix);
     QString solverMode() const;
     void setSolverMode(const QString &solverMode);
+    QDateTime createdAt() const;
+    QDateTime updatedAt() const;
+    int lockRevision() const;
     SolverProto &operator=(const SolverProto &other);
 
     QString toText() const;
@@ -61,6 +64,7 @@ public:
 
     static SolverProto create(const QVariantMap &values);
     static SolverProto get(int id);
+    static SolverProto get(int id, int lockRevision);
     static int count();
     static QList<SolverProto> getAll();
     static QJsonArray getAllJson();

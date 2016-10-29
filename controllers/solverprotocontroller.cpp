@@ -54,6 +54,7 @@ void SolverProtoController::edit(const QString &pk)
 {
     auto solverProto = SolverProto::get(pk.toInt());
     if (!solverProto.isNull()) {
+        session().insert("solverProto_lockRevision", solverProto.lockRevision());
         renderEdit(solverProto.toVariantMap());
     } else {
         redirect(urla("entry"));
@@ -67,7 +68,8 @@ void SolverProtoController::save(const QString &pk)
     }
 
     QString error;
-    auto solverProto = SolverProto::get(pk.toInt());
+    int rev = session().value("solverProto_lockRevision").toInt();
+    auto solverProto = SolverProto::get(pk.toInt(), rev);
     if (solverProto.isNull()) {
         error = "Original data not found. It may have been updated/removed by another transaction.";
         tflash(error);

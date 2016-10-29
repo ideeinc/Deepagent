@@ -26,9 +26,9 @@ private:
 
 void Tailer::job()
 {
-    QString text = Tail(_path).tail(4096, _offset);
+    auto text = Tail(_path).tail(4096, _offset);
     _offset += text.length();
-    publish(_topic, text);
+    publish(_topic, QString::fromUtf8(text.data(), text.length()));
 
     restart();
 }

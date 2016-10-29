@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<%#include "caffecontext.h" %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+
+<h1>Listing Caffe Context</h1>
+
+<%== linkTo("New entry", urla("entry")) %><br />
+<br />
+<table border="1" cellpadding="5" style="border: 1px #d0d0d0 solid; border-collapse: collapse;">
+  <tr>
+    <th>ID</th>
+    <th>Solver Proto ID</th>
+    <th>Neural Net ID</th>
+    <th>Caffe Pid</th>
+    <th>Topic</th>
+    <th>Log Path</th>
+  </tr>
+<% tfetch(QList<CaffeContext>, caffeContextList); %>
+<% for (const auto &i : caffeContextList) { %>
+  <tr>
+    <td><%= i.id() %></td>
+    <td><%= i.solverProtoId() %></td>
+    <td><%= i.neuralNetId() %></td>
+    <td><%= i.caffePid() %></td>
+    <td><%= i.topic() %></td>
+    <td><%= i.logPath() %></td>
+    <td>
+      <%== linkTo("Show", urla("show", i.id())) %>
+      <%== linkTo("Edit", urla("edit", i.id())) %>
+      <%== linkTo("Remove", urla("remove", i.id()), Tf::Post, "confirm('Are you sure?')") %>
+    </td>
+  </tr>
+<% } %>
+</table>
+
+</body>
+</html>

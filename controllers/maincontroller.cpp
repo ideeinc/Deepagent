@@ -2,8 +2,12 @@
 #include "tail.h"
 #include <TWebApplication>
 #include <THttpUtility>
-#include <QProcess>
 #include "solverproto.h"
+#include "caffecontext.h"
+#include "neuralnetwork.h"
+#include "service/caffeprocess.h"
+#include "tsystemglobal.h"
+#include <QThread>
 
 
 MainController::MainController(const MainController &)
@@ -26,50 +30,17 @@ void MainController::index()
 }
 
 
-void MainController::train()
-{
-    const QString CaffeCammand = "/home/aoyama/caffe/build/tools/caffe";
-    QString solver = "/home/aoyama/caffe/examples/mnist/lenet_solver.prototxt";
-    QStringList args = { "train", (QLatin1String("--solver=") + solver),  };
-
-    auto *caffe = new QProcess(Tf::app());
-    caffe->setWorkingDirectory("/home/aoyama/caffe");
-    caffe->setProcessChannelMode(QProcess::MergedChannels);
-    caffe->setStandardOutputFile("/var/tmp/hogehoge.log");
-    connect(caffe, SIGNAL(finished(int, QProcess::ExitStatus)), caffe, SLOT(deleteLater()));
-    caffe->start(CaffeCammand, args);
-
-    session().insert("logFile", "/var/tmp/hogehoge.log");
-    render();
-}
-
-
 void MainController::train(const QString &no)
 {
-    const QString CaffeCammand = "/home/aoyama/caffe/build/tools/caffe";
-
     SolverProto sp = SolverProto::get(no.toInt());
     if (sp.isNull()) {
         return;
     }
 
-    QString solverPath = "/home/aoyama/caffe/examples/mnist/hogehoge_solver.prototxt";
-    QFile solver(solverPath);
-    if (solver.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QTextStream out(&solver);
-        out << sp.toText();
-    } else {
-        return;
-    }
-
-    QStringList args = { "train", (QLatin1String("--solver=") + solverPath) };
-
-    auto *caffe = new QProcess(Tf::app());
-    caffe->setWorkingDirectory("/home/aoyama/caffe");
-    caffe->setProcessChannelMode(QProcess::MergedChannels);
-    caffe->setStandardOutputFile("/var/tmp/hogehoge.log");
-    connect(caffe, SIGNAL(finished(int, QProcess::ExitStatus)), caffe, SLOT(deleteLater()));
-    caffe->start(CaffeCammand, args);
+    auto *caffe = new CaffeProcess();
+    connect(caffe, SIGNAL(finished(int, QProcess::ExitStatus)), caffe, SLOT(cleanup()));
+    caffe->start(sp, NeuralNetwork());
+    caffe->moveToThread(Tf::app()->databaseContextMainThread());
 
     session().insert("logFile", "/var/tmp/hogehoge.log");
     render();

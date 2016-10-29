@@ -23,6 +23,9 @@ public:
     QString snapshot;
     QString snapshot_prefix;
     QString solver_mode;
+    QDateTime created_at;
+    QDateTime updated_at;
+    int lock_revision {0};
 
     enum PropertyIndex {
         Id = 0,
@@ -40,6 +43,9 @@ public:
         Snapshot,
         SnapshotPrefix,
         SolverMode,
+        CreatedAt,
+        UpdatedAt,
+        LockRevision,
     };
 
     int primaryKeyIndex() const override { return Id; }
@@ -78,6 +84,12 @@ private:    /*** Don't modify below this line ***/
     T_DEFINE_PROPERTY(QString, snapshot_prefix)
     Q_PROPERTY(QString solver_mode READ getsolver_mode WRITE setsolver_mode)
     T_DEFINE_PROPERTY(QString, solver_mode)
+    Q_PROPERTY(QDateTime created_at READ getcreated_at WRITE setcreated_at)
+    T_DEFINE_PROPERTY(QDateTime, created_at)
+    Q_PROPERTY(QDateTime updated_at READ getupdated_at WRITE setupdated_at)
+    T_DEFINE_PROPERTY(QDateTime, updated_at)
+    Q_PROPERTY(int lock_revision READ getlock_revision WRITE setlock_revision)
+    T_DEFINE_PROPERTY(int, lock_revision)
 };
 
 #endif // SOLVERPROTOOBJECT_H

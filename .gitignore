@@ -3,4 +3,8 @@
 Makefile*
 tmp/
 log/
+lib/
+views/_src/
 db/dbfile
+*.moc
+moc_*.cpp

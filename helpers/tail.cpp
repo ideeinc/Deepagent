@@ -12,7 +12,7 @@ Tail::Tail(const QString &filePath)
 
 QByteArray Tail::tail(int maxlen, qint64 offset) const
 {
-    const qint64 BUFSIZE = sysconf(_SC_PAGE_SIZE);
+    static const qint64 BUFSIZE = sysconf(_SC_PAGE_SIZE);
 
     QByteArray ret;
     ret.reserve(qMin(maxlen, (int)BUFSIZE));
@@ -36,7 +36,6 @@ QByteArray Tail::tail(int maxlen, qint64 offset) const
     while (offset < fsize && ret.length() < maxlen) {
         qint64 paOffset = offset & ~(BUFSIZE - 1);  // must be page aligned
         const qint64 len = qMin(qMin(BUFSIZE, fsize - paOffset), (qint64)maxlen - ret.length());
-
         if (len > offset - paOffset) {
             char *addr = (char*)mmap(nullptr, len, PROT_READ, MAP_PRIVATE, fd, paOffset);
             if (addr == MAP_FAILED) {
