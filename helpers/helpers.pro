@@ -7,6 +7,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += qml
 DEFINES += TF_DLL
 DESTDIR = ../lib
 DEPENDPATH +=
+MOC_DIR = .obj/
+OBJECTS_DIR = .obj/
 
 include(../appbase.pri)
 

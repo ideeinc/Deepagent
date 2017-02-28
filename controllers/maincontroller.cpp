@@ -5,7 +5,7 @@
 #include "solverproto.h"
 #include "caffecontext.h"
 #include "neuralnetwork.h"
-#include "service/caffeprocess.h"
+#include "services/caffeprocess.h"
 #include "tsystemglobal.h"
 #include <QThread>
 

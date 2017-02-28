@@ -9,17 +9,19 @@ DESTDIR = ../lib
 INCLUDEPATH += ../helpers sqlobjects mongoobjects
 DEPENDPATH  += ../helpers sqlobjects mongoobjects
 LIBS += -L../lib -lhelper
+MOC_DIR = .obj/
+OBJECTS_DIR = .obj/
 
 include(../appbase.pri)
 
+HEADERS += services/caffeprocess.h
+SOURCES += services/caffeprocess.cpp
 HEADERS += sqlobjects/solverprotoobject.h
 HEADERS += solverproto.h
 SOURCES += solverproto.cpp
 HEADERS += sqlobjects/caffecontextobject.h
 HEADERS += caffecontext.h
 SOURCES += caffecontext.cpp
-HEADERS += service/caffeprocess.h
-SOURCES += service/caffeprocess.cpp
 HEADERS += sqlobjects/workspaceobject.h
 HEADERS += workspace.h
 SOURCES += workspace.cpp
