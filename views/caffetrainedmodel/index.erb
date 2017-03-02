@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<%#include "neuralnetwork.h" %>
+<%#include "caffetrainedmodel.h" %>
 <html>
 <head>
   <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
@@ -7,25 +7,32 @@
 </head>
 <body>
 
-<h1>Listing Neural Network</h1>
+<h1>Listing Caffe Trained Model</h1>
 
 <%== linkTo("New entry", urla("create")) %><br />
 <br />
 <table border="1" cellpadding="5" style="border: 1px #d0d0d0 solid; border-collapse: collapse;">
   <tr>
     <th>ID</th>
-    <th>Name</th>
-    <th>Type</th>
-    <th>Abs File Path</th>
+    <th>Model Path</th>
+    <th>Neural Network Name</th>
+    <th>Epoch</th>
+    <th>Dataset ID</th>
+    <th>Img Width</th>
+    <th>Img Height</th>
   </tr>
-<% tfetch(QList<NeuralNetwork>, neuralNetworkList); %>
-<% for (const auto &i : neuralNetworkList) { %>
+<% tfetch(QList<CaffeTrainedModel>, caffeTrainedModelList); %>
+<% for (const auto &i : caffeTrainedModelList) { %>
   <tr>
     <td><%= i.id() %></td>
-    <td><%= i.name() %></td>
-    <td><%= i.type() %></td>
-    <td><%= i.absFilePath() %></td>
+    <td><%= QFileInfo(i.modelPath()).fileName() %></td>
+    <td><%= i.neuralNetworkName() %></td>
+    <td><%= i.epoch() %></td>
+    <td><%= i.datasetId() %></td>
+    <td><%= i.imgWidth() %></td>
+    <td><%= i.imgHeight() %></td>
     <td>
+      <%== linkTo("Predict", urla("predict", i.id())) %>
       <%== linkTo("Show", urla("show", i.id())) %>
       <%== linkTo("Edit", urla("save", i.id())) %>
       <%== linkTo("Remove", urla("remove", i.id()), Tf::Post, "confirm('Are you sure?')") %>

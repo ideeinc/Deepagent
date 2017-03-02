@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<%#include "neuralnetwork.h" %>
+<%#include "classlabel.h" %>
 <html>
 <head>
   <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
@@ -7,24 +7,26 @@
 </head>
 <body>
 
-<h1>Listing Neural Network</h1>
+<h1>Listing Class Label</h1>
 
 <%== linkTo("New entry", urla("create")) %><br />
 <br />
 <table border="1" cellpadding="5" style="border: 1px #d0d0d0 solid; border-collapse: collapse;">
   <tr>
     <th>ID</th>
+    <th>Dataset ID</th>
+    <th>Idx</th>
     <th>Name</th>
-    <th>Type</th>
-    <th>Abs File Path</th>
+    <th>Meta Info</th>
   </tr>
-<% tfetch(QList<NeuralNetwork>, neuralNetworkList); %>
-<% for (const auto &i : neuralNetworkList) { %>
+<% tfetch(QList<ClassLabel>, classLabelList); %>
+<% for (const auto &i : classLabelList) { %>
   <tr>
     <td><%= i.id() %></td>
+    <td><%= i.datasetId() %></td>
+    <td><%= i.idx() %></td>
     <td><%= i.name() %></td>
-    <td><%= i.type() %></td>
-    <td><%= i.absFilePath() %></td>
+    <td><%= i.metaInfo() %></td>
     <td>
       <%== linkTo("Show", urla("show", i.id())) %>
       <%== linkTo("Edit", urla("save", i.id())) %>

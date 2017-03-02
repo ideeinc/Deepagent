@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<%#include "classlabel.h" %>
+<% tfetch(ClassLabel, classLabel); %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+<p style="color: red"><%=$ error %></p>
+<p style="color: green"><%=$ notice %></p>
+
+<h1>Showing Class Label</h1>
+<dt>ID</dt><dd><%= classLabel.id() %></dd><br />
+<dt>Dataset ID</dt><dd><%= classLabel.datasetId() %></dd><br />
+<dt>Idx</dt><dd><%= classLabel.idx() %></dd><br />
+<dt>Name</dt><dd><%= classLabel.name() %></dd><br />
+<dt>Meta Info</dt><dd><%= classLabel.metaInfo() %></dd><br />
+<dt>Updated at</dt><dd><%= classLabel.updatedAt() %></dd><br />
+<dt>Lock Revision</dt><dd><%= classLabel.lockRevision() %></dd><br />
+
+<%== linkTo("Edit", urla("save", classLabel.id())) %> |
+<%== linkTo("Back", urla("index")) %>
+
+</body>
+</html>

@@ -6,9 +6,9 @@ QT -= gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += qml
 DEFINES += TF_DLL
 DESTDIR = ../lib
-INCLUDEPATH += ../helpers sqlobjects mongoobjects
+INCLUDEPATH += ../helpers sqlobjects mongoobjects ${CAFFE_ROOT}/include /usr/local/cuda/include ${CAFFE_ROOT}/.build_release/src
 DEPENDPATH  += ../helpers sqlobjects mongoobjects
-LIBS += -L../lib -lhelper
+LIBS += -L../lib -lhelper -Wl,-rpath,${CAFFE_ROOT}/.build_release/lib -L${CAFFE_ROOT}/.build_release/lib -lboost_system -lcaffe -lglog -lprotobuf -lopencv_core
 MOC_DIR = .obj/
 OBJECTS_DIR = .obj/
 
@@ -16,6 +16,12 @@ include(../appbase.pri)
 
 HEADERS += services/caffeprocess.h
 SOURCES += services/caffeprocess.cpp
+HEADERS += services/caffetrainedmodelservice.h
+SOURCES += services/caffetrainedmodelservice.cpp
+HEADERS += services/prediction.h
+SOURCES += services/prediction.cpp
+HEADERS += services/image.h
+SOURCES += services/image.cpp
 HEADERS += sqlobjects/solverprotoobject.h
 HEADERS += solverproto.h
 SOURCES += solverproto.cpp
@@ -28,3 +34,12 @@ SOURCES += workspace.cpp
 HEADERS += sqlobjects/neuralnetworkobject.h
 HEADERS += neuralnetwork.h
 SOURCES += neuralnetwork.cpp
+HEADERS += sqlobjects/caffetrainedmodelobject.h
+HEADERS += caffetrainedmodel.h
+SOURCES += caffetrainedmodel.cpp
+HEADERS += sqlobjects/classlabelobject.h
+HEADERS += classlabel.h
+SOURCES += classlabel.cpp
+HEADERS += sqlobjects/datasetobject.h
+HEADERS += dataset.h
+SOURCES += dataset.cpp

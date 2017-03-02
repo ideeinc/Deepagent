@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+
+<h1>Commands</h1>
+
+<p>
+  <%== linkTo("Caffe Trained Model ページ", url("CaffeTrainedModel", "index")); %>
+</p>
+<p>
+  <%== linkTo("Neural Network ページ", url("NeuralNetwork", "index")); %>
+</p>
+<p>
+  <%== linkTo("Dataset ページ", url("Dataset", "index")); %>
+</p>
+<p>
+  <%== linkTo("Class Label ページ", url("ClassLabel", "index")); %>
+</p>
+
+</body>
+</html>

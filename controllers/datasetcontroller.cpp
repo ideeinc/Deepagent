@@ -1,26 +1,26 @@
-#include "neuralnetworkcontroller.h"
-#include "neuralnetwork.h"
+#include "datasetcontroller.h"
+#include "dataset.h"
 
 
-NeuralNetworkController::NeuralNetworkController(const NeuralNetworkController &)
+DatasetController::DatasetController(const DatasetController &)
     : ApplicationController()
 { }
 
-void NeuralNetworkController::index()
+void DatasetController::index()
 {
-    auto neuralNetworkList = NeuralNetwork::getAll();
-    texport(neuralNetworkList);
+    auto datasetList = Dataset::getAll();
+    texport(datasetList);
     render();
 }
 
-void NeuralNetworkController::show(const QString &id)
+void DatasetController::show(const QString &id)
 {
-    auto neuralNetwork = NeuralNetwork::get(id.toInt());
-    texport(neuralNetwork);
+    auto dataset = Dataset::get(id.toInt());
+    texport(dataset);
     render();
 }
 
-void NeuralNetworkController::create()
+void DatasetController::create()
 {
     switch (httpRequest().method()) {
     case Tf::Get:
@@ -28,8 +28,8 @@ void NeuralNetworkController::create()
         break;
 
     case Tf::Post: {
-        auto neuralNetwork = httpRequest().formItems("neuralNetwork");
-        auto model = NeuralNetwork::create(neuralNetwork);
+        auto dataset = httpRequest().formItems("dataset");
+        auto model = Dataset::create(dataset);
 
         if (!model.isNull()) {
             QString notice = "Created successfully.";
@@ -38,7 +38,7 @@ void NeuralNetworkController::create()
         } else {
             QString error = "Failed to create.";
             texport(error);
-            texport(neuralNetwork);
+            texport(dataset);
             render();
         }
         break; }
@@ -49,23 +49,23 @@ void NeuralNetworkController::create()
     }
 }
 
-void NeuralNetworkController::save(const QString &id)
+void DatasetController::save(const QString &id)
 {
     switch (httpRequest().method()) {
     case Tf::Get: {
-        auto model = NeuralNetwork::get(id.toInt());
+        auto model = Dataset::get(id.toInt());
         if (!model.isNull()) {
-            session().insert("neuralNetwork_lockRevision", model.lockRevision());
-            auto neuralNetwork = model.toVariantMap();
-            texport(neuralNetwork);
+            session().insert("dataset_lockRevision", model.lockRevision());
+            auto dataset = model.toVariantMap();
+            texport(dataset);
             render();
         }
         break; }
 
     case Tf::Post: {
         QString error;
-        int rev = session().value("neuralNetwork_lockRevision").toInt();
-        auto model = NeuralNetwork::get(id.toInt(), rev);
+        int rev = session().value("dataset_lockRevision").toInt();
+        auto model = Dataset::get(id.toInt(), rev);
         
         if (model.isNull()) {
             error = "Original data not found. It may have been updated/removed by another transaction.";
@@ -74,8 +74,8 @@ void NeuralNetworkController::save(const QString &id)
             break;
         }
 
-        auto neuralNetwork = httpRequest().formItems("neuralNetwork");
-        model.setProperties(neuralNetwork);
+        auto dataset = httpRequest().formItems("dataset");
+        model.setProperties(dataset);
         if (model.save()) {
             QString notice = "Updated successfully.";
             tflash(notice);
@@ -83,7 +83,7 @@ void NeuralNetworkController::save(const QString &id)
         } else {
             error = "Failed to update.";
             texport(error);
-            texport(neuralNetwork);
+            texport(dataset);
             render();
         }
         break; }
@@ -94,18 +94,18 @@ void NeuralNetworkController::save(const QString &id)
     }
 }
 
-void NeuralNetworkController::remove(const QString &id)
+void DatasetController::remove(const QString &id)
 {
     if (httpRequest().method() != Tf::Post) {
         renderErrorResponse(Tf::NotFound);
         return;
     }
 
-    auto neuralNetwork = NeuralNetwork::get(id.toInt());
-    neuralNetwork.remove();
+    auto dataset = Dataset::get(id.toInt());
+    dataset.remove();
     redirect(urla("index"));
 }
 
 
 // Don't remove below this line
-T_REGISTER_CONTROLLER(neuralnetworkcontroller)
+T_REGISTER_CONTROLLER(datasetcontroller)

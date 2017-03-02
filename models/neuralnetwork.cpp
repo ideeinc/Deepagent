@@ -28,19 +28,34 @@ int NeuralNetwork::id() const
     return d->id;
 }
 
-QString NeuralNetwork::layers() const
+QString NeuralNetwork::name() const
 {
-    return d->layers;
+    return d->name;
 }
 
-void NeuralNetwork::setLayers(const QString &layers)
+void NeuralNetwork::setName(const QString &name)
 {
-    d->layers = layers;
+    d->name = name;
 }
 
-QDateTime NeuralNetwork::createdAt() const
+QString NeuralNetwork::type() const
 {
-    return d->created_at;
+    return d->type;
+}
+
+void NeuralNetwork::setType(const QString &type)
+{
+    d->type = type;
+}
+
+QString NeuralNetwork::absFilePath() const
+{
+    return d->abs_file_path;
+}
+
+void NeuralNetwork::setAbsFilePath(const QString &absFilePath)
+{
+    d->abs_file_path = absFilePath;
 }
 
 QDateTime NeuralNetwork::updatedAt() const
@@ -59,10 +74,12 @@ NeuralNetwork &NeuralNetwork::operator=(const NeuralNetwork &other)
     return *this;
 }
 
-NeuralNetwork NeuralNetwork::create(const QString &layers)
+NeuralNetwork NeuralNetwork::create(const QString &name, const QString &type, const QString &absFilePath)
 {
     NeuralNetworkObject obj;
-    obj.layers = layers;
+    obj.name = name;
+    obj.type = type;
+    obj.abs_file_path = absFilePath;
     if (!obj.create()) {
         return NeuralNetwork();
     }
@@ -91,6 +108,14 @@ NeuralNetwork NeuralNetwork::get(int id, int lockRevision)
     TCriteria cri;
     cri.add(NeuralNetworkObject::Id, id);
     cri.add(NeuralNetworkObject::LockRevision, lockRevision);
+    return NeuralNetwork(mapper.findFirst(cri));
+}
+
+NeuralNetwork NeuralNetwork::getOneByName(const QString &name)
+{
+    TSqlORMapper<NeuralNetworkObject> mapper;
+    TCriteria cri;
+    cri.add(NeuralNetworkObject::Name, name);
     return NeuralNetwork(mapper.findFirst(cri));
 }
 

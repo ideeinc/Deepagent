@@ -14,16 +14,10 @@ public:
 
 public slots:
     void index();
-    void show(const QString &pk);
-    void entry();
+    void show(const QString &id);
     void create();
-    void edit(const QString &pk);
-    void save(const QString &pk);
-    void remove(const QString &pk);
-
-private:
-    void renderEntry(const QVariantMap &neuralNetwork = QVariantMap());
-    void renderEdit(const QVariantMap &neuralNetwork = QVariantMap());
+    void save(const QString &id);
+    void remove(const QString &id);
 };
 
 T_DECLARE_CONTROLLER(NeuralNetworkController, neuralnetworkcontroller)

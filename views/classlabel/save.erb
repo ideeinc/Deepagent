@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<%#include "classlabel.h" %>
+<% tfetch(QVariantMap, classLabel); %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+<p style="color: red"><%=$ error %></p>
+<p style="color: green"><%=$ notice %></p>
+
+<h1>Editing Class Label</h1>
+
+<%== formTag(urla("save", classLabel["id"]), Tf::Post) %>
+  <p>
+    <label>ID<br /><input type="text" name="classLabel[id]" value="<%= classLabel["id"] %>" readonly="readonly" /></label>
+  </p>
+  <p>
+    <label>Dataset ID<br /><input type="text" name="classLabel[datasetId]" value="<%= classLabel["datasetId"] %>" /></label>
+  </p>
+  <p>
+    <label>Idx<br /><input type="text" name="classLabel[idx]" value="<%= classLabel["idx"] %>" /></label>
+  </p>
+  <p>
+    <label>Name<br /><input type="text" name="classLabel[name]" value="<%= classLabel["name"] %>" /></label>
+  </p>
+  <p>
+    <label>Meta Info<br /><input type="text" name="classLabel[metaInfo]" value="<%= classLabel["metaInfo"] %>" /></label>
+  </p>
+  <p>
+    <input type="submit" value="Update" />
+  </p>
+</form>
+
+<%== linkTo("Show", urla("show", classLabel["id"])) %> |
+<%== linkTo("Back", urla("index")) %>
+</body>
+</html>

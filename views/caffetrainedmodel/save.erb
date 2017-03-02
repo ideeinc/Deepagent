@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<%#include "caffetrainedmodel.h" %>
+<% tfetch(QVariantMap, caffeTrainedModel); %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+<p style="color: red"><%=$ error %></p>
+<p style="color: green"><%=$ notice %></p>
+
+<h1>Editing Caffe Trained Model</h1>
+
+<%== formTag(urla("save", caffeTrainedModel["id"]), Tf::Post) %>
+  <p>
+    <label>ID<br /><input type="text" name="caffeTrainedModel[id]" value="<%= caffeTrainedModel["id"] %>" readonly="readonly" /></label>
+  </p>
+  <p>
+    <label>Model Path<br /><input type="text" name="caffeTrainedModel[modelPath]" value="<%= caffeTrainedModel["modelPath"] %>" /></label>
+  </p>
+  <p>
+    <label>Neural Network Name<br /><input type="text" name="caffeTrainedModel[neuralNetworkName]" value="<%= caffeTrainedModel["neuralNetworkName"] %>" /></label>
+  </p>
+  <p>
+    <label>Epoch<br /><input type="text" name="caffeTrainedModel[epoch]" value="<%= caffeTrainedModel["epoch"] %>" /></label>
+  </p>
+  <p>
+    <label>Data Set ID<br /><input type="text" name="caffeTrainedModel[datasetId]" value="<%= caffeTrainedModel["datasetId"] %>" /></label>
+  </p>
+  <p>
+    <label>Img Width<br /><input type="text" name="caffeTrainedModel[imgWidth]" value="<%= caffeTrainedModel["imgWidth"] %>" /></label>
+  </p>
+  <p>
+    <label>Img Height<br /><input type="text" name="caffeTrainedModel[imgHeight]" value="<%= caffeTrainedModel["imgHeight"] %>" /></label>
+  </p>
+  <p>
+    <input type="submit" value="Update" />
+  </p>
+</form>
+
+<%== linkTo("Show", urla("show", caffeTrainedModel["id"])) %> |
+<%== linkTo("Back", urla("index")) %>
+</body>
+</html>

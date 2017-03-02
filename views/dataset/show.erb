@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<%#include "dataset.h" %>
+<% tfetch(Dataset, dataset); %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+<p style="color: red"><%=$ error %></p>
+<p style="color: green"><%=$ notice %></p>
+
+<h1>Showing Dataset</h1>
+<dt>ID</dt><dd><%= dataset.id() %></dd><br />
+<dt>Db Path</dt><dd><%= dataset.dbPath() %></dd><br />
+<dt>Db Type</dt><dd><%= dataset.dbType() %></dd><br />
+<dt>Mean Path</dt><dd><%= dataset.meanPath() %></dd><br />
+<dt>Updated at</dt><dd><%= dataset.updatedAt() %></dd><br />
+<dt>Lock Revision</dt><dd><%= dataset.lockRevision() %></dd><br />
+
+<%== linkTo("Edit", urla("save", dataset.id())) %> |
+<%== linkTo("Back", urla("index")) %>
+
+</body>
+</html>

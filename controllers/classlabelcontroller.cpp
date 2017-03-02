@@ -1,26 +1,26 @@
-#include "neuralnetworkcontroller.h"
-#include "neuralnetwork.h"
+#include "classlabelcontroller.h"
+#include "classlabel.h"
 
 
-NeuralNetworkController::NeuralNetworkController(const NeuralNetworkController &)
+ClassLabelController::ClassLabelController(const ClassLabelController &)
     : ApplicationController()
 { }
 
-void NeuralNetworkController::index()
+void ClassLabelController::index()
 {
-    auto neuralNetworkList = NeuralNetwork::getAll();
-    texport(neuralNetworkList);
+    auto classLabelList = ClassLabel::getAll();
+    texport(classLabelList);
     render();
 }
 
-void NeuralNetworkController::show(const QString &id)
+void ClassLabelController::show(const QString &id)
 {
-    auto neuralNetwork = NeuralNetwork::get(id.toInt());
-    texport(neuralNetwork);
+    auto classLabel = ClassLabel::get(id.toInt());
+    texport(classLabel);
     render();
 }
 
-void NeuralNetworkController::create()
+void ClassLabelController::create()
 {
     switch (httpRequest().method()) {
     case Tf::Get:
@@ -28,8 +28,8 @@ void NeuralNetworkController::create()
         break;
 
     case Tf::Post: {
-        auto neuralNetwork = httpRequest().formItems("neuralNetwork");
-        auto model = NeuralNetwork::create(neuralNetwork);
+        auto classLabel = httpRequest().formItems("classLabel");
+        auto model = ClassLabel::create(classLabel);
 
         if (!model.isNull()) {
             QString notice = "Created successfully.";
@@ -38,7 +38,7 @@ void NeuralNetworkController::create()
         } else {
             QString error = "Failed to create.";
             texport(error);
-            texport(neuralNetwork);
+            texport(classLabel);
             render();
         }
         break; }
@@ -49,23 +49,23 @@ void NeuralNetworkController::create()
     }
 }
 
-void NeuralNetworkController::save(const QString &id)
+void ClassLabelController::save(const QString &id)
 {
     switch (httpRequest().method()) {
     case Tf::Get: {
-        auto model = NeuralNetwork::get(id.toInt());
+        auto model = ClassLabel::get(id.toInt());
         if (!model.isNull()) {
-            session().insert("neuralNetwork_lockRevision", model.lockRevision());
-            auto neuralNetwork = model.toVariantMap();
-            texport(neuralNetwork);
+            session().insert("classLabel_lockRevision", model.lockRevision());
+            auto classLabel = model.toVariantMap();
+            texport(classLabel);
             render();
         }
         break; }
 
     case Tf::Post: {
         QString error;
-        int rev = session().value("neuralNetwork_lockRevision").toInt();
-        auto model = NeuralNetwork::get(id.toInt(), rev);
+        int rev = session().value("classLabel_lockRevision").toInt();
+        auto model = ClassLabel::get(id.toInt(), rev);
         
         if (model.isNull()) {
             error = "Original data not found. It may have been updated/removed by another transaction.";
@@ -74,8 +74,8 @@ void NeuralNetworkController::save(const QString &id)
             break;
         }
 
-        auto neuralNetwork = httpRequest().formItems("neuralNetwork");
-        model.setProperties(neuralNetwork);
+        auto classLabel = httpRequest().formItems("classLabel");
+        model.setProperties(classLabel);
         if (model.save()) {
             QString notice = "Updated successfully.";
             tflash(notice);
@@ -83,7 +83,7 @@ void NeuralNetworkController::save(const QString &id)
         } else {
             error = "Failed to update.";
             texport(error);
-            texport(neuralNetwork);
+            texport(classLabel);
             render();
         }
         break; }
@@ -94,18 +94,18 @@ void NeuralNetworkController::save(const QString &id)
     }
 }
 
-void NeuralNetworkController::remove(const QString &id)
+void ClassLabelController::remove(const QString &id)
 {
     if (httpRequest().method() != Tf::Post) {
         renderErrorResponse(Tf::NotFound);
         return;
     }
 
-    auto neuralNetwork = NeuralNetwork::get(id.toInt());
-    neuralNetwork.remove();
+    auto classLabel = ClassLabel::get(id.toInt());
+    classLabel.remove();
     redirect(urla("index"));
 }
 
 
 // Don't remove below this line
-T_REGISTER_CONTROLLER(neuralnetworkcontroller)
+T_REGISTER_CONTROLLER(classlabelcontroller)

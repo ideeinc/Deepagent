@@ -22,9 +22,12 @@ public:
     ~NeuralNetwork();
 
     int id() const;
-    QString layers() const;
-    void setLayers(const QString &layers);
-    QDateTime createdAt() const;
+    QString name() const;
+    void setName(const QString &name);
+    QString type() const;
+    void setType(const QString &type);
+    QString absFilePath() const;
+    void setAbsFilePath(const QString &absFilePath);
     QDateTime updatedAt() const;
     int lockRevision() const;
     NeuralNetwork &operator=(const NeuralNetwork &other);
@@ -34,10 +37,11 @@ public:
     bool save()   { return TAbstractModel::save(); }
     bool remove() { return TAbstractModel::remove(); }
 
-    static NeuralNetwork create(const QString &layers);
+    static NeuralNetwork create(const QString &name, const QString &type, const QString &absFilePath);
     static NeuralNetwork create(const QVariantMap &values);
     static NeuralNetwork get(int id);
     static NeuralNetwork get(int id, int lockRevision);
+    static NeuralNetwork getOneByName(const QString &name);
     static int count();
     static QList<NeuralNetwork> getAll();
     static QJsonArray getAllJson();

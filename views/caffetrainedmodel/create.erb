@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<%#include "caffetrainedmodel.h" %>
+<% tfetch(QVariantMap, caffeTrainedModel); %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+<p style="color: red"><%=$ error %></p>
+<p style="color: green"><%=$ notice %></p>
+
+<h1>学習済Caffeモデル 登録</h1>
+
+<%== formTag(urla("create"), Tf::Post, true) %>
+  <p>
+    <label>デプロイNetworkファイル<br />
+      File: <input name="deployNetFile" type="file">
+    </label>
+  </p>
+  <p>
+    <label>Meanファイル<br />
+      File: <input name="meanFile" type="file">
+    </label>
+  </p>
+  <p>
+    <label>ラベルファイル<br />
+      File: <input name="labelFile" type="file">
+    </label>
+  </p>
+  <p>
+    <label>学習済Caffeモデル<br />
+      File: <input name="trainedModelFile" type="file">
+    </label>
+  </p>
+  <p>
+    <label>Neural Network Name<br /><input name="caffeTrainedModel[neuralNetworkName]" value="<%= caffeTrainedModel["neuralNetworkName"] %>" /></label>
+  </p>
+  <p>
+    <label>エポック<br /><input name="caffeTrainedModel[epoch]" value="<%= caffeTrainedModel["epoch"] %>" /></label>
+  </p>
+  <p>
+    <label>Img Width<br /><input name="caffeTrainedModel[imgWidth]" value="<%= caffeTrainedModel["imgWidth"] %>" /></label>
+  </p>
+  <p>
+    <label>Img Height<br /><input name="caffeTrainedModel[imgHeight]" value="<%= caffeTrainedModel["imgHeight"] %>" /></label>
+  </p>
+  <p>
+    <input type="submit" value="Create" />
+  </p>
+</form>
+
+<%== linkTo("Back", urla("index")) %>
+
+</body>
+</html>

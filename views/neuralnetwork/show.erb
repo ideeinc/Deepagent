@@ -12,12 +12,13 @@
 
 <h1>Showing Neural Network</h1>
 <dt>ID</dt><dd><%= neuralNetwork.id() %></dd><br />
-<dt>Layers</dt><dd><%= neuralNetwork.layers() %></dd><br />
-<dt>Created at</dt><dd><%= neuralNetwork.createdAt() %></dd><br />
+<dt>Name</dt><dd><%= neuralNetwork.name() %></dd><br />
+<dt>Type</dt><dd><%= neuralNetwork.type() %></dd><br />
+<dt>Abs File Path</dt><dd><%= neuralNetwork.absFilePath() %></dd><br />
 <dt>Updated at</dt><dd><%= neuralNetwork.updatedAt() %></dd><br />
 <dt>Lock Revision</dt><dd><%= neuralNetwork.lockRevision() %></dd><br />
 
-<%== linkTo("Edit", urla("edit", neuralNetwork.id())) %> |
+<%== linkTo("Edit", urla("save", neuralNetwork.id())) %> |
 <%== linkTo("Back", urla("index")) %>
 
 </body>
