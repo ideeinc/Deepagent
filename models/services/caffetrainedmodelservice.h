@@ -1,6 +1,8 @@
 #ifndef CAFFETRAINEDMODELSERVICE_H
 #define CAFFETRAINEDMODELSERVICE_H
 
+#include "containers/caffetrainedmodelpredictcontainer.h"
+
 class THttpRequest;
 
 
@@ -10,7 +12,8 @@ public:
     CaffeTrainedModelService() {}
 
     int create(THttpRequest &request);
-    void predict(int modelId, THttpRequest &request);
+    void uploadTrainedModel(THttpRequest &request);
+    CaffeTrainedModelPredictContainer predict(int modelId, THttpRequest &request);
 };
 
 #endif // CAFFETRAINEDMODELSERVICE_H

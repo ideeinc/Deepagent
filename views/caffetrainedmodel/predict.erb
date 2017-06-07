@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <%#include "caffetrainedmodel.h" %>
+<%#include "containers/caffetrainedmodelpredictcontainer.h" %>
 <% tfetch(CaffeTrainedModel, caffeTrainedModel); %>
 <html>
 <head>
@@ -10,7 +11,7 @@
 <p style="color: red"><%=$ error %></p>
 <p style="color: green"><%=$ notice %></p>
 
-<h1>推論実行</h1>
+<h1>DCNN推論</h1>
 
 <%== formTag(urla("predict", caffeTrainedModel.id()), Tf::Post, true) %>
   どちらか一方を入力してください。
@@ -23,6 +24,17 @@
   <input type="submit" value="Predict" />
 </form>
 <br>
+
+<% tfetch(CaffeTrainedModelPredictContainer, container);
+   if (container.jpegFile.exists()) {
+       echo(inlineImageTag(container.jpegFile, "image/jpeg", QSize(224,224))); %>
+  <p>
+    結果： <br>
+    <% for (auto &r : container.results) { %>
+      <%= r %><br>
+    <% } %>
+  </p>
+<% } %>
 <br>
 <hr>
 <h3>学習済モデル</h3>

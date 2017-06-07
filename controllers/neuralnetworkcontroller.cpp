@@ -2,7 +2,7 @@
 #include "neuralnetwork.h"
 
 
-NeuralNetworkController::NeuralNetworkController(const NeuralNetworkController &)
+NeuralNetworkController::NeuralNetworkController()
     : ApplicationController()
 { }
 
@@ -66,7 +66,7 @@ void NeuralNetworkController::save(const QString &id)
         QString error;
         int rev = session().value("neuralNetwork_lockRevision").toInt();
         auto model = NeuralNetwork::get(id.toInt(), rev);
-        
+
         if (model.isNull()) {
             error = "Original data not found. It may have been updated/removed by another transaction.";
             tflash(error);
@@ -108,4 +108,4 @@ void NeuralNetworkController::remove(const QString &id)
 
 
 // Don't remove below this line
-T_REGISTER_CONTROLLER(neuralnetworkcontroller)
+T_DEFINE_CONTROLLER(NeuralNetworkController)

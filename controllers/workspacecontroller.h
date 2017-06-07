@@ -9,8 +9,7 @@ class T_CONTROLLER_EXPORT WorkspaceController : public ApplicationController
     Q_OBJECT
 public:
     Q_INVOKABLE
-    WorkspaceController() { }
-    WorkspaceController(const WorkspaceController &other);
+    WorkspaceController();
 
 public slots:
     void index();
@@ -25,7 +24,5 @@ private:
     void renderEntry(const QVariantMap &workspace = QVariantMap());
     void renderEdit(const QVariantMap &workspace = QVariantMap());
 };
-
-T_DECLARE_CONTROLLER(WorkspaceController, workspacecontroller)
 
 #endif // WORKSPACECONTROLLER_H

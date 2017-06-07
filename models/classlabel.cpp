@@ -135,6 +135,23 @@ QList<ClassLabel> ClassLabel::getAll()
     return tfGetModelListByCriteria<ClassLabel, ClassLabelObject>(TCriteria());
 }
 
+QList<ClassLabel> ClassLabel::getListByDatasetId(int id)
+{
+    TCriteria cri;
+    cri.add(ClassLabelObject::DatasetId, id);
+    return tfGetModelListByCriteria<ClassLabel, ClassLabelObject>(cri);
+}
+
+QMap<int, ClassLabel> ClassLabel::getMapByDatasetId(int id)
+{
+    QMap<int, ClassLabel> ret;
+    const auto labelList = ClassLabel::getListByDatasetId(id);
+    for (auto &label : labelList) {
+        ret.insert(label.idx(), label);
+    }
+    return ret;
+}
+
 QJsonArray ClassLabel::getAllJson()
 {
     QJsonArray array;

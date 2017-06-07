@@ -9,14 +9,11 @@ class T_CONTROLLER_EXPORT MainController : public ApplicationController
     Q_OBJECT
 public:
     Q_INVOKABLE
-    MainController() { }
-    MainController(const MainController &other);
+    MainController();
 
 public slots:
     void index();
     void train(const QString &no);
 };
-
-T_DECLARE_CONTROLLER(MainController, maincontroller)
 
 #endif // MAINCONTROLLER_H

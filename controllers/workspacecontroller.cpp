@@ -2,7 +2,7 @@
 #include "workspace.h"
 
 
-WorkspaceController::WorkspaceController(const WorkspaceController &)
+WorkspaceController::WorkspaceController()
     : ApplicationController()
 { }
 
@@ -109,4 +109,4 @@ void WorkspaceController::remove(const QString &pk)
 
 
 // Don't remove below this line
-T_REGISTER_CONTROLLER(workspacecontroller)
+T_DEFINE_CONTROLLER(WorkspaceController)

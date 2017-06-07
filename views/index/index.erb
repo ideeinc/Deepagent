@@ -20,6 +20,19 @@
 <p>
   <%== linkTo("Class Label ページ", url("ClassLabel", "index")); %>
 </p>
+<p>
+  <%== linkTo(u8"内視鏡画像トリミング・リサイズ", url("boundingbox", "crop")); %>
+</p>
+<p>
+  <%== linkTo(u8"内視鏡病変検出 教師データ作成", url("boundingbox", "index")); %>
+</p>
+
+<%== formTag(url("CaffeTrainedModel", "uploadTrainedModel"), Tf::Post, true) %>
+  <p>
+    <label>Upload a trained model of DIGITS (tar.gz) :<br /><input name="trainedModel" value="" type="file" /></label>
+  </p>
+  <input type="submit" value="Upload" />
+</form>
 
 </body>
 </html>

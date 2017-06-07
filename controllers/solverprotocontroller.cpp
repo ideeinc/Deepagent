@@ -2,7 +2,7 @@
 #include "solverproto.h"
 
 
-SolverProtoController::SolverProtoController(const SolverProtoController &)
+SolverProtoController::SolverProtoController()
     : ApplicationController()
 { }
 
@@ -109,4 +109,4 @@ void SolverProtoController::remove(const QString &pk)
 
 
 // Don't remove below this line
-T_REGISTER_CONTROLLER(solverprotocontroller)
+T_DEFINE_CONTROLLER(SolverProtoController)

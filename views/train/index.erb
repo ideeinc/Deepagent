@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<%#include "containers/trainindexcontainer.h" %>
+<% tfetch(TrainIndexContainer, container) %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+
+<h1>Listing Train Models</h1>
+
+<%== linkTo("New entry", urla("create")) %><br />
+<br />
+<table border="1" cellpadding="5" style="border: 1px #d0d0d0 solid; border-collapse: collapse;">
+  <tr>
+    <th>Name</th>
+    <th>Status</th>
+    <th>Created</th>
+  </tr>
+
+<% for (const auto &i : container.trainingModels) { %>
+  <tr>
+    <td><%= i.name() %></td>
+    <td><%= i.state() %></td>
+    <td><%= i.createdAt() %></td>
+    <td>
+      <%== linkTo("Show", urla("show", i.id())) %>
+      <%== linkTo("Clone", urla("clone", i.id())) %>
+      <%== linkTo("Remove", urla("remove", i.id()), Tf::Post, "confirm('Are you sure?')") %>
+    </td>
+  </tr>
+<% } %>
+</table>
+
+</body>
+</html>

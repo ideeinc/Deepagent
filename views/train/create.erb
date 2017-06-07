@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<%#include "containers/traincreatecontainer.h" %>
+<% tfetch(TrainCreateContainer, container); %>
+<% auto trainingModel = container.trainingModel.toVariantMap(); %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+<p style="color: red"><%=$ error %></p>
+<p style="color: green"><%=$ notice %></p>
+
+<h1>New Train Model</h1>
+
+<p><%=$ message %></p>
+
+<%== formTag(urla("create"), Tf::Post) %>
+  <p>
+    <label>name<br /><input name="trainingModel[name]" value="<%= trainingModel["name"] %>" /></label>
+  </p>
+  <div>
+    <label for="trainingModel[dataset]">Select Dataset<br />
+      <select name="trainingModel[dataset]">
+        <option>その1</option>
+        <option>その2</option>
+        <option>その3</option>
+      </select>
+    </label>
+  </p>
+  </div>
+  <p>
+    <label>Solver (solver.prototxt)<br /><textarea name="trainingModel[solverPrototxt]"><%= trainingModel["solverPrototxt"] %></textarea></label>
+  </p>
+  <p>
+    <label for="trainingModel[trainEpochs]">Training epochs</label><br><input name="trainingModel[trainEpochs]" type="text" value="100"/>
+  </p>
+  <p>
+    <label for="trainingModel[snapInterval]">Snapshot interval</label><br><input name="trainingModel[snapInterval]" type="text" value="1"/>
+  </p>
+  <p>
+    <label for="trainingModel[valInterval]">Validation interval</label><br><input name="trainingModel[valInterval]" type="text" value="1"/>
+  </p>
+  <p>
+    <label>Network for training (prototxt)<br /><textarea name="trainingModel[trainPrototxt]"><%= trainingModel["trainPrototxt"] %></textarea></label>
+  </p>
+  <p>
+    <label>pretreined model path<br /><input name="trainingModel[pretrainedModel]" value="<%= trainingModel["pretrainedModel"] %>" /></label>
+  </p>
+  <p>
+    <label>Network for deployment (prototxt)<br /><textarea name="trainingModel[deployPrototxt]"><%= trainingModel["deployPrototxt"] %></textarea></label>
+  </p>
+  <p>
+    <input type="submit" value="Train" />
+  </p>
+</form>
+
+<%== linkTo("Back", urla("index")) %>
+
+</body>
+</html>

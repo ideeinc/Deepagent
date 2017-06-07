@@ -9,7 +9,7 @@ INCLUDEPATH += ../../helpers ../../models
 DEPENDPATH  += ../../helpers ../../models
 DESTDIR = ../../lib
 LIBS += -L../../lib -lhelper -lmodel
-QMAKE_CLEAN = *.cpp source.list
+QMAKE_CLEAN = *.cpp *.moc *.o source.list
 
 tmake.target = source.list
 tmake.commands = tmake -f ../../config/application.ini -v .. -d . -P

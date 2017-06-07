@@ -8,7 +8,7 @@
 <body>
 
 <h1>Listing Caffe Trained Model</h1>
-
+<%== linkTo("Commands", url("index")) %><br />
 <%== linkTo("New entry", urla("create")) %><br />
 <br />
 <table border="1" cellpadding="5" style="border: 1px #d0d0d0 solid; border-collapse: collapse;">
@@ -20,6 +20,7 @@
     <th>Dataset ID</th>
     <th>Img Width</th>
     <th>Img Height</th>
+    <th>Note</th>
   </tr>
 <% tfetch(QList<CaffeTrainedModel>, caffeTrainedModelList); %>
 <% for (const auto &i : caffeTrainedModelList) { %>
@@ -31,6 +32,7 @@
     <td><%= i.datasetId() %></td>
     <td><%= i.imgWidth() %></td>
     <td><%= i.imgHeight() %></td>
+    <td><%= i.note() %></td>
     <td>
       <%== linkTo("Predict", urla("predict", i.id())) %>
       <%== linkTo("Show", urla("show", i.id())) %>

@@ -1,7 +1,7 @@
 #include <TreeFrogModel>
 #include "caffetrainedmodel.h"
 #include "caffetrainedmodelobject.h"
-#include "dataset.h"
+#include "traindataset.h"
 #include "neuralnetwork.h"
 
 
@@ -95,6 +95,16 @@ void CaffeTrainedModel::setImgHeight(int imgHeight)
     d->img_height = imgHeight;
 }
 
+QString CaffeTrainedModel::note() const
+{
+    return d->note;
+}
+
+void CaffeTrainedModel::setNote(const QString &note)
+{
+    d->note = note;
+}
+
 QDateTime CaffeTrainedModel::updatedAt() const
 {
     return d->updated_at;
@@ -111,7 +121,7 @@ CaffeTrainedModel &CaffeTrainedModel::operator=(const CaffeTrainedModel &other)
     return *this;
 }
 
-CaffeTrainedModel CaffeTrainedModel::create(const QString &modelPath, const QString &neuralNetworkName, int epoch, int datasetId, int imgWidth, int imgHeight)
+CaffeTrainedModel CaffeTrainedModel::create(const QString &modelPath, const QString &neuralNetworkName, int epoch, int datasetId, int imgWidth, int imgHeight, const QString &note)
 {
     CaffeTrainedModelObject obj;
     obj.model_path = modelPath;
@@ -120,6 +130,7 @@ CaffeTrainedModel CaffeTrainedModel::create(const QString &modelPath, const QStr
     obj.dataset_id = datasetId;
     obj.img_width = imgWidth;
     obj.img_height = imgHeight;
+    obj.note = note;
     if (!obj.create()) {
         return CaffeTrainedModel();
     }
@@ -157,9 +168,9 @@ int CaffeTrainedModel::count()
     return mapper.findCount();
 }
 
-QList<CaffeTrainedModel> CaffeTrainedModel::getAll()
+QList<CaffeTrainedModel> CaffeTrainedModel::getAll(Tf::SortOrder sortOrder)
 {
-    return tfGetModelListByCriteria<CaffeTrainedModel, CaffeTrainedModelObject>(TCriteria());
+    return tfGetModelListByCriteria<CaffeTrainedModel, CaffeTrainedModelObject>(TCriteria(), CaffeTrainedModelObject::Id, sortOrder);
 }
 
 QJsonArray CaffeTrainedModel::getAllJson()
@@ -191,7 +202,7 @@ NeuralNetwork CaffeTrainedModel::getNeuralNetwork() const
 }
 
 
-Dataset CaffeTrainedModel::getDataset() const
+TrainDataset CaffeTrainedModel::getDataset() const
 {
-    return Dataset::get(datasetId());
+    return TrainDataset::get(datasetId());
 }

@@ -9,7 +9,7 @@ class T_CONTROLLER_EXPORT SolverProtoController : public ApplicationController
     Q_OBJECT
 public:
     Q_INVOKABLE
-    SolverProtoController() { }
+    SolverProtoController();
     SolverProtoController(const SolverProtoController &other);
 
 public slots:
@@ -25,7 +25,5 @@ private:
     void renderEntry(const QVariantMap &solverProto = QVariantMap());
     void renderEdit(const QVariantMap &solverProto = QVariantMap());
 };
-
-T_DECLARE_CONTROLLER(SolverProtoController, solverprotocontroller)
 
 #endif // SOLVERPROTOCONTROLLER_H

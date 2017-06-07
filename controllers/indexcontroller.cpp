@@ -1,7 +1,7 @@
 #include "indexcontroller.h"
 
 
-IndexController::IndexController(const IndexController &)
+IndexController::IndexController()
     : ApplicationController()
 { }
 
@@ -10,6 +10,5 @@ void IndexController::index()
     render();
 }
 
-
 // Don't remove below this line
-T_REGISTER_CONTROLLER(indexcontroller)
+T_DEFINE_CONTROLLER(IndexController)

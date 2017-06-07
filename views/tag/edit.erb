@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<%#include "services/taggroup.h" %>
+<% tfetch(TagGroup, group) %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+  <script src="/js/jquery-1.11.3.min.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    $(window).load(function() {
+        $('input:submit[name="updateGroup"]').click(function(e){
+            e.preventDefault();
+            var error = '';
+            var groupName = $('input:text[name="destinationName"]').val();
+            if (groupName.length < 1) {
+                error = 'グループ名は必須です';
+            }
+            if (groupName.match(/[\/\$\*\#\@\~\&\;\'\"\(\)\[\]\`\+\=\!]/)) {
+                error = 'グループ名に記号は使えません';
+            }
+            if (error.length > 0) {
+                window.alert(error);
+                return false;
+            }
+            var data = {
+                sourceName: $('input:hidden[name="sourceName"]').val(),
+                destinationName: groupName
+            };
+            $.ajax({ type: 'post', url: '<%= urla("updateGroup") %>', data: JSON.stringify(data), contentType: 'application/json', scriptCharset: 'utf-8', success: function(response) {
+                if (response.error) {
+                    window.alert(response.error);
+                }
+                else {
+                    window.location.href = '<%= urla("index") %>';
+                }
+            }, error: function(response) {
+                alert('error');
+            } });
+            return false;
+        });
+        $('input:submit[name="destroyGroup"]').click(function(e){
+            e.preventDefault();
+            if (confirm("グループを削除します。含まれるタグも同時に削除されます。")) {
+                var data = { target: 'group', name: $('input:hidden[name="sourceName"]').val() };
+                $.ajax({ type: 'post', url: '<%= urla("destroy") %>', data: JSON.stringify(data), contentType: 'application/json', scriptCharset: 'utf-8', success: function(response) {
+                    window.location.href = '<%= urla("index") %>';
+                }, error: function(response) {
+                    alert('error');
+                } });
+            }
+            return false;
+        });
+    });
+  </script>
+</head>
+<body>
+
+<h1>Edit Group</h1>
+
+<%== formTag(urla("updateGroup"), Tf::Post) %>
+<input type="hidden" name="sourceName" value="<%= group.name() %>" />
+<div>
+    <label>Group Name<br />
+    <input type="text" name="destinationName" value="<%= group.name() %>" /></label>
+    <input type="submit" name="updateGroup" value="更新" />
+    <input type="submit" name="destroyGroup" value="削除" />
+</div>
+<%== endTag("form") %>
+
+<p><%== linkTo("Back", urla("index")) %></p>
+
+</body>
+</html>

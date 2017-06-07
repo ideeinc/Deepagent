@@ -9,13 +9,10 @@ class T_CONTROLLER_EXPORT IndexController : public ApplicationController
     Q_OBJECT
 public:
     Q_INVOKABLE
-    IndexController() { }
-    IndexController(const IndexController &other);
+    IndexController();
 
 public slots:
     void index();
 };
-
-T_DECLARE_CONTROLLER(IndexController, indexcontroller)
 
 #endif // INDEXCONTROLLER_H

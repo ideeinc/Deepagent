@@ -3,11 +3,13 @@
 
 #include "applicationendpoint.h"
 
+
 class T_CONTROLLER_EXPORT LogTailEndpoint : public ApplicationEndpoint
 {
+    Q_OBJECT
 public:
-    LogTailEndpoint() { }
-    LogTailEndpoint(const LogTailEndpoint &other);
+    Q_INVOKABLE
+    LogTailEndpoint();
 
 protected:
     bool onOpen(const TSession &httpSession);
@@ -15,7 +17,5 @@ protected:
     void onTextReceived(const QString &text);
     void onBinaryReceived(const QByteArray &binary);
 };
-
-T_DECLARE_CONTROLLER(LogTailEndpoint, logtailendpoint)
 
 #endif // LOGTAILENDPOINT_H

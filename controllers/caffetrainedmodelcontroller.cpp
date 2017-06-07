@@ -1,8 +1,10 @@
 #include "caffetrainedmodelcontroller.h"
 #include "caffetrainedmodel.h"
+#include "containers/caffetrainedmodelpredictcontainer.h"
+#include <QtCore/QtCore>
 
 
-CaffeTrainedModelController::CaffeTrainedModelController(const CaffeTrainedModelController &)
+CaffeTrainedModelController::CaffeTrainedModelController()
     : ApplicationController()
 { }
 
@@ -40,20 +42,6 @@ void CaffeTrainedModelController::create()
             texport(caffeTrainedModel);
             render();
         }
-
-        // auto caffeTrainedModel = httpRequest().formItems("caffeTrainedModel");
-        // auto model = CaffeTrainedModel::create(caffeTrainedModel);
-
-        // if (!model.isNull()) {
-        //     QString notice = "Created successfully.";
-        //     tflash(notice);
-        //     redirect(urla("show", model.id()));
-        // } else {
-        //     QString error = "Failed to create.";
-        //     texport(error);
-        //     texport(caffeTrainedModel);
-        //     render();
-        // }
         break; }
 
     default:
@@ -119,18 +107,31 @@ void CaffeTrainedModelController::remove(const QString &id)
     redirect(urla("index"));
 }
 
+void CaffeTrainedModelController::uploadTrainedModel()
+{
+    switch (httpRequest().method()) {
+    case Tf::Post: {
+        service.uploadTrainedModel(httpRequest());
+        redirect(urla("index"));
+        break; }
+
+    default:
+        break;
+    }
+}
 
 void CaffeTrainedModelController::predict(const QString &id)
 {
     switch (httpRequest().method()) {
+    case Tf::Post: {
+        auto container = service.predict(id.toInt(), httpRequest());
+        texport(container);
+        /* FALL THROUGH */ }
+
     case Tf::Get: {
         auto caffeTrainedModel = CaffeTrainedModel::get(id.toInt());
         texport(caffeTrainedModel);
         render();
-        break; }
-
-    case Tf::Post: {
-        service.predict(id.toInt(), httpRequest());
         break; }
 
     default:
@@ -140,4 +141,4 @@ void CaffeTrainedModelController::predict(const QString &id)
 }
 
 // Don't remove below this line
-T_REGISTER_CONTROLLER(caffetrainedmodelcontroller)
+T_DEFINE_CONTROLLER(CaffeTrainedModelController)

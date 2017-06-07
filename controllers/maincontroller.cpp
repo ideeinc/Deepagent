@@ -1,16 +1,16 @@
 #include "maincontroller.h"
 #include "tail.h"
-#include <TWebApplication>
-#include <THttpUtility>
 #include "solverproto.h"
 #include "caffecontext.h"
 #include "neuralnetwork.h"
-#include "services/caffeprocess.h"
-#include "tsystemglobal.h"
+#include "logics/caffeprocess.h"
+#include <TWebApplication>
+#include <THttpUtility>
+#include <TSystemGlobal>
 #include <QThread>
 
 
-MainController::MainController(const MainController &)
+MainController::MainController()
     : ApplicationController()
 { }
 
@@ -32,19 +32,19 @@ void MainController::index()
 
 void MainController::train(const QString &no)
 {
-    SolverProto sp = SolverProto::get(no.toInt());
-    if (sp.isNull()) {
-        return;
-    }
+    // SolverProto sp = SolverProto::get(no.toInt());
+    // if (sp.isNull()) {
+    //     return;
+    // }
 
-    auto *caffe = new CaffeProcess();
-    connect(caffe, SIGNAL(finished(int, QProcess::ExitStatus)), caffe, SLOT(cleanup()));
-    caffe->start(sp, NeuralNetwork());
-    caffe->moveToThread(Tf::app()->databaseContextMainThread());
+    // auto *caffe = new CaffeProcess();
+    // connect(caffe, SIGNAL(finished(int, QProcess::ExitStatus)), caffe, SLOT(cleanup()));
+    // caffe->start(sp, NeuralNetwork());
+    // caffe->moveToThread(Tf::app()->databaseContextMainThread());
 
-    session().insert("logFile", "/var/tmp/hogehoge.log");
+    // session().insert("logFile", "/var/tmp/hogehoge.log");
     render();
 }
 
 // Don't remove below this line
-T_REGISTER_CONTROLLER(maincontroller)
+T_DEFINE_CONTROLLER(MainController)

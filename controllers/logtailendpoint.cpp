@@ -34,7 +34,7 @@ void Tailer::job()
 }
 
 
-LogTailEndpoint::LogTailEndpoint(const LogTailEndpoint &)
+LogTailEndpoint::LogTailEndpoint()
     : ApplicationEndpoint()
 { }
 
@@ -87,4 +87,4 @@ void LogTailEndpoint::onBinaryReceived(const QByteArray &)
 
 
 // Don't remove below this line
-T_REGISTER_CONTROLLER(logtailendpoint)
+T_DEFINE_CONTROLLER(LogTailEndpoint)

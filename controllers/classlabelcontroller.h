@@ -9,8 +9,7 @@ class T_CONTROLLER_EXPORT ClassLabelController : public ApplicationController
     Q_OBJECT
 public:
     Q_INVOKABLE
-    ClassLabelController() { }
-    ClassLabelController(const ClassLabelController &other);
+    ClassLabelController();
 
 public slots:
     void index();
@@ -19,7 +18,5 @@ public slots:
     void save(const QString &id);
     void remove(const QString &id);
 };
-
-T_DECLARE_CONTROLLER(ClassLabelController, classlabelcontroller)
 
 #endif // CLASSLABELCONTROLLER_H

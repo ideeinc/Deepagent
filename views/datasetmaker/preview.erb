@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<%#include "containers/datasetmakerpreviewcontainer.h" %>
+<% tfetch(DatasetMakerPreviewContainer, container) %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+
+<% if (container.list.count() > 0) { %>
+<%== formTag(urla("make"), Tf::Post) %>
+<table rules="all" style="border: 1px;">
+<tr>
+    <th></th>
+    <th>ラベル名</th>
+    <th>タグ</th>
+    <th>数</th>
+</tr>
+<% for (const QVariant& v : container.list) {
+    const QMap<QString, QVariant> m = v.toMap();
+    echo("<tr>");
+    echo("<td>" + checkBoxTag("", "", true) + "</td>");
+    echo("<td>" + inputTextTag("", m["name"].toString(), THtmlAttribute("size", "50")) + "</td>");
+    echo("<td>" + m["displayName"].toString() + "</td>");
+    echo("<td>" + QString::number(m["images"].toList().count()) + "</td>");
+    echo("</tr>");
+} %>
+</table>
+<p>
+<fieldset>
+<legend>作成オプション</legend>
+<div>データセット名称: <input type="text" name="datasetName" value="" /></div>
+<div>作成タイプ: <select name="layoutType"><option value="classification">分類用</option><option value="detection">物体検出用</option></select></div>
+<div>データ水増し: <input type="text" name="augmentationRate" value="1" size="4" />倍</div>
+<div>検証データ割合: <input type="text" name="validationRate" value="20" size="4" />%</div>
+</fieldset>
+</p>
+<div><%== submitTag("　作成　") %></div>
+<%== endTag() %>
+<% } else { %>
+<h3>No images</h3>
+<%== linkTo("<< 戻る", urla("index")) %>
+<% } %>
+
+</body>
+</html>
+

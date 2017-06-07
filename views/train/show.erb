@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<%#include "containers/trainshowcontainer.h" %>
+<% tfetch(TrainShowContainer, container); %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+<p style="color: red"><%=$ error %></p>
+<p style="color: green"><%=$ notice %></p>
+
+<h1>Showing Training Model</h1>
+<dt>ID</dt><dd><%= container.trainingModel.id() %></dd><br />
+<dt>Name</dt><dd><%= container.trainingModel.name() %></dd><br />
+<dt>Solver</dt><dd><%== linkTo("solver.prototxt", urla("getPrototxt", QStringList({container.trainingModel.id(), "solverPrototxt"}))) %></dd><br />
+<dt>Network for training</dt><dd><%== linkTo("train.prototxt", urla("getPrototxt", QStringList({container.trainingModel.id(), "trainPrototxt"}))) %></dd><br />
+<dt>Network for deployment</dt><dd><%== linkTo("deploy.prototxt", urla("getPrototxt", QStringList({container.trainingModel.id(), "deployPrototxt"}))) %></dd><br />
+<dt>Created at</dt><dd><%= container.trainingModel.createdAt() %></dd><br />
+
+<% for (auto &png : container.graphImages) { %>
+<div>
+<%== inlineImageTag(QFileInfo(png), "image/png"); %>
+</div>
+<% } %>
+
+<%== linkTo("Back", urla("index")) %>
+</body>
+</html>

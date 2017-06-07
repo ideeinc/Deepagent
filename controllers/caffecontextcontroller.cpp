@@ -2,7 +2,7 @@
 #include "caffecontext.h"
 
 
-CaffeContextController::CaffeContextController(const CaffeContextController &)
+CaffeContextController::CaffeContextController()
     : ApplicationController()
 { }
 
@@ -107,6 +107,5 @@ void CaffeContextController::remove(const QString &pk)
     redirect(urla("index"));
 }
 
-
 // Don't remove below this line
-T_REGISTER_CONTROLLER(caffecontextcontroller)
+T_DEFINE_CONTROLLER(CaffeContextController)

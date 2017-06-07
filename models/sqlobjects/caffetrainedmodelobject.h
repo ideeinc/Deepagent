@@ -15,6 +15,7 @@ public:
     int dataset_id {0};
     int img_width {0};
     int img_height {0};
+    QString note;
     QDateTime updated_at;
     int lock_revision {0};
 
@@ -26,6 +27,7 @@ public:
         DatasetId,
         ImgWidth,
         ImgHeight,
+        Note,
         UpdatedAt,
         LockRevision,
     };
@@ -50,6 +52,8 @@ private:    /*** Don't modify below this line ***/
     T_DEFINE_PROPERTY(int, img_width)
     Q_PROPERTY(int img_height READ getimg_height WRITE setimg_height)
     T_DEFINE_PROPERTY(int, img_height)
+    Q_PROPERTY(QString note READ getnote WRITE setnote)
+    T_DEFINE_PROPERTY(QString, note)
     Q_PROPERTY(QDateTime updated_at READ getupdated_at WRITE setupdated_at)
     T_DEFINE_PROPERTY(QDateTime, updated_at)
     Q_PROPERTY(int lock_revision READ getlock_revision WRITE setlock_revision)

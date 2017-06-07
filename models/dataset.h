@@ -6,41 +6,49 @@
 #include <QVariant>
 #include <QSharedDataPointer>
 #include <TGlobal>
-#include <TAbstractModel>
+#include "caffedata.h"
 
 class TModelObject;
 class DatasetObject;
 class QJsonArray;
 
 
-class T_MODEL_EXPORT Dataset : public TAbstractModel
+class T_MODEL_EXPORT Dataset : public CaffeData
 {
 public:
     Dataset();
     Dataset(const Dataset &other);
-    Dataset(const DatasetObject &object);
+    //Dataset(const DatasetObject &object);
     ~Dataset();
 
-    int id() const;
-    QString dbPath() const;
-    void setDbPath(const QString &dbPath);
-    QString dbType() const;
-    void setDbType(const QString &dbType);
-    QString meanPath() const;
-    void setMeanPath(const QString &meanPath);
-    QDateTime updatedAt() const;
-    int lockRevision() const;
+    // QString id() const;
+    // void setId(const QString &id);
+    int imageWidth() const;
+    void setImageWidth(int imageWidth);
+    int imageHeight() const;
+    void setImageHeight(int imageHeight);
+    QString meanFile() const;
+    void setMeanFile(const QString &meanFile);
+    QString labelFile() const;
+    void setLabelFile(const QString &labelFile);
+    QString trainDbPath() const;
+    void setTrainDbPath(const QString &trainDbPath);
+    QString valDbPath() const;
+    void setValDbPath(const QString &valDbPath);
+    QString logFile() const;
+    void setLogFile(const QString &logFile);
     Dataset &operator=(const Dataset &other);
 
-    bool create() { return TAbstractModel::create(); }
-    bool update() { return TAbstractModel::update(); }
-    bool save()   { return TAbstractModel::save(); }
-    bool remove() { return TAbstractModel::remove(); }
+    bool create() override;
+    bool update() override { return false; }
+    bool save()   override { return false; }
+    void setProperties(const QVariantMap &properties) override;
+    QVariantMap toVariantMap() const override;
+    void clear() override;
 
-    static Dataset create(const QString &dbPath, const QString &dbType, const QString &meanPath);
+    //static Dataset create(const QString &id, int imageWidth, int imageHeight, const QString &meanFile, const QString &labelFile, const QString &valDbPath, const QString &logFile);
     static Dataset create(const QVariantMap &values);
-    static Dataset get(int id);
-    static Dataset get(int id, int lockRevision);
+    static Dataset get(const QString &id);
     static int count();
     static QList<Dataset> getAll();
     static QJsonArray getAllJson();
@@ -48,8 +56,11 @@ public:
 private:
     QSharedDataPointer<DatasetObject> d;
 
-    TModelObject *modelData();
-    const TModelObject *modelData() const;
+    TModelObject *modelData() override;
+    const TModelObject *modelData() const override;
+    friend class CaffeData;
+    friend QDataStream &operator<<(QDataStream &ds, const Dataset &model);
+    friend QDataStream &operator>>(QDataStream &ds, Dataset &model);
 };
 
 Q_DECLARE_METATYPE(Dataset)

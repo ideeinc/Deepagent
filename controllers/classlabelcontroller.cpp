@@ -2,7 +2,7 @@
 #include "classlabel.h"
 
 
-ClassLabelController::ClassLabelController(const ClassLabelController &)
+ClassLabelController::ClassLabelController()
     : ApplicationController()
 { }
 
@@ -66,7 +66,7 @@ void ClassLabelController::save(const QString &id)
         QString error;
         int rev = session().value("classLabel_lockRevision").toInt();
         auto model = ClassLabel::get(id.toInt(), rev);
-        
+
         if (model.isNull()) {
             error = "Original data not found. It may have been updated/removed by another transaction.";
             tflash(error);
@@ -108,4 +108,4 @@ void ClassLabelController::remove(const QString &id)
 
 
 // Don't remove below this line
-T_REGISTER_CONTROLLER(classlabelcontroller)
+T_DEFINE_CONTROLLER(ClassLabelController)

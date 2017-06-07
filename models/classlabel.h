@@ -45,6 +45,8 @@ public:
     static ClassLabel get(int id, int lockRevision);
     static int count();
     static QList<ClassLabel> getAll();
+    static QList<ClassLabel> getListByDatasetId(int id);
+    static QMap<int, ClassLabel> getMapByDatasetId(int id);
     static QJsonArray getAllJson();
 
 private:

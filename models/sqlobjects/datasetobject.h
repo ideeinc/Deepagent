@@ -8,40 +8,44 @@
 class T_MODEL_EXPORT DatasetObject : public TSqlObject, public QSharedData
 {
 public:
-    int id {0};
-    QString db_path;
-    QString db_type;
-    QString mean_path;
-    QDateTime updated_at;
-    int lock_revision {0};
+    int image_width {0};
+    int image_height {0};
+    QString mean_file;
+    QString label_file;
+    QString train_db_path;
+    QString val_db_path;
+    QString log_file;
 
     enum PropertyIndex {
-        Id = 0,
-        DbPath,
-        DbType,
-        MeanPath,
-        UpdatedAt,
-        LockRevision,
+        ImageWidth = 0,
+        ImageHeight,
+        MeanFile,
+        LabelFile,
+        TrainDbPath,
+        ValDbPath,
+        LogFile,
     };
 
-    int primaryKeyIndex() const override { return Id; }
-    int autoValueIndex() const override { return Id; }
+    int primaryKeyIndex() const override { return -1; }
+    int autoValueIndex() const override { return -1; }
     QString tableName() const override { return QLatin1String("dataset"); }
 
 private:    /*** Don't modify below this line ***/
     Q_OBJECT
-    Q_PROPERTY(int id READ getid WRITE setid)
-    T_DEFINE_PROPERTY(int, id)
-    Q_PROPERTY(QString db_path READ getdb_path WRITE setdb_path)
-    T_DEFINE_PROPERTY(QString, db_path)
-    Q_PROPERTY(QString db_type READ getdb_type WRITE setdb_type)
-    T_DEFINE_PROPERTY(QString, db_type)
-    Q_PROPERTY(QString mean_path READ getmean_path WRITE setmean_path)
-    T_DEFINE_PROPERTY(QString, mean_path)
-    Q_PROPERTY(QDateTime updated_at READ getupdated_at WRITE setupdated_at)
-    T_DEFINE_PROPERTY(QDateTime, updated_at)
-    Q_PROPERTY(int lock_revision READ getlock_revision WRITE setlock_revision)
-    T_DEFINE_PROPERTY(int, lock_revision)
+    Q_PROPERTY(int image_width READ getimage_width WRITE setimage_width)
+    T_DEFINE_PROPERTY(int, image_width)
+    Q_PROPERTY(int image_height READ getimage_height WRITE setimage_height)
+    T_DEFINE_PROPERTY(int, image_height)
+    Q_PROPERTY(QString mean_file READ getmean_file WRITE setmean_file)
+    T_DEFINE_PROPERTY(QString, mean_file)
+    Q_PROPERTY(QString label_file READ getlabel_file WRITE setlabel_file)
+    T_DEFINE_PROPERTY(QString, label_file)
+    Q_PROPERTY(QString train_db_path READ gettrain_db_path WRITE settrain_db_path)
+    T_DEFINE_PROPERTY(QString, train_db_path)
+    Q_PROPERTY(QString val_db_path READ getval_db_path WRITE setval_db_path)
+    T_DEFINE_PROPERTY(QString, val_db_path)
+    Q_PROPERTY(QString log_file READ getlog_file WRITE setlog_file)
+    T_DEFINE_PROPERTY(QString, log_file)
 };
 
 #endif // DATASETOBJECT_H

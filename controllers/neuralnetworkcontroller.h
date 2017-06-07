@@ -9,8 +9,7 @@ class T_CONTROLLER_EXPORT NeuralNetworkController : public ApplicationController
     Q_OBJECT
 public:
     Q_INVOKABLE
-    NeuralNetworkController() { }
-    NeuralNetworkController(const NeuralNetworkController &other);
+    NeuralNetworkController();
 
 public slots:
     void index();
@@ -19,7 +18,5 @@ public slots:
     void save(const QString &id);
     void remove(const QString &id);
 };
-
-T_DECLARE_CONTROLLER(NeuralNetworkController, neuralnetworkcontroller)
 
 #endif // NEURALNETWORKCONTROLLER_H

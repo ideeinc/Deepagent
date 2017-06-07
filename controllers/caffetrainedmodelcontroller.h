@@ -10,8 +10,7 @@ class T_CONTROLLER_EXPORT CaffeTrainedModelController : public ApplicationContro
     Q_OBJECT
 public:
     Q_INVOKABLE
-    CaffeTrainedModelController() { }
-    CaffeTrainedModelController(const CaffeTrainedModelController &other);
+    CaffeTrainedModelController();
 
 public slots:
     void index();
@@ -19,13 +18,11 @@ public slots:
     void create();
     void save(const QString &id);
     void remove(const QString &id);
-
+    void uploadTrainedModel();
     void predict(const QString &id);
 
 private:
     CaffeTrainedModelService service {};
 };
-
-T_DECLARE_CONTROLLER(CaffeTrainedModelController, caffetrainedmodelcontroller)
 
 #endif // CAFFETRAINEDMODELCONTROLLER_H

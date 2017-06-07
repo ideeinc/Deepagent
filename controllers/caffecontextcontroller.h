@@ -9,8 +9,7 @@ class T_CONTROLLER_EXPORT CaffeContextController : public ApplicationController
     Q_OBJECT
 public:
     Q_INVOKABLE
-    CaffeContextController() { }
-    CaffeContextController(const CaffeContextController &other);
+    CaffeContextController();
 
 public slots:
     void index();
@@ -25,7 +24,5 @@ private:
     void renderEntry(const QVariantMap &caffeContext = QVariantMap());
     void renderEdit(const QVariantMap &caffeContext = QVariantMap());
 };
-
-T_DECLARE_CONTROLLER(CaffeContextController, caffecontextcontroller)
 
 #endif // CAFFECONTEXTCONTROLLER_H

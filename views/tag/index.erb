@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<%#include "services/taggroup.h" %>
+<% tfetch(QList<TagGroup>, allGroups) %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+  <script src="/js/jquery-1.11.3.min.js" type="text/javascript"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+      var allGroups = {
+          <% for (const TagGroup& g : allGroups) {
+              echo("\"" + g.name() + "\": [");
+              for (const Tag& t : g.tags()) {
+                  echo("\"" + t.name() + "\", ");
+              }
+              echo("], ");
+          } %>
+      }
+
+      $('input:submit[name=create]').on('click', function(e){
+          var error = '';
+          var target = $(this).closest('form').find('input:hidden[name=target]').val();
+          if (target === "group") {
+              var groupName = $('input:text[name=groupName]').val();
+              if (groupName.length < 1) {
+                  error = 'グループ名は必須です';
+              }
+              if (groupName.match(/[\/\$\*\#\@\~\&\;\'\"\(\)\[\]\`\+\=\!]/)) {
+                  error = 'グループ名に記号は使えません';
+              }
+              if (allGroups.hasOwnProperty(groupName)) {
+                  error = 'グループ名 "' + groupName + '" はすでに使用されています'
+              }
+          }
+          if (target === "tag") {
+              var parentGroup = $('select[name=parentGroup] option:selected').val();
+              if (! allGroups.hasOwnProperty(parentGroup)) {
+                  error = 'グループ名は"' + parentGroup + '"定義されていません';
+              }
+              else {
+                  var tagId = $('input:text[name=tagId]').val();
+                  if (tagId.length < 1) {
+                      error = 'タグIDは必須です';
+                  } else if ($.inArray(tagId, allGroups[ parentGroup ]) >= 0) {
+                      error = 'タグID "' + tagId + '" は "' + parentGroup + '" グループですでに使われています';
+                  } else if (! tagId.match(/^[a-z0-9_\-]+$/)) {
+                      error = 'タグIDには半角英数小文字のみ使えます';
+                  }
+              }
+          }
+          if (error.length > 0) {
+              e.preventDefault();
+              window.alert(error);
+              return false;
+          }
+      });
+  });
+  </script>
+</head>
+<body>
+
+<h2>タグ一覧</h2>
+
+<div style="display: inline;">
+<% for (const auto& group : allGroups) { %>
+<div style="display: inline-table; border: 1px solid black;">
+<span><%== linkTo(group.name(), urla("edit", group.name())) %></span>
+<ul>
+<% for (const auto& tag : group.tags()) { %>
+<li><%== linkTo(tag.displayName(), urla("show", QStringList({group.name(), tag.name()}) )) %> (<%= tag.countOfImages() %>)</li>
+<% } %>
+</ul>
+</div>
+<% } %>
+</div>
+
+<p>
+<h2>新規グループ</h2>
+<%== formTag(urla("create")) %>
+<input type="hidden" name="target" value="group" />
+<div>グループ名: <%== inputTextTag("groupName", "", THtmlAttribute("placeholder", "（必須）")) %> （必須）</div>
+<div><%== inputTag("submit", "create", "Create New Tag Group") %></div>
+<%== endTag() %>
+</p>
+
+<p>
+<h2>新規タグ</h2>
+<div>
+<%== formTag(urla("create")) %>
+<input type="hidden" name="target" value="tag" />
+<div>グループ: <select name="parentGroup"><% for (const auto& g : allGroups) { echo(optionTag(g.name(), g.name())); } %></select></div>
+<div>表示名: <%== inputTextTag("tagDisplayName", "", THtmlAttribute("placeholder", "（任意）")) %> （任意）</div>
+<div>タグID: <%== inputTextTag("tagId", "", THtmlAttribute("placeholder", "（必須: 半角英数小文字）")) %> （必須: 半角英数小文字）</div>
+<div><%== inputTag("submit", "create", "Create New Tag") %></div>
+<%== endTag() %>
+</div>
+</p>
+
+<p>
+<h2>アップロード</h2>
+<div><%== linkTo("アップロード", urla("upload")) %></div>
+</p>
+
+</body>
+</html>
