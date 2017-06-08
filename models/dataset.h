@@ -40,8 +40,8 @@ public:
     Dataset &operator=(const Dataset &other);
 
     bool create() override;
-    bool update() override { return false; }
-    bool save()   override { return false; }
+    bool update() override;
+    bool save()   override;
     void setProperties(const QVariantMap &properties) override;
     QVariantMap toVariantMap() const override;
     void clear() override;
@@ -51,7 +51,7 @@ public:
     static Dataset get(const QString &id);
     static int count();
     static QList<Dataset> getAll();
-    static QJsonArray getAllJson();
+    //static QJsonArray getAllJson();
 
 private:
     QSharedDataPointer<DatasetObject> d;

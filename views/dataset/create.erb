@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<%#include "dataset.h" %>
+<% tfetch(QVariantMap, dataset); %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+<p style="color: red"><%=$ error %></p>
+<p style="color: green"><%=$ notice %></p>
+
+<h1>New Dataset</h1>
+
+<%== formTag(urla("create"), Tf::Post) %>
+  <p>
+    <label>Image Width<br /><input name="dataset[imageWidth]" value="<%= dataset["imageWidth"] %>" /></label>
+  </p>
+  <p>
+    <label>Image Height<br /><input name="dataset[imageHeight]" value="<%= dataset["imageHeight"] %>" /></label>
+  </p>
+  <p>
+    <label>Mean File<br /><input name="dataset[meanFile]" value="<%= dataset["meanFile"] %>" /></label>
+  </p>
+  <p>
+    <label>Label File<br /><input name="dataset[labelFile]" value="<%= dataset["labelFile"] %>" /></label>
+  </p>
+  <p>
+    <label>Train Db Path<br /><input name="dataset[trainDbPath]" value="<%= dataset["trainDbPath"] %>" /></label>
+  </p>
+  <p>
+    <label>Val Db Path<br /><input name="dataset[valDbPath]" value="<%= dataset["valDbPath"] %>" /></label>
+  </p>
+  <p>
+    <label>Log File<br /><input name="dataset[logFile]" value="<%= dataset["logFile"] %>" /></label>
+  </p>
+  <p>
+    <input type="submit" value="Create" />
+  </p>
+</form>
+
+<%== linkTo("Back", urla("index")) %>
+
+</body>
+</html>

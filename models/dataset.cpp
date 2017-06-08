@@ -13,6 +13,7 @@ Dataset::Dataset()
     d->train_db_path = "train_db";
     d->val_db_path = "val_db";
     d->log_file = "create_db.log";
+    CaffeData::setDataType(className<Dataset>());
 }
 
 Dataset::Dataset(const Dataset &other)
@@ -135,11 +136,7 @@ Dataset &Dataset::operator=(const Dataset &other)
 bool Dataset::create()
 {
     setId(QString::number(QDateTime::currentDateTime().toMSecsSinceEpoch()));
-    // json
-    auto values = toVariantMap();
-    values.unite(CaffeData::toVariantMap());
-    writeJson(jsonFilePath(), values);
-    return true;
+    return update();
 }
 
 Dataset Dataset::create(const QVariantMap &values)
@@ -150,6 +147,25 @@ Dataset Dataset::create(const QVariantMap &values)
         model.d->clear();
     }
     return model;
+}
+
+bool Dataset::update()
+{
+    if (id().isEmpty()) {
+        return false;
+    }
+
+    // json
+    auto values = toVariantMap();
+    values.unite(CaffeData::toVariantMap());
+    CaffeData::setDataType(className<Dataset>());  // data type name
+    writeJson(jsonFilePath(), values);
+    return true;
+}
+
+bool Dataset::save()
+{
+    return (id().isEmpty()) ? create() : update();
 }
 
 void Dataset::clear()
@@ -168,18 +184,18 @@ QList<Dataset> Dataset::getAll()
     return CaffeData::getAll<Dataset>();
 }
 
-QJsonArray Dataset::getAllJson()
-{
-    // QJsonArray array;
-    // TSqlORMapper<DatasetObject> mapper;
+// QJsonArray Dataset::getAllJson()
+// {
+//     QJsonArray array;
+//     TSqlORMapper<DatasetObject> mapper;
 
-    // if (mapper.find() > 0) {
-    //     for (TSqlORMapperIterator<DatasetObject> i(mapper); i.hasNext(); ) {
-    //         array.append(QJsonValue(QJsonObject::fromVariantMap(Dataset(i.next()).toVariantMap())));
-    //     }
-    // }
-    // return array;
-}
+//     if (mapper.find() > 0) {
+//         for (TSqlORMapperIterator<DatasetObject> i(mapper); i.hasNext(); ) {
+//             array.append(QJsonValue(QJsonObject::fromVariantMap(Dataset(i.next()).toVariantMap())));
+//         }
+//     }
+//     return array;
+// }
 
 void Dataset::setProperties(const QVariantMap &properties)
 {

@@ -48,3 +48,5 @@ SOURCES += datasetmakercontroller.cpp
 #SOURCES += statuscontroller.cpp
 #HEADERS += caffedatacontroller.h
 #SOURCES += caffedatacontroller.cpp
+HEADERS += datasetcontroller.h
+SOURCES += datasetcontroller.cpp

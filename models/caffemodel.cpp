@@ -6,11 +6,11 @@
 CaffeModel::CaffeModel()
     : CaffeData(), d(new CaffeModelObject())
 {
-    CaffeData::setDataType("caffemodel");
     d->solver_file = "solver.prototxt";
     d->train_file = "train.prototxt";
     d->deploy_file = "deploy.prototxt";
     d->log_file = "caffe.log";
+    CaffeData::setDataType(className<CaffeModel>());  // data type name
 }
 
 CaffeModel::CaffeModel(const CaffeModel &other)
@@ -270,6 +270,7 @@ bool CaffeModel::update()
     values.remove("trainPrototxt");
     values.remove("deployPrototxt");
     values.remove("networkPrototxt");
+    CaffeData::setDataType(className<CaffeModel>());  // data type name
     writeJson(jsonFilePath(), values, true);
 
     // prototxt files

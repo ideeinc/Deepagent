@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<%#include "dataset.h" %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+
+<h1>Listing Dataset</h1>
+
+<%== linkTo("Create a new Dataset", urla("create")) %><br />
+<br />
+<table border="1" cellpadding="5" style="border: 1px #d0d0d0 solid; border-collapse: collapse;">
+  <tr>
+    <th>Image Width</th>
+    <th>Image Height</th>
+    <th>Mean File</th>
+    <th>Label File</th>
+    <th>Train Db Path</th>
+    <th>Val Db Path</th>
+    <th>Log File</th>
+    <th>ID</th>
+  </tr>
+<% tfetch(QList<Dataset>, datasetList); %>
+<% for (const auto &i : datasetList) { %>
+  <tr>
+    <td><%= i.imageWidth() %></td>
+    <td><%= i.imageHeight() %></td>
+    <td><%= i.meanFile() %></td>
+    <td><%= i.labelFile() %></td>
+    <td><%= i.trainDbPath() %></td>
+    <td><%= i.valDbPath() %></td>
+    <td><%= i.logFile() %></td>
+    <td><%= i.id() %></td>
+    <td>
+      <%== linkTo("Show", urla("show", i.id())) %>
+      <%== linkTo("Edit", urla("save", i.id())) %>
+      <%== linkTo("Remove", urla("remove", i.id()), Tf::Post, "confirm('Are you sure?')") %>
+    </td>
+  </tr>
+<% } %>
+</table>
+
+</body>
+</html>

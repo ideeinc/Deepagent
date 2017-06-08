@@ -5,7 +5,9 @@
 
 PretrainedModel::PretrainedModel()
     : CaffeData(), d(new PretrainedModelObject())
-{ }
+{
+    CaffeData::setDataType(className<PretrainedModel>());  // data type name
+}
 
 PretrainedModel::PretrainedModel(const PretrainedModel &other)
     : CaffeData(other), d(new PretrainedModelObject(*other.d))
@@ -73,11 +75,7 @@ PretrainedModel &PretrainedModel::operator=(const PretrainedModel &other)
 bool PretrainedModel::create()
 {
     setId(QString::number(QDateTime::currentDateTime().toMSecsSinceEpoch()));
-    // json
-    auto values = toVariantMap();
-    values.unite(CaffeData::toVariantMap());
-    writeJson(jsonFilePath(), values);
-    return true;
+    return update();
 }
 
 
@@ -89,6 +87,25 @@ PretrainedModel PretrainedModel::create(const QVariantMap &values)
         model.d->clear();
     }
     return model;
+}
+
+bool PretrainedModel::update()
+{
+    if (id().isEmpty()) {
+        return false;
+    }
+
+    // json
+    auto values = toVariantMap();
+    values.unite(CaffeData::toVariantMap());
+    CaffeData::setDataType(className<PretrainedModel>());  // data type name
+    writeJson(jsonFilePath(), values);
+    return true;
+}
+
+bool PretrainedModel::save()
+{
+    return (id().isEmpty()) ? create() : update();
 }
 
 void PretrainedModel::clear()
@@ -107,18 +124,18 @@ QList<PretrainedModel> PretrainedModel::getAll()
     return CaffeData::getAll<PretrainedModel>();
 }
 
-QJsonArray PretrainedModel::getAllJson()
-{
-    // QJsonArray array;
-    // TSqlORMapper<PretrainedModelObject> mapper;
+// QJsonArray PretrainedModel::getAllJson()
+// {
+//     QJsonArray array;
+//     TSqlORMapper<PretrainedModelObject> mapper;
 
-    // if (mapper.find() > 0) {
-    //     for (TSqlORMapperIterator<PretrainedModelObject> i(mapper); i.hasNext(); ) {
-    //         array.append(QJsonValue(QJsonObject::fromVariantMap(PretrainedModel(i.next()).toVariantMap())));
-    //     }
-    // }
-    // return array;
-}
+//     if (mapper.find() > 0) {
+//         for (TSqlORMapperIterator<PretrainedModelObject> i(mapper); i.hasNext(); ) {
+//             array.append(QJsonValue(QJsonObject::fromVariantMap(PretrainedModel(i.next()).toVariantMap())));
+//         }
+//     }
+//     return array;
+// }
 
 void PretrainedModel::setProperties(const QVariantMap &properties)
 {

@@ -88,6 +88,7 @@ protected:
     QString jsonFilePath() const;
     QVariantMap toBaseMap() const;
     void setBaseProperties(const QVariantMap &properties);
+    template <typename T> static QString className();
     template <typename T> static T get(const QString &id);
     template <typename T> static QList<T> getAll();
 
@@ -101,20 +102,26 @@ protected:
 
 
 template <typename T>
+inline QString CaffeData::className()
+{
+    int status = 0;
+    auto clsname = abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status);
+    const QString name(clsname);
+    std::free(clsname);
+    return name;
+}
+
+template <typename T>
 inline T CaffeData::get(const QString &id)
 {
     T model;
     model.setId(id);
     QDir dir(model.dirPath());
 
-    int status = 0;
-    auto clsname = abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status);
-    const QString name(clsname);
-    std::free(clsname);
-
     if (dir.exists()) {
+        auto clsname = className<T>();
         auto values = readJson(model.jsonFilePath());
-        if (! values.isEmpty() && values.value("dataType").toString().toLower() == name.toLower()) {
+        if (! values.isEmpty() && values.value("dataType").toString().toLower() == clsname.toLower()) {
             model.setProperties(values);
             return model;
         }

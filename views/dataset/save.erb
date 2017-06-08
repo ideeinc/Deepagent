@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<%#include "dataset.h" %>
+<% tfetch(QVariantMap, dataset); %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+<p style="color: red"><%=$ error %></p>
+<p style="color: green"><%=$ notice %></p>
+
+<h1>Editing Dataset</h1>
+
+<%== formTag(urla("save", dataset["id"]), Tf::Post) %>
+  <p>
+    <label>Image Width<br /><input type="text" name="dataset[imageWidth]" value="<%= dataset["imageWidth"] %>" /></label>
+  </p>
+  <p>
+    <label>Image Height<br /><input type="text" name="dataset[imageHeight]" value="<%= dataset["imageHeight"] %>" /></label>
+  </p>
+  <p>
+    <label>Mean File<br /><input type="text" name="dataset[meanFile]" value="<%= dataset["meanFile"] %>" /></label>
+  </p>
+  <p>
+    <label>Label File<br /><input type="text" name="dataset[labelFile]" value="<%= dataset["labelFile"] %>" /></label>
+  </p>
+  <p>
+    <label>Train Db Path<br /><input type="text" name="dataset[trainDbPath]" value="<%= dataset["trainDbPath"] %>" /></label>
+  </p>
+  <p>
+    <label>Val Db Path<br /><input type="text" name="dataset[valDbPath]" value="<%= dataset["valDbPath"] %>" /></label>
+  </p>
+  <p>
+    <label>Log File<br /><input type="text" name="dataset[logFile]" value="<%= dataset["logFile"] %>" /></label>
+  </p>
+  <p>
+    <label>ID<br /><input type="text" name="dataset[id]" value="<%= dataset["id"] %>" readonly="readonly" /></label>
+  </p>
+  <p>
+    <input type="submit" value="Save" />
+  </p>
+</form>
+
+<%== linkTo("Show", urla("show", dataset["id"])) %> |
+<%== linkTo("Back", urla("index")) %>
+</body>
+</html>

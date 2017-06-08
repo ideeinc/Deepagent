@@ -6,7 +6,7 @@ QT -= gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += qml
 DEFINES += TF_DLL USE_OPENCV
 DESTDIR = ../lib
-INCLUDEPATH += ../helpers/ sqlobjects/ mongoobjects/ services/ logics/ contrainers/ ${CAFFE_ROOT}/include ${CAFFE_ROOT}/build/include /usr/local/cuda/include
+INCLUDEPATH += ../helpers/ sqlobjects/ mongoobjects/ services/ logics/ contrainers/ ${CAFFE_ROOT}/build/include ${CAFFE_ROOT}/include /usr/local/cuda/include
 DEPENDPATH  += ../helpers/ sqlobjects/ mongoobjects/ services/ logics/ contrainers/
 macx {
   DEFINES += USE_ACCELERATE CPU_ONLY

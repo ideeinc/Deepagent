@@ -2,10 +2,6 @@
 #include "dataset.h"
 
 
-DatasetController::DatasetController(const DatasetController &)
-    : ApplicationController()
-{ }
-
 void DatasetController::index()
 {
     auto datasetList = Dataset::getAll();
@@ -15,7 +11,7 @@ void DatasetController::index()
 
 void DatasetController::show(const QString &id)
 {
-    auto dataset = Dataset::get(id.toInt());
+    auto dataset = Dataset::get(id);
     texport(dataset);
     render();
 }
@@ -53,9 +49,8 @@ void DatasetController::save(const QString &id)
 {
     switch (httpRequest().method()) {
     case Tf::Get: {
-        auto model = Dataset::get(id.toInt());
+        auto model = Dataset::get(id);
         if (!model.isNull()) {
-            session().insert("dataset_lockRevision", model.lockRevision());
             auto dataset = model.toVariantMap();
             texport(dataset);
             render();
@@ -64,9 +59,8 @@ void DatasetController::save(const QString &id)
 
     case Tf::Post: {
         QString error;
-        int rev = session().value("dataset_lockRevision").toInt();
-        auto model = Dataset::get(id.toInt(), rev);
-        
+        auto model = Dataset::get(id);
+
         if (model.isNull()) {
             error = "Original data not found. It may have been updated/removed by another transaction.";
             tflash(error);
@@ -101,11 +95,11 @@ void DatasetController::remove(const QString &id)
         return;
     }
 
-    auto dataset = Dataset::get(id.toInt());
+    auto dataset = Dataset::get(id);
     dataset.remove();
     redirect(urla("index"));
 }
 
 
 // Don't remove below this line
-T_REGISTER_CONTROLLER(datasetcontroller)
+T_DEFINE_CONTROLLER(DatasetController)

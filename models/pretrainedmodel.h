@@ -30,8 +30,8 @@ public:
     PretrainedModel &operator=(const PretrainedModel &other);
 
     bool create() override;
-    bool update() override { return false; }
-    bool save()   override { return false; }
+    bool update() override;
+    bool save()   override;
     void setProperties(const QVariantMap &properties) override;
     QVariantMap toVariantMap() const override;
     void clear();
@@ -41,7 +41,7 @@ public:
     static PretrainedModel get(const QString &id);
     static int count();
     static QList<PretrainedModel> getAll();
-    static QJsonArray getAllJson();
+    //static QJsonArray getAllJson();
 
 private:
     QSharedDataPointer<PretrainedModelObject> d;
