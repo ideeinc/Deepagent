@@ -10,8 +10,7 @@ class T_CONTROLLER_EXPORT DatasetMakerController : public ApplicationController
     Q_OBJECT
 public:
     Q_INVOKABLE
-    DatasetMakerController() {};
-    DatasetMakerController(const DatasetMakerController&);
+    DatasetMakerController() : ApplicationController() {}
 
 public slots:
     void index();

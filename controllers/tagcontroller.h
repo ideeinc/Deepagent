@@ -10,8 +10,7 @@ class T_CONTROLLER_EXPORT TagController : public ApplicationController
     Q_OBJECT
 public:
     Q_INVOKABLE
-    TagController() { }
-    TagController(const TagController &other);
+    TagController() : ApplicationController() {}
 
 public slots:
     void index();
@@ -31,7 +30,5 @@ public slots:
 private:
     TagService service {};
 };
-
-T_DECLARE_CONTROLLER(TagController, tagcontroller)
 
 #endif // TAGCONTROLLER_H

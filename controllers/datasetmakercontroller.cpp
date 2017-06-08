@@ -3,11 +3,6 @@
 #include <QtCore>
 
 
-DatasetMakerController::DatasetMakerController(const DatasetMakerController&)
-: ApplicationController()
-{
-}
-
 void DatasetMakerController::index()
 {
     const QList<TagGroup> allGroups = TagService().allGroups();

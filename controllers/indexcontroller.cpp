@@ -1,10 +1,6 @@
 #include "indexcontroller.h"
 
 
-IndexController::IndexController()
-    : ApplicationController()
-{ }
-
 void IndexController::index()
 {
     render();

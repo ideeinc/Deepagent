@@ -9,8 +9,7 @@ class T_CONTROLLER_EXPORT SolverProtoController : public ApplicationController
     Q_OBJECT
 public:
     Q_INVOKABLE
-    SolverProtoController();
-    SolverProtoController(const SolverProtoController &other);
+    SolverProtoController() : ApplicationController() {}
 
 public slots:
     void index();

@@ -5,12 +5,6 @@
 const QString kTagImageListKey = "Tag_ImageListKey";
 
 
-TagController::TagController(const TagController&)
-    : ApplicationController()
-{
-}
-
-
 void TagController::index()
 {
     const QList<TagGroup> allGroups = service.allGroups();
@@ -306,4 +300,4 @@ void TagController::batchUpdate()
     }
 }
 
-T_REGISTER_CONTROLLER(tagcontroller)
+T_DEFINE_CONTROLLER(TagController)

@@ -9,7 +9,7 @@ class T_CONTROLLER_EXPORT LogTailEndpoint : public ApplicationEndpoint
     Q_OBJECT
 public:
     Q_INVOKABLE
-    LogTailEndpoint();
+    LogTailEndpoint() : ApplicationEndpoint() {}
 
 protected:
     bool onOpen(const TSession &httpSession);

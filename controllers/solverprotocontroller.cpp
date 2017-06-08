@@ -2,10 +2,6 @@
 #include "solverproto.h"
 
 
-SolverProtoController::SolverProtoController()
-    : ApplicationController()
-{ }
-
 void SolverProtoController::index()
 {
     QList<SolverProto> solverProtoList = SolverProto::getAll();

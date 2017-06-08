@@ -34,10 +34,6 @@ void Tailer::job()
 }
 
 
-LogTailEndpoint::LogTailEndpoint()
-    : ApplicationEndpoint()
-{ }
-
 bool LogTailEndpoint::onOpen(const TSession &sess)
 {
     if (sess.isEmpty()) {

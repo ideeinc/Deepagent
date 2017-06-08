@@ -9,7 +9,7 @@ class T_CONTROLLER_EXPORT IndexController : public ApplicationController
     Q_OBJECT
 public:
     Q_INVOKABLE
-    IndexController();
+    IndexController() : ApplicationController() {}
 
 public slots:
     void index();
