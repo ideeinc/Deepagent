@@ -35,7 +35,7 @@
 <div>データセット名称: <input type="text" name="datasetName" value="<%= QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss") %>" /></div>
 <div>作成タイプ: <select name="layoutType"><option value="classification">分類用</option><option value="detection">物体検出用</option></select></div>
 <div>画像サイズ: <input type="text" name="imageSize[w]" value="300" size="4" /> x <input type="text" name="imageSize[h]" value="300" size="4" /></div>
-<div>出力形式: <select name="archiveType"><option value="tar">圧縮（tar）</option><option value="lmdb" disabled="disabled">データベース（lmdb）</option></select></div>
+<div>出力形式: <select name="archiveType"><option value="tar">圧縮（tar）</option><option value="lmdb">データベース（lmdb）</option></select></div>
 <div>データ水増し: <input type="text" name="augmentationRate" value="1" size="4" />倍</div>
 <div>検証データ割合: <input type="text" name="validationRate" value="20" size="4" />%</div>
 </fieldset>

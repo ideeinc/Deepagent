@@ -268,13 +268,19 @@ namespace {
 
         QProcess tar;
         tar.start("tar", {"czfh", destinationPath, "-C", QFileInfo(sourceDir).dir().absolutePath(), destinationName});
-        tar.waitForFinished();
+        tar.waitForFinished(-1);
 
         return destinationPath;
     }
-    QString archiveByLMDB(const QString& /* sourceDir */, const QString& /* destinationDir */, const QString& /* destinationName */)
+    QString archiveByLMDB(const QString& sourceDir, const QString& destinationDir, const QString& destinationName)
     {
-        return "";
+        QDir().mkpath(destinationDir);
+        const QString destinationPath = QDir(destinationDir).absoluteFilePath(destinationName);
+
+        /* TODO: currently just a simple move operation */
+        QFile::rename(sourceDir, destinationPath);
+
+        return destinationPath;
     }
 }
 namespace {

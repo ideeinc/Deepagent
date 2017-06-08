@@ -194,15 +194,15 @@ QMap<QString, QStringList> TagService::extractImages(const QList<TMimeEntity>& f
         const QString contentType = f.contentType();
         if ((extension == "zip") || (contentType == "application/zip") || (contentType == "application/x-zip-compressed")) {
             inflator.start("unzip", { f.uploadedFilePath(), "-d", workPath });
-            inflator.waitForFinished();
+            inflator.waitForFinished(-1);
         }
         else if ((extension == "tar") || (contentType == "application/x-tar")) {
             inflator.start("tar", { "xf", f.uploadedFilePath(), "-C", workPath });
-            inflator.waitForFinished();
+            inflator.waitForFinished(-1);
         }
         else if ((extension == "tar.gz") || (contentType == "application/x-gzip") || (contentType == "application/gzip")) {
             inflator.start("tar", { "xf", f.uploadedFilePath(), "-C", workPath });
-            inflator.waitForFinished();
+            inflator.waitForFinished(-1);
         }
         else if (contentType == "image/jpeg") {
             const_cast<TMimeEntity*>(&f)->renameUploadedFile(QDir(workPath).filePath(originalName));

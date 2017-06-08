@@ -11,7 +11,7 @@
 
 <%
     const QFileInfo file(container.path);
-    if (file.exists()) {
+    if (file.exists() && file.isFile()) {
         echo("<p>" + linkTo("ダウンロード", urla("download", file.fileName())) + "</p>");
     }
 %>
