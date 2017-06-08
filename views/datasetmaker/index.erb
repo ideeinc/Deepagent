@@ -55,6 +55,16 @@
                 return false;
             }
         });
+
+        $('input:button[name^=removeArchive]').on('click', function(e) {
+            var archiveName = $(this).attr('name').replace(/^removeArchive\[(.+)\]$/, '$1');
+            $.ajax({
+                url: '<%= urla("remove") %>/' + archiveName,
+                complete: function() {
+                    window.location.reload();
+                }
+            });
+        });
   });
   </script>
 </head>
@@ -91,6 +101,18 @@
 <div style="text-align: right;"><%== submitTag("　この構成で表示　", THtmlAttribute("name", "preview")) %></div>
 <%== endTag() %>
 </div>
+
+<% if (container.archives.count() > 0) { %>
+<br />
+<fieldset>
+<legend>過去のアーカイブ</legend>
+<ul>
+<% for (const QString& archiveName : container.archives) {
+    echo("<li>" + linkTo(archiveName, urla("download", archiveName)) + "　<input type=\"button\" name=\"removeArchive[" + archiveName + "]\" value=\"　削除　\" />" + "</li>");
+} %>
+</ul>
+</fieldset>
+<% } %>
 
 </body>
 </html>

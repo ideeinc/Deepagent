@@ -20,29 +20,34 @@
 </tr>
 <% for (const QVariant& v : container.list) {
     const QMap<QString, QVariant> m = v.toMap();
+    const QString identifier = m["name"].toString();
     echo("<tr>");
-    echo("<td>" + checkBoxTag("", "", true) + "</td>");
-    echo("<td>" + inputTextTag("", m["name"].toString(), THtmlAttribute("size", "50")) + "</td>");
+    echo("<td>" + checkBoxTag("includes[" + identifier + "]", identifier, true) + "</td>");
+    echo("<td>" + inputTextTag("labelNames[" + identifier + "]", identifier, THtmlAttribute("size", "50")) + "</td>");
     echo("<td>" + m["displayName"].toString() + "</td>");
-    echo("<td>" + QString::number(m["images"].toList().count()) + "</td>");
+    echo("<td style=\"text-align: right;\">" + QString::number(m["images"].toList().count()) + "</td>");
     echo("</tr>");
 } %>
 </table>
 <p>
 <fieldset>
 <legend>作成オプション</legend>
-<div>データセット名称: <input type="text" name="datasetName" value="" /></div>
+<div>データセット名称: <input type="text" name="datasetName" value="<%= QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss") %>" /></div>
 <div>作成タイプ: <select name="layoutType"><option value="classification">分類用</option><option value="detection">物体検出用</option></select></div>
+<div>画像サイズ: <input type="text" name="imageSize[w]" value="300" size="4" /> x <input type="text" name="imageSize[h]" value="300" size="4" /></div>
+<div>出力形式: <select name="archiveType"><option value="tar">圧縮（tar）</option><option value="lmdb" disabled="disabled">データベース（lmdb）</option></select></div>
 <div>データ水増し: <input type="text" name="augmentationRate" value="1" size="4" />倍</div>
 <div>検証データ割合: <input type="text" name="validationRate" value="20" size="4" />%</div>
 </fieldset>
 </p>
-<div><%== submitTag("　作成　") %></div>
+<div style="width: 100%; text-align: right;"><%== submitTag("　作成　") %></div>
 <%== endTag() %>
 <% } else { %>
 <h3>No images</h3>
-<%== linkTo("<< 戻る", urla("index")) %>
+<div>条件に一致する画像はありません</div>
 <% } %>
+
+<p><%== linkTo("<< 戻る", urla("index")) %></p>
 
 </body>
 </html>

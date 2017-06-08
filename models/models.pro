@@ -1,7 +1,7 @@
 TARGET = model
 TEMPLATE = lib
 CONFIG += shared c++11 x86_64
-QT += sql xml
+QT += sql xml concurrent
 QT -= gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += qml
 DEFINES += TF_DLL USE_OPENCV
@@ -58,6 +58,7 @@ HEADERS += containers/taggedimageinfocontainer.h
 HEADERS += containers/uploadresultcontainer.h
 HEADERS += containers/datasetmakerindexcontainer.h
 HEADERS += containers/datasetmakerpreviewcontainer.h
+HEADERS += containers/datasetmakerresultcontainer.h
 
 HEADERS += image.h
 SOURCES += image.cpp

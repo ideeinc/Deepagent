@@ -91,6 +91,18 @@ QStringList Tag::imageNames() const
     return names;
 }
 
+QStringList Tag::imagePaths() const
+{
+    QStringList paths;
+
+    const QDir dir = QDir(_baseDir.filePath(_name)).absolutePath();
+    for (const QFileInfo& p : dir.entryInfoList({"*.jpg", "*.jpeg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot)) {
+        paths << QFile::symLinkTarget(p.absoluteFilePath());
+    }
+
+    return paths;
+}
+
 bool Tag::hasImage(const QString& filename) const
 {
     return QDir(_baseDir.filePath(_name)).exists(filename);

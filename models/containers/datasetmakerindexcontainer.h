@@ -9,6 +9,7 @@ class DatasetMakerIndexContainer
 {
 public:
     QList<Tag> excludes;
+    QStringList archives;
 };
 
 Q_DECLARE_METATYPE(DatasetMakerIndexContainer)

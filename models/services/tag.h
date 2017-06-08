@@ -22,6 +22,7 @@ public:
     long countOfImages() const;
     QStringList images() const;
     QStringList imageNames() const;
+    QStringList imagePaths() const;
     bool hasImage(const QString&) const;
 
     void setDisplayName(const QString& displayName) const;

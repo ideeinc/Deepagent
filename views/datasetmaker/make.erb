@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<%#include "containers/datasetmakerresultcontainer.h" %>
+<% tfetch(DatasetMakerResultContainer, container) %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+
+<%
+    const QFileInfo file(container.path);
+    if (file.exists()) {
+        echo("<p>" + linkTo("ダウンロード", urla("download", file.fileName())) + "</p>");
+    }
+%>
+
+<p><%== linkTo("<< 戻る", urla("index")) %></p>
+
+</body>
+</html>
+

@@ -16,6 +16,12 @@ public:
 public slots:
     void index();
     void preview();
+    void make();
+    void download(const QString&);
+    void remove(const QString&);
+
+    void check(const QString&);
+    void result(const QString&);
 
 private:
     DatasetMakerService service {};
