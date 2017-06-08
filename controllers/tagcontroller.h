@@ -15,7 +15,7 @@ public:
 
 public slots:
     void index();
-    void edit(const QString& groupName);
+    void show(const QString& groupName);
     void show(const QString& groupName, const QString& tagName);
     void show(const QString& groupName, const QString& tagName, const QString& index);
     void upload();

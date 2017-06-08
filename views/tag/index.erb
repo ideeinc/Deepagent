@@ -61,20 +61,13 @@
 </head>
 <body>
 
-<h2>タグ一覧</h2>
+<h2>グループ一覧</h2>
 
-<div style="display: inline;">
-<% for (const auto& group : allGroups) { %>
-<div style="display: inline-table; border: 1px solid black;">
-<span><%== linkTo(group.name(), urla("edit", group.name())) %></span>
 <ul>
-<% for (const auto& tag : group.tags()) { %>
-<li><%== linkTo(tag.displayName(), urla("show", QStringList({group.name(), tag.name()}) )) %> (<%= tag.countOfImages() %>)</li>
+<% for (const auto& group : allGroups) { %>
+<li><%== linkTo(group.name(), urla("show", group.name())) %> (<%= group.tags().count() %>)</li>
 <% } %>
 </ul>
-</div>
-<% } %>
-</div>
 
 <p>
 <h2>新規グループ</h2>

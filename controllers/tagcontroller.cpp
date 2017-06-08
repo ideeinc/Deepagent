@@ -19,12 +19,18 @@ void TagController::index()
 }
 
 
-void TagController::edit(const QString& groupName)
+void TagController::show(const QString& groupName)
 {
     TagGroup group(groupName);
-    texport(group);
-    render();
+    if (group.exists()) {
+        texport(group);
+        render("showGroup");
+    }
+    else {
+        redirect(urla("index"));
+    }
 }
+
 
 void TagController::show(const QString& groupName, const QString& tagName)
 {
@@ -104,7 +110,13 @@ void TagController::create()
         if (target == "tag") {
             service.createTag(httpRequest().formItemValue("parentGroup"), httpRequest().formItemValue("tagId"), httpRequest().formItemValue("tagDisplayName"));
         }
-        redirect(urla("index"));
+
+        const QUrl back = httpRequest().formItemValue("backToURL");
+        if (! back.isEmpty()) {
+            redirect(back);
+        } else {
+            redirect(urla("index"));
+        }
     }
     else {
         renderErrorResponse(Tf::NotAcceptable);

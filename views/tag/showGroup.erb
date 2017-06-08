@@ -51,24 +51,66 @@
             }
             return false;
         });
+
+      $('input:submit[name=create]').on('click', function(e){
+            var error = '';
+            var usedTags = [ <% for (const Tag& t : group.tags()) {
+                echo("'" + t.name() + "', ");
+            } %> ];
+            var tagId = $('input:text[name=tagId]').val();
+            if (tagId.length < 1) {
+                error = 'タグIDは必須です';
+            } else if ($.inArray(tagId, usedTags) >= 0) {
+                error = 'タグID "' + tagId + '" は "<%= group.name() %>" グループですでに使われています';
+            } else if (! tagId.match(/^[a-z0-9_\-]+$/)) {
+                error = 'タグIDには半角英数小文字のみ使えます';
+            }
+            if (error.length > 0) {
+                e.preventDefault();
+                window.alert(error);
+                return false;
+            }
+      });
     });
   </script>
 </head>
 <body>
 
-<h1>Edit Group</h1>
+<h2>グループ: <%= group.name() %> のタグ一覧</h2>
 
+<fieldset>
+<legend>グループ名称の変更</legend>
 <%== formTag(urla("updateGroup"), Tf::Post) %>
 <input type="hidden" name="sourceName" value="<%= group.name() %>" />
 <div>
-    <label>Group Name<br />
-    <input type="text" name="destinationName" value="<%= group.name() %>" /></label>
+    <input type="text" name="destinationName" value="<%= group.name() %>" />
     <input type="submit" name="updateGroup" value="更新" />
     <input type="submit" name="destroyGroup" value="削除" />
 </div>
 <%== endTag("form") %>
+</fieldset>
 
-<p><%== linkTo("Back", urla("index")) %></p>
+<fieldset>
+<legend>新規タグ</legend>
+<div>
+<%== formTag(urla("create")) %>
+<input type="hidden" name="target" value="tag" />
+<input type="hidden" name="parentGroup" value="<%= group.name() %>" />
+<input type="hidden" name="backToURL" value="<%= urla("show", group.name()) %>" />
+<div>表示名: <%== inputTextTag("tagDisplayName", "", THtmlAttribute("placeholder", "（任意）")) %> （任意）</div>
+<div>タグID: <%== inputTextTag("tagId", "", THtmlAttribute("placeholder", "（必須: 半角英数小文字）")) %> （必須: 半角英数小文字）</div>
+<div><%== inputTag("submit", "create", "　新規タグ作成　") %></div>
+<%== endTag() %>
+</div>
+</fieldset>
+
+<ul>
+<% for (const Tag& t : group.tags()) { %>
+<li><%== linkTo(t.displayName(), urla("show", { group.name(), t.name() })) %> (<%= t.countOfImages() %>)</li>
+<% } %>
+</ul>
+
+<p><%== linkTo("<< 戻る", urla("index")) %></p>
 
 </body>
 </html>

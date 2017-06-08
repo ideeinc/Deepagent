@@ -64,7 +64,7 @@
                 change: { name: name, displayName: displayName, groupName: groupName }
             };
             if ((groupName != '<%= container.groupName %>') || (name != '<%= container.name %>') || (displayName != '<%= container.displayName %>')) {
-                if (allGroups.hasOwnProperty(groupName) && ($.inArray(name, allGroups[groupName]) > -1)) {
+                if (allGroups.hasOwnProperty(groupName) && (name != '<%= container.name %>') && ($.inArray(name, allGroups[groupName]) > -1)) {
                     window.alert('タグID "' + name + '" は "' + groupName + '" グループですでに使われています');
                     return false;
                 }
@@ -85,7 +85,7 @@
             if (window.confirm("画像からタグが１つもなくなる可能性があります。この操作を実行しますか？")) {
                 var data = { target: 'tag', group: '<%= container.groupName %>', name: '<%= container.name %>' };
                 $.ajax({ type: 'post', url: '<%= urla("destroy") %>', data: JSON.stringify(data), contentType: 'application/json', scriptCharset: 'utf-8', success: function(data) {
-                    window.location.href = '<%= urla("index") %>';
+                    window.location.href = '<%= urla("show", container.groupName) %>';
                 }, error: function(data) {
                 } });
             }
@@ -151,9 +151,9 @@
 </head>
 <body>
 
-<h2>タグ: <%= container.displayName %> の画像一覧</h2>
+<h2>タグ: <%= container.groupName %> &gg; <%= container.displayName %> の画像一覧</h2>
 
-<p><%== linkTo("<< 一覧へ戻る", urla("index")) %></p>
+<p><%== linkTo("<< 一覧へ戻る", urla("show", container.groupName)) %></p>
 
 <p>
 <fieldset>
@@ -236,7 +236,7 @@
 </fieldset>
 <% } %>
 
-<p><%== linkTo("<< 一覧へ戻る", urla("index")) %></p>
+<p><%== linkTo("<< 一覧へ戻る", urla("show", container.groupName)) %></p>
 
 </body>
 </html>
