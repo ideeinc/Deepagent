@@ -13,6 +13,12 @@ Dataset::Dataset()
     d->train_db_path = "train_db";
     d->val_db_path = "val_db";
     d->log_file = "create_db.log";
+    // For detectoin
+    d->num_classes = 0;
+    d->num_train_image = 0;
+    d->num_val_image = 0;
+    d->name_size_file = "name_size.txt";
+    d->label_map_file = "labelmap.txt";
     CaffeData::setDataType(className<Dataset>());
 }
 
@@ -20,25 +26,11 @@ Dataset::Dataset(const Dataset &other)
     : CaffeData(*(CaffeData*)&other), d(new DatasetObject(*other.d))
 { }
 
-// Dataset::Dataset(const DatasetObject &object)
-//     : CaffeData(), d(new DatasetObject(object))
-// { }
-
 Dataset::~Dataset()
 {
     // If the reference count becomes 0,
     // the shared data object 'DatasetObject' is deleted.
 }
-
-// QString Dataset::id() const
-// {
-//     return d->id;
-// }
-
-// void Dataset::setId(const QString &id)
-// {
-//     d->id = id;
-// }
 
 int Dataset::imageWidth() const
 {
@@ -110,28 +102,57 @@ void Dataset::setLogFile(const QString &logFile)
     d->log_file = logFile;
 }
 
+int Dataset::numClasses() const
+{
+    return d->num_classes;
+}
+
+void Dataset::setNumClasses(int numClasses)
+{
+    d->num_classes = numClasses;
+}
+
+void Dataset::setNumTrainImage(int numTrainImage)
+{
+   d->num_train_image = numTrainImage;
+}
+
+int Dataset::numValImage() const
+{
+    return d->num_val_image;
+}
+
+void Dataset::setNumValImage(int numValImage)
+{
+    d->num_val_image = numValImage;
+}
+
+QString Dataset::nameSizeFile() const
+{
+    return d->name_size_file;
+}
+
+void Dataset::setNameSizeFile(const QString &nameSizeFile)
+{
+    d->name_size_file = nameSizeFile;
+}
+
+QString Dataset::labelMapFile() const
+{
+    return d->label_map_file;
+}
+
+void Dataset::setLabelMapFile(const QString &labelMapFile)
+{
+    d->label_map_file = labelMapFile;
+}
+
 Dataset &Dataset::operator=(const Dataset &other)
 {
     CaffeData::operator=(other);
     d = other.d;  // increments the reference count of the data
     return *this;
 }
-
-// Dataset Dataset::create(const QString &id, int imageWidth, int imageHeight, const QString &meanFile, const QString &labelFile, const QString &valDbPath, const QString &logFile)
-// {
-//     DatasetObject obj;
-//     obj.id = id;
-//     obj.image_width = imageWidth;
-//     obj.image_height = imageHeight;
-//     obj.mean_file = meanFile;
-//     obj.label_file = labelFile;
-//     obj.val_db_path = valDbPath;
-//     obj.log_file = logFile;
-//     if (!obj.create()) {
-//         return Dataset();
-//     }
-//     return Dataset(obj);
-// }
 
 bool Dataset::create()
 {

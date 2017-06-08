@@ -14,6 +14,12 @@
 
 <%== formTag(urla("create"), Tf::Post) %>
   <p>
+    <label>Category<br /><input name="dataset[category]" value="<%= dataset["category"] %>" /></label>
+  </p>
+  <p>
+    <label>State<br /><input name="dataset[state]" value="<%= dataset["state"] %>" /></label>
+  </p>
+  <p>
     <label>Image Width<br /><input name="dataset[imageWidth]" value="<%= dataset["imageWidth"] %>" /></label>
   </p>
   <p>

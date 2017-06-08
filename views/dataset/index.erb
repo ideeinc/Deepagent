@@ -13,26 +13,28 @@
 <br />
 <table border="1" cellpadding="5" style="border: 1px #d0d0d0 solid; border-collapse: collapse;">
   <tr>
-    <th>Image Width</th>
-    <th>Image Height</th>
+    <th>ID</th>
+    <th>Category</th>
+    <th>State</th>
+    <th>Width x Height</th>
     <th>Mean File</th>
     <th>Label File</th>
     <th>Train Db Path</th>
     <th>Val Db Path</th>
     <th>Log File</th>
-    <th>ID</th>
   </tr>
 <% tfetch(QList<Dataset>, datasetList); %>
 <% for (const auto &i : datasetList) { %>
   <tr>
-    <td><%= i.imageWidth() %></td>
-    <td><%= i.imageHeight() %></td>
+    <td><%= i.id() %></td>
+    <td><%= i.category() %></td>
+    <td><%= i.state() %></td>
+    <td><%= i.imageWidth() %>x<%= i.imageHeight() %></td>
     <td><%= i.meanFile() %></td>
     <td><%= i.labelFile() %></td>
     <td><%= i.trainDbPath() %></td>
     <td><%= i.valDbPath() %></td>
     <td><%= i.logFile() %></td>
-    <td><%= i.id() %></td>
     <td>
       <%== linkTo("Show", urla("show", i.id())) %>
       <%== linkTo("Edit", urla("save", i.id())) %>

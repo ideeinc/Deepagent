@@ -18,11 +18,8 @@ class T_MODEL_EXPORT Dataset : public CaffeData
 public:
     Dataset();
     Dataset(const Dataset &other);
-    //Dataset(const DatasetObject &object);
     ~Dataset();
 
-    // QString id() const;
-    // void setId(const QString &id);
     int imageWidth() const;
     void setImageWidth(int imageWidth);
     int imageHeight() const;
@@ -37,6 +34,18 @@ public:
     void setValDbPath(const QString &valDbPath);
     QString logFile() const;
     void setLogFile(const QString &logFile);
+
+    // For detection
+    int numClasses() const;
+    void setNumClasses(int numClasses);
+    int numTrainImage() const;
+    void setNumTrainImage(int numTrainImage);
+    int numValImage() const;
+    void setNumValImage(int numValImage);
+    QString nameSizeFile() const;
+    void setNameSizeFile(const QString &nameSizeFile);
+    QString labelMapFile() const;
+    void setLabelMapFile(const QString &labelMapFile);
     Dataset &operator=(const Dataset &other);
 
     bool create() override;
@@ -46,12 +55,10 @@ public:
     QVariantMap toVariantMap() const override;
     void clear() override;
 
-    //static Dataset create(const QString &id, int imageWidth, int imageHeight, const QString &meanFile, const QString &labelFile, const QString &valDbPath, const QString &logFile);
     static Dataset create(const QVariantMap &values);
     static Dataset get(const QString &id);
     static int count();
     static QList<Dataset> getAll();
-    //static QJsonArray getAllJson();
 
 private:
     QSharedDataPointer<DatasetObject> d;

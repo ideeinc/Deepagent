@@ -15,6 +15,11 @@ public:
     QString train_db_path;
     QString val_db_path;
     QString log_file;
+    int num_classes {0};
+    int num_train_image {0};
+    int num_val_image {0};
+    QString name_size_file;
+    QString label_map_file;
 
     enum PropertyIndex {
         ImageWidth = 0,
@@ -24,6 +29,11 @@ public:
         TrainDbPath,
         ValDbPath,
         LogFile,
+        NumClasses,
+        NumTrainImage,
+        NumValImage,
+        NameSizeFile,
+        LabelMapFile,
     };
 
     int primaryKeyIndex() const override { return -1; }
@@ -46,6 +56,16 @@ private:    /*** Don't modify below this line ***/
     T_DEFINE_PROPERTY(QString, val_db_path)
     Q_PROPERTY(QString log_file READ getlog_file WRITE setlog_file)
     T_DEFINE_PROPERTY(QString, log_file)
+    Q_PROPERTY(int num_classes READ getnum_classes WRITE setnum_classes)
+    T_DEFINE_PROPERTY(int, num_classes)
+    Q_PROPERTY(int num_train_image READ getnum_train_image WRITE setnum_train_image)
+    T_DEFINE_PROPERTY(int, num_train_image)
+    Q_PROPERTY(int num_val_image READ getnum_val_image WRITE setnum_val_image)
+    T_DEFINE_PROPERTY(int, num_val_image)
+    Q_PROPERTY(QString name_size_file READ getname_size_file WRITE setname_size_file)
+    T_DEFINE_PROPERTY(QString, name_size_file)
+    Q_PROPERTY(QString label_map_file READ getlabel_map_file WRITE setlabel_map_file)
+    T_DEFINE_PROPERTY(QString, label_map_file)
 };
 
 #endif // DATASETOBJECT_H
