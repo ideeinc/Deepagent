@@ -30,6 +30,24 @@ void TrainController::create()
     }
 }
 
+void TrainController::createSsd()
+{
+    switch (httpRequest().method()) {
+    case Tf::Get: {
+        render();
+        break; }
+
+    case Tf::Post: {
+        auto id = service.create(httpRequest());
+        redirect(urla("show", QStringList(id)));
+        break; }
+
+    default:
+        renderErrorResponse(Tf::NotFound);
+        break;
+    }
+}
+
 void TrainController::show(const QString &id)
 {
     switch (httpRequest().method()) {

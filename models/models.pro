@@ -52,6 +52,7 @@ HEADERS += containers/boundingboxsettingcontainer.h
 HEADERS += containers/trainindexcontainer.h
 HEADERS += containers/traincreatecontainer.h
 SOURCES += containers/traincreatecontainer.cpp
+HEADERS += containers/traincreatessdcontainer.h
 HEADERS += containers/trainshowcontainer.h
 HEADERS += containers/taginfocontainer.h
 HEADERS += containers/taggedimageinfocontainer.h

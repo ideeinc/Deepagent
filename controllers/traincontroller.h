@@ -15,6 +15,7 @@ public:
 public slots:
     void index();
     void create();
+    void createSsd();
     void show(const QString &id);
     void clone(const QString &id);
     void remove(const QString &id);

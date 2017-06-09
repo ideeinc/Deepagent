@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<%#include "containers/traincreatessdcontainer.h" %>
+<% tfetch(TrainCreateSsdContainer, container); %>
+<% auto &ssdParam = container.ssdParam; %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+<p style="color: red"><%=$ error %></p>
+<p style="color: green"><%=$ notice %></p>
+
+<h1>New SSD Train Model</h1>
+
+<p><%=$ message %></p>
+
+<%== formTag(urla("create"), Tf::Post) %>
+  <p>
+    <label>name<br /><input name="ssdParam[name]" value="<%= ssdParam["name"] %>" /></label>
+  </p>
+  <div>
+    <label for="ssdParam[dataset]">Select Dataset for SSD<br />
+      <select name="ssdParam[dataset]" size=5>
+        <option>その1</option>
+        <option>その2</option>
+        <option>その3</option>
+      </select>
+    </label>
+  </p>
+  </div>
+  <div>
+    <label for="ssdParam[pretrained]">Select a pretrained model<br />
+      <select name="ssdParam[pretrained]" size=5>
+        <option>その1</option>
+        <option>その2</option>
+        <option>その3</option>
+      </select>
+    </label>
+  </p>
+  </div>
+  <p>
+    <label for="ssdParam[trainEpochs]">Training epochs</label><br><input name="ssdParam[trainEpochs]" type="text" value="100"/>
+  </p>
+  <p>
+    <label for="ssdParam[snapshot]">Snapshot interval</label><br><input name="ssdParam[snapshot]" type="text" value="100"/>
+  </p>
+  <p>
+    <label for="ssdParam[valInterval]">Validation interval</label><br><input name="ssdParam[valInterval]" type="text" value="100"/>
+  </p>
+  <p>
+    <label for="ssdParam[batchSize]">Batch size</label><br><input name="ssdParam[batchSize]" type="text" value="16"/>
+  </p>
+  <p>
+    <label for="ssdParam[gpus]">Specify ID(s) of GPU</label><br><input name="ssdParam[gpus]" type="text" value="0"/>
+  </p>
+  <p>
+    <input type="submit" value="Train" />
+  </p>
+</form>
+
+<%== linkTo("Back", urla("index")) %>
+
+</body>
+</html>
