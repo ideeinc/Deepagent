@@ -17,25 +17,11 @@ CaffeModel::CaffeModel(const CaffeModel &other)
     : CaffeData(*(CaffeData*)&other), d(new CaffeModelObject(*other.d))
 { }
 
-// CaffeModel::CaffeModel(const CaffeModelObject &object)
-//     : CaffeData(), d(new CaffeModelObject(object))
-// { }
-
 CaffeModel::~CaffeModel()
 {
     // If the reference count becomes 0,
     // the shared data object 'CaffeModelObject' is deleted.
 }
-
-// QString CaffeModel::id() const
-// {
-//     return d->id;
-// }
-
-// void CaffeModel::setId(const QString &id)
-// {
-//     d->id = id;
-// }
 
 QString CaffeModel::datasetId() const
 {
@@ -79,12 +65,8 @@ void CaffeModel::setSolverFile(const QString &solverFile)
 
 QString CaffeModel::solverPrototxt() const
 {
-    return d->solver_prototxt;
-}
-
-void CaffeModel::setSolverPrototxt(const QString &solverPrototxt)
-{
-    d->solver_prototxt = solverPrototxt;
+    auto txt = readFile(dirPath() % solverFile());
+    return QString::fromUtf8(txt);
 }
 
 QString CaffeModel::trainFile() const
@@ -99,12 +81,8 @@ void CaffeModel::setTrainFile(const QString &trainFile)
 
 QString CaffeModel::trainPrototxt() const
 {
-    return d->train_prototxt;
-}
-
-void CaffeModel::setTrainPrototxt(const QString &trainPrototxt)
-{
-    d->train_prototxt = trainPrototxt;
+    auto txt = readFile(dirPath() % trainFile());
+    return QString::fromUtf8(txt);
 }
 
 QString CaffeModel::deployFile() const
@@ -119,12 +97,8 @@ void CaffeModel::setDeployFile(const QString &deployFile)
 
 QString CaffeModel::deployPrototxt() const
 {
-    return d->deploy_prototxt;
-}
-
-void CaffeModel::setDeployPrototxt(const QString &deployPrototxt)
-{
-    d->deploy_prototxt = deployPrototxt;
+    auto txt = readFile(dirPath() % deployFile());
+    return QString::fromUtf8(txt);
 }
 
 QString CaffeModel::networkFile() const
@@ -139,20 +113,16 @@ void CaffeModel::setNetworkFile(const QString &networkFile)
 
 QString CaffeModel::networkPrototxt() const
 {
-    return d->network_prototxt;
+    auto txt = readFile(dirPath() % networkFile());
+    return QString::fromUtf8(txt);
 }
 
-void CaffeModel::setNetworkPrototxt(const QString &networkPrototxt)
-{
-    d->network_prototxt = networkPrototxt;
-}
-
-QString CaffeModel::trainedModelFiles() const
+QStringList CaffeModel::trainedModelFiles() const
 {
     return d->trained_model_files;
 }
 
-void CaffeModel::setTrainedModelFiles(const QString &trainedModelFiles)
+void CaffeModel::setTrainedModelFiles(const QStringList &trainedModelFiles)
 {
     d->trained_model_files = trainedModelFiles;
 }
@@ -295,12 +265,12 @@ void CaffeModel::clear()
 CaffeModel CaffeModel::get(const QString &id)
 {
     CaffeModel model = CaffeData::get<CaffeModel>(id);
-    if (! model.isNull()) {
-        model.setSolverPrototxt(model.dirPath() + model.solverFile());
-        model.setTrainPrototxt(model.dirPath() + model.trainFile());
-        model.setDeployPrototxt(model.dirPath() + model.deployFile());
-        model.setNetworkPrototxt(model.dirPath() + model.networkFile());
-    }
+    // if (! model.isNull()) {
+    //     model.setSolverPrototxt(model.dirPath() + model.solverFile());
+    //     model.setTrainPrototxt(model.dirPath() + model.trainFile());
+    //     model.setDeployPrototxt(model.dirPath() + model.deployFile());
+    //     model.setNetworkPrototxt(model.dirPath() + model.networkFile());
+    // }
     return model;
 }
 

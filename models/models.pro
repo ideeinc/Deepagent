@@ -42,6 +42,8 @@ HEADERS += logics/formatconverter.h
 SOURCES += logics/formatconverter.cpp
 HEADERS += logics/prediction.h
 SOURCES += logics/prediction.cpp
+HEADERS += logics/ssddetector.h
+SOURCES += logics/ssddetector.cpp
 HEADERS += logics/roccurve.h
 SOURCES += logics/roccurve.cpp
 
@@ -53,6 +55,7 @@ HEADERS += containers/trainindexcontainer.h
 HEADERS += containers/traincreatecontainer.h
 SOURCES += containers/traincreatecontainer.cpp
 HEADERS += containers/traincreatessdcontainer.h
+HEADERS += containers/traindetectcontainer.h
 HEADERS += containers/trainshowcontainer.h
 HEADERS += containers/taginfocontainer.h
 HEADERS += containers/taggedimageinfocontainer.h

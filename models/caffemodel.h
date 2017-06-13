@@ -18,11 +18,8 @@ class T_MODEL_EXPORT CaffeModel : public CaffeData
 public:
     CaffeModel();
     CaffeModel(const CaffeModel &other);
-    //CaffeModel(const CaffeModelObject &object);
     ~CaffeModel();
 
-    // QString id() const;
-    // void setId(const QString &id);
     QString datasetId() const;
     void setDatasetId(const QString &datasetId);
     QString meanFile() const;
@@ -30,35 +27,28 @@ public:
     QString meanData() const;
     void setMeanData(const QString &meanData);
     QString solverFile() const;
+    QString solverFilePath() const { return dirPath() % solverFile(); }
     void setSolverFile(const QString &solverFile);
     QString solverPrototxt() const;
-    void setSolverPrototxt(const QString &solverPrototxt);
     QString trainFile() const;
+    QString trainFilePath() const { return dirPath() % trainFile(); }
     void setTrainFile(const QString &trainFile);
     QString trainPrototxt() const;
-    void setTrainPrototxt(const QString &trainPrototxt);
     QString deployFile() const;
+    QString deployFilePath() const { return dirPath() % deployFile(); }
     void setDeployFile(const QString &deployFile);
     QString deployPrototxt() const;
-    void setDeployPrototxt(const QString &deployPrototxt);
     QString networkFile() const;
+    QString networkFilePath() const { return dirPath() % networkFile(); }
     void setNetworkFile(const QString &networkFile);
     QString networkPrototxt() const;
-    void setNetworkPrototxt(const QString &networkPrototxt);
-    QString trainedModelFiles() const;
-    void setTrainedModelFiles(const QString &trainedModelFiles);
+    QStringList trainedModelFiles() const;
+    QString trainedModelFilePath(const QString &trainedModelFile) const { return dirPath() % trainedModelFile; }
+    void setTrainedModelFiles(const QStringList &trainedModelFiles);
     QString logFile() const;
     void setLogFile(const QString &logFile);
     CaffeModel &operator=(const CaffeModel &other);
 
-    // QString solverPrototxt() const;
-    // void setSolverPrototxt(const QString &prototxt);
-    // QString trainPrototxt() const;
-    // void setTrainPrototxt(const QString &prototxt);
-    // QString deployPrototxt() const;
-    // void setDeployPrototxt(const QString &prototxt);
-    // QString networkPrototxt() const;
-    // void setNetworkPrototxt(const QString &prototxt);
     QString solverPrototxtPath() const;
     QString caffeInfoLogPath() const;
 
@@ -69,7 +59,6 @@ public:
     QVariantMap toVariantMap() const override;
     void clear();
 
-    //static CaffeModel create(const QString &id, const QString &datasetId, const QString &meanFile, const QString &solverFile, const QString &trainFile, const QString &deployFile, const QString &networkFile, const QString &trainedModelFiles, const QString &logFile);
     static CaffeModel create(const QVariantMap &values);
     static CaffeModel get(const QString &id);
     //static int count();

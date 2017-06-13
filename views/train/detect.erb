@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<%#include "containers/trainshowcontainer.h" %>
+<% tfetch(TrainShowContainer, container); %>
+<% const auto &caffeModel = container.caffeModel; %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+<p style="color: red"><%=$ error %></p>
+<p style="color: green"><%=$ notice %></p>
+
+<h1>検出</h1>
+
+<%== formTag(urla("detect", caffeModel.id() ), Tf::Post, true) %>
+  <p>
+    <label>アップロード画像ファイル: <input name="imageFile" value="" type="file" /></label>
+  </p>
+  <p>
+    <label>mean value: <input name="meanValue" value="53,74,144" /></label>
+  </p>
+  <p>
+    <label for="trainedModel">Select a trained model<br />
+      <select name="trainedModel" size=6>
+      <%== optionTags(caffeModel.trainedModelFiles()); %>
+      </select>
+    </label>
+  </p>
+  <input type="submit" value="Detect" />
+</form>
+<br>
+
+<br>
+<hr>
+<h3>モデル情報</h3>
+<dt>ID</dt><dd><%= caffeModel.id()  %></dd><br />
+<dt>Deploy prototxt</dt><dd><%= caffeModel.deployFile() %></dd><br />
+
+</body>
+</html>

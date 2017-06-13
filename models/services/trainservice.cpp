@@ -4,10 +4,10 @@
 #include <TBackgroundProcess>
 #include <TBackgroundProcessHandler>
 #include <QtCore>
-//#include "trainingmodel.h"
 #include "caffemodel.h"
 #include "trainservice.h"
 #include "caffeprocess.h"
+#include "ssddetector.h"
 #include "containers/trainindexcontainer.h"
 
 
@@ -79,25 +79,33 @@ static void caffeTrain(const QString &solverPath, const QString &pretrainedModel
 
 QString TrainService::create(THttpRequest &request)
 {
-#if 0
     const auto CaffeCommandPath = Tf::app()->getConfig("settings").value("CaffeCommand").toString();
-    auto trainingModel = request.formItems("trainingModel");
-    auto model = CaffeModel::create(trainingModel);
-
-    if (!model.isNull()) {
-        caffeTrain(model.solverPrototxtPath(), "");
-    }
-    return model.id();
-#else
-    const auto CaffeCommandPath = Tf::app()->getConfig("settings").value("CaffeCommand").toString();
-    auto trainingModel = request.formItems("trainingModel");
-    auto model = CaffeModel::create(trainingModel);
+    auto caffeModel = request.formItems("caffeModel");
+    caffeModel.insert("category", "classification");
+    auto model = CaffeModel::create(caffeModel);
 
     if (! model.isNull()) {
-        caffeTrain(model.solverPrototxtPath(), "");
+        // Train model
+        //caffeTrain(model.solverPrototxtPath(), "");
     }
     return model.id();
-#endif
+}
+
+
+QString TrainService::createSsd(THttpRequest &request)
+{
+    const auto CaffeCommandPath = Tf::app()->getConfig("settings").value("CaffeCommand").toString();
+    auto ssdParam = request.formItems("ssdParam");
+
+    CaffeModel model;
+    model.setName(ssdParam["name"].toString());
+    model.setCategory("detection");
+
+    if (! model.create()) {
+        // Train model
+        //caffeTrain(model.solverPrototxtPath(), "");
+    }
+    return model.id();
 }
 
 
@@ -133,19 +141,41 @@ static void plotResultPng(const QString &caffeLogPath, const QString &keyword, i
 }
 
 
+TrainDetectContainer TrainService::detect(const QString &id, THttpRequest &request)
+{
+    TrainDetectContainer container;
+
+    auto &formdata = request.multipartFormData();
+    auto entity = formdata.entity("imageFile");
+    auto jpg = entity.uploadedFilePath();
+    auto caffeModel = CaffeModel::get(id);
+    auto meanValue = request.formItemValue("meanValue", "53,74,144");
+    auto trainedModel = request.formItemValue("trainedModel");
+
+    if (! caffeModel.isNull() && ! jpg.isEmpty() && ! trainedModel.isEmpty()) {
+        auto cand = SsdDetector::detect(jpg, 0.4, caffeModel.deployFilePath(), caffeModel.trainedModelFilePath(trainedModel), meanValue);
+        for (auto &c : cand) {
+            tInfo() << "class:" << c[1] << " score:"  << c[2] << " w:" << (int)(c[3]) << " h:"  << (int)c[4]
+                    << " w:" << (int)c[5] << " h:"  << (int)c[6];
+        }
+    }
+    return container;
+}
+
+
 TrainShowContainer TrainService::show(const QString &id)
 {
     TrainShowContainer container;
-    container.trainingModel = CaffeModel::get(id);
+    container.caffeModel = CaffeModel::get(id);
 
-    QFileInfo caffeLog(container.trainingModel.caffeInfoLogPath());
+    QFileInfo caffeLog(container.caffeModel.caffeInfoLogPath());
     if (caffeLog.exists()) {
         QString path = caffeLog.absolutePath() + "/plot0.png";
-        plotResultPng(container.trainingModel.caffeInfoLogPath(), "Train net output #0", 11, 40/2702.0, path);
+        plotResultPng(container.caffeModel.caffeInfoLogPath(), "Train net output #0", 11, 40/2702.0, path);
         container.graphImages << path;
 
         path = caffeLog.absolutePath() + "/plot_t.png";
-        plotResultPng(container.trainingModel.caffeInfoLogPath(), "Test net output #0", 11, 1, path);
+        plotResultPng(container.caffeModel.caffeInfoLogPath(), "Test net output #0", 11, 1, path);
         container.graphImages << path;
     }
     return container;
@@ -162,7 +192,7 @@ bool TrainService::remove(const QString &id)
 TrainCreateContainer TrainService::clone(const QString &id)
 {
     TrainCreateContainer container;
-    container.trainingModel = CaffeModel::get(id);
+    container.caffeModel = CaffeModel::get(id);
     return container;
 }
 

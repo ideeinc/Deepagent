@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <%#include "containers/traincreatecontainer.h" %>
 <% tfetch(TrainCreateContainer, container); %>
-<% auto trainingModel = container.trainingModel.toVariantMap(); %>
+<% auto caffeModel = container.caffeModel.toVariantMap(); %>
 <html>
 <head>
   <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
@@ -17,11 +17,11 @@
 
 <%== formTag(urla("create"), Tf::Post) %>
   <p>
-    <label>name<br /><input name="trainingModel[name]" value="<%= trainingModel["name"] %>" /></label>
+    <label>name<br /><input name="caffeModel[name]" value="<%= caffeModel["name"] %>" /></label>
   </p>
   <div>
-    <label for="trainingModel[dataset]">Select Dataset<br />
-      <select name="trainingModel[dataset]" size=6>
+    <label for="caffeModel[dataset]">Select Dataset<br />
+      <select name="caffeModel[dataset]" size=6>
         <option>その1</option>
         <option>その2</option>
         <option>その3</option>
@@ -30,25 +30,25 @@
   </p>
   </div>
   <p>
-    <label>Solver (solver.prototxt)<br /><textarea name="trainingModel[solverPrototxt]"><%= trainingModel["solverPrototxt"] %></textarea></label>
+    <label>Solver (solver.prototxt)<br /><textarea name="caffeModel[solverPrototxt]"><%= caffeModel["solverPrototxt"] %></textarea></label>
   </p>
   <p>
-    <label for="trainingModel[trainEpochs]">Training epochs</label><br><input name="trainingModel[trainEpochs]" type="text" value="100"/>
+    <label for="caffeModel[trainEpochs]">Training epochs</label><br><input name="caffeModel[trainEpochs]" type="text" value="100"/>
   </p>
   <p>
-    <label for="trainingModel[snapInterval]">Snapshot interval</label><br><input name="trainingModel[snapInterval]" type="text" value="1"/>
+    <label for="caffeModel[snapInterval]">Snapshot interval</label><br><input name="caffeModel[snapInterval]" type="text" value="1"/>
   </p>
   <p>
-    <label for="trainingModel[valInterval]">Validation interval</label><br><input name="trainingModel[valInterval]" type="text" value="1"/>
+    <label for="caffeModel[valInterval]">Validation interval</label><br><input name="caffeModel[valInterval]" type="text" value="1"/>
   </p>
   <p>
-    <label>Network for training (prototxt)<br /><textarea name="trainingModel[trainPrototxt]"><%= trainingModel["trainPrototxt"] %></textarea></label>
+    <label>Network for training (prototxt)<br /><textarea name="caffeModel[trainPrototxt]"><%= caffeModel["trainPrototxt"] %></textarea></label>
   </p>
   <p>
-    <label>pretreined model path<br /><input name="trainingModel[pretrainedModel]" value="<%= trainingModel["pretrainedModel"] %>" /></label>
+    <label>pretreined model path<br /><input name="caffeModel[pretrainedModel]" value="<%= caffeModel["pretrainedModel"] %>" /></label>
   </p>
   <p>
-    <label>Network for deployment (prototxt)<br /><textarea name="trainingModel[deployPrototxt]"><%= trainingModel["deployPrototxt"] %></textarea></label>
+    <label>Network for deployment (prototxt)<br /><textarea name="caffeModel[deployPrototxt]"><%= caffeModel["deployPrototxt"] %></textarea></label>
   </p>
   <p>
     <input type="submit" value="Train" />

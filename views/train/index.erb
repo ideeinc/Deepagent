@@ -26,7 +26,12 @@
     <td><%= i.state() %></td>
     <td><%= i.createdAt() %></td>
     <td>
-      <%== linkTo("Show", urla("show", i.id())) %>
+      <% if (i.category().toLower() == "classification") { %>
+        <%== linkTo("Classify", urla("classify", i.id())) %>
+      <% } else if (i.category().toLower() == "detection") { %>
+        <%== linkTo("Detect", urla("detect", i.id())) %>
+      <% } %>
+      <%== linkTo("Show", urla("show", i.id())) %><br>
       <%== linkTo("Clone", urla("clone", i.id())) %>
       <%== linkTo("Remove", urla("remove", i.id()), Tf::Post, "confirm('Are you sure?')") %>
     </td>

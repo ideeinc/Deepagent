@@ -22,7 +22,7 @@ class T_MODEL_EXPORT CaffeData : public TAbstractModel
     Q_GADGET
 public:
     enum Category {
-        Classify = 0,
+        Classification = 0,
         Detection,
         Any,
     };

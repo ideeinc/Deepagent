@@ -8,7 +8,7 @@
 class TrainShowContainer
 {
 public:
-    CaffeModel trainingModel;
+    CaffeModel caffeModel;
     QString solverLink;
     QString trainLink;
     QString deployLink;

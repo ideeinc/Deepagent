@@ -3,13 +3,13 @@
 
 QDataStream &operator<<(QDataStream &stream, const TrainCreateContainer &container)
 {
-    stream << container.trainingModel;
+    stream << container.caffeModel;
     return stream;
 }
 
 QDataStream &operator>>(QDataStream &stream, TrainCreateContainer &container)
 {
-    stream >> container.trainingModel;
+    stream >> container.caffeModel;
     return stream;
 }
 

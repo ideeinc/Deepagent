@@ -2,6 +2,7 @@
 #define TRAINSERVICE_H
 
 #include "containers/trainindexcontainer.h"
+#include "containers/traindetectcontainer.h"
 #include "containers/trainshowcontainer.h"
 #include "containers/traincreatecontainer.h"
 
@@ -14,6 +15,8 @@ class TrainService
 public:
     TrainIndexContainer index();
     QString create(THttpRequest &request);
+    QString createSsd(THttpRequest &request);
+    TrainDetectContainer detect(const QString &id, THttpRequest &request);
     TrainShowContainer show(const QString &id);
     bool remove(const QString &id);
     TrainCreateContainer clone(const QString &id);

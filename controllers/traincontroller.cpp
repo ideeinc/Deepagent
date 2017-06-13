@@ -38,8 +38,43 @@ void TrainController::createSsd()
         break; }
 
     case Tf::Post: {
-        auto id = service.create(httpRequest());
+        auto id = service.createSsd(httpRequest());
         redirect(urla("show", QStringList(id)));
+        break; }
+
+    default:
+        renderErrorResponse(Tf::NotFound);
+        break;
+    }
+}
+
+void TrainController::classify(const QString &id)
+{
+    switch (httpRequest().method()) {
+    case Tf::Get: {
+        render();
+        break; }
+
+    case Tf::Post:
+    default:
+        renderErrorResponse(Tf::NotFound);
+        break;
+    }
+}
+
+void TrainController::detect(const QString &id)
+{
+    switch (httpRequest().method()) {
+    case Tf::Get: {
+        auto container = service.show(id);
+        texport(container);
+        render();
+        break; }
+
+    case Tf::Post: {
+        auto container = service.detect(id, httpRequest());
+        texport(container);
+        render();
         break; }
 
     default:

@@ -8,7 +8,7 @@
 class TrainCreateContainer
 {
 public:
-    CaffeModel trainingModel;
+    CaffeModel caffeModel;
 
     friend QDataStream &operator<<(QDataStream &stream, const TrainCreateContainer &container);
     friend QDataStream &operator>>(QDataStream &stream, TrainCreateContainer &container);
