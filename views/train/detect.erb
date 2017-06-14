@@ -1,22 +1,86 @@
 <!DOCTYPE html>
-<%#include "containers/trainshowcontainer.h" %>
-<% tfetch(TrainShowContainer, container); %>
+<%#include "containers/traindetectcontainer.h" %>
+<% tfetch(TrainDetectContainer, container); %>
 <% const auto &caffeModel = container.caffeModel; %>
 <html>
 <head>
-  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
-  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+<meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+<title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+<style>
+#drop_zone {
+    width: 50%;
+    border: 2px dashed #bbb;
+    /*  -moz-border-radius: 5px; */
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    padding: 15px 5px;
+    text-align: center;
+    font: bold 1.0em/1.8em 'Vollkorn';
+    color: #999;
+    min-height: 90px;
+}
+</style>
+<script>
+// 送信準備
+var dsup = {};
+dsup.sendRequest = function(files) {
+    dsup.blobToSend = null;
+    if (files == null || files.length == 0) {
+        return;
+    }
+
+    if (files[0].size == 0) {
+        alert("ファイルが読み込めません");
+        return;
+    }
+
+    if (files.length == 1) {
+        // ファイル１つ
+        var f = files[0];
+        //modal.showWaiting(500, null, null, f.name);
+        //dsup.post(f, f.name, f.type);
+        alert(f.name);
+        ;;; console.log("file size: " + f.size);
+
+    } else {
+        // ファイル2つ以上
+    }
+};
+
+// 初期化
+$(function(){
+     // ドラッグオーバ
+    $('#drop_zone').on('dragover', function(ev) {
+        var evt = ev.originalEvent;
+        evt.stopPropagation();
+        evt.preventDefault();
+        evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+    });
+
+    //　ドロップ
+    $('#drop_zone').on('drop', function(ev){
+        $(this).blur();
+        var evt = ev.originalEvent;
+        evt.stopPropagation();
+        evt.preventDefault();
+        dsup.sendRequest(evt.dataTransfer.files);
+    });
+});
+</script>
 </head>
 <body>
 <p style="color: red"><%=$ error %></p>
 <p style="color: green"><%=$ notice %></p>
 
-<h1>検出</h1>
+<h1>病変検出</h1>
 
 <%== formTag(urla("detect", caffeModel.id() ), Tf::Post, true) %>
   <p>
     <label>アップロード画像ファイル: <input name="imageFile" value="" type="file" /></label>
   </p>
+  <div id="drop_zone"><span id="msg_drag"><i class="fa fa-files-o"></i>　Drag file here<br>or<br></span><i class="fa fa-folder-open-o"></i>　Click to choose file to send</div>
   <p>
     <label>mean value: <input name="meanValue" value="53,74,144" /></label>
   </p>
@@ -30,7 +94,17 @@
   <input type="submit" value="Detect" />
 </form>
 <br>
-
+<div>
+  <%== inlineImageTag(container.jpegBin, "image/jpeg"); %>
+</div>
+<p>
+  <% for (auto &c : container.detections) {
+        QString str = QString("class:%1 score:%2  (%3,%4) (%5,%6)").arg(c[1]).arg(c[2], 0, 'g', 3).arg((int)c[3]).arg((int)c[4]).arg((int)c[5]).arg((int)c[6]);
+        eh(str);
+        echo("<br>");
+      }
+  %>
+</p>
 <br>
 <hr>
 <h3>モデル情報</h3>

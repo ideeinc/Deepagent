@@ -1,8 +1,7 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
-#include <QString>
-#include <QRect>
+#include <QtCore>
 #include <opencv2/imgproc/imgproc.hpp>
 
 
@@ -47,8 +46,14 @@ public:
     Image trimmed() const;
     QRect getValidRect() const;
 
+    // 矩形描画
+    void drawRectangle(int x1, int y1, int x2, int y2, const cv::Scalar& color, int thickness=1, int lineType=8);
+
     // 保存
     bool save(const QString &path) const;
+
+    // エンコード
+    QByteArray toEncoded(const QString &ext, const QVector<int> &params=QVector<int>());
 
     // // 表示
     // void show(const QString &title)

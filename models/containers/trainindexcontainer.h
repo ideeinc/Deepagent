@@ -17,8 +17,6 @@ public:
     //     QString created;
     // };
 
-    // QList<TrainModel> trainModels;
-//    QList<TrainingModel> trainingModels;
     QList<CaffeModel> trainingModels;
 };
 

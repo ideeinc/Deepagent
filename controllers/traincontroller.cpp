@@ -65,12 +65,7 @@ void TrainController::classify(const QString &id)
 void TrainController::detect(const QString &id)
 {
     switch (httpRequest().method()) {
-    case Tf::Get: {
-        auto container = service.show(id);
-        texport(container);
-        render();
-        break; }
-
+    case Tf::Get:
     case Tf::Post: {
         auto container = service.detect(id, httpRequest());
         texport(container);

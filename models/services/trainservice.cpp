@@ -8,7 +8,7 @@
 #include "trainservice.h"
 #include "caffeprocess.h"
 #include "ssddetector.h"
-#include "containers/trainindexcontainer.h"
+#include "image.h"
 
 
 TrainIndexContainer TrainService::index()
@@ -144,20 +144,34 @@ static void plotResultPng(const QString &caffeLogPath, const QString &keyword, i
 TrainDetectContainer TrainService::detect(const QString &id, THttpRequest &request)
 {
     TrainDetectContainer container;
+    container.caffeModel = CaffeModel::get(id);
 
-    auto &formdata = request.multipartFormData();
-    auto entity = formdata.entity("imageFile");
-    auto jpg = entity.uploadedFilePath();
-    auto caffeModel = CaffeModel::get(id);
-    auto meanValue = request.formItemValue("meanValue", "53,74,144");
-    auto trainedModel = request.formItemValue("trainedModel");
+    switch (request.method()) {
+    case Tf::Get: {
+        break; }
 
-    if (! caffeModel.isNull() && ! jpg.isEmpty() && ! trainedModel.isEmpty()) {
-        auto cand = SsdDetector::detect(jpg, 0.4, caffeModel.deployFilePath(), caffeModel.trainedModelFilePath(trainedModel), meanValue);
-        for (auto &c : cand) {
-            tInfo() << "class:" << c[1] << " score:"  << c[2] << " w:" << (int)(c[3]) << " h:"  << (int)c[4]
-                    << " w:" << (int)c[5] << " h:"  << (int)c[6];
+    case Tf::Post: {
+        auto &formdata = request.multipartFormData();
+        auto entity = formdata.entity("imageFile");
+        auto jpg = entity.uploadedFilePath();
+        auto caffeModel = CaffeModel::get(id);
+        auto meanValue = request.formItemValue("meanValue", "53,74,144");
+        auto trainedModel = request.formItemValue("trainedModel");
+        auto image = Image(jpg);
+
+        if (! caffeModel.isNull() && ! jpg.isEmpty() && ! trainedModel.isEmpty()) {
+            container.detections = SsdDetector::detect(jpg, 0.4, caffeModel.deployFilePath(), caffeModel.trainedModelFilePath(trainedModel), meanValue);
+            for (const auto &c : container.detections) {
+                image.drawRectangle(c[3], c[4], c[5], c[6], CV_RGB(0,200,0), 2, 8);
+                tInfo() << "class:" << c[1] << " score:"  << c[2] << " w:" << (int)(c[3]) << " h:"  << (int)c[4]
+                        << " w:" << (int)c[5] << " h:"  << (int)c[6];
+            }
         }
+        container.jpegBin = image.toEncoded(".jpg");
+        break; }
+
+    default:
+        break;
     }
     return container;
 }

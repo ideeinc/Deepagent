@@ -1,5 +1,6 @@
 #include "image.h"
 #include <TDebug>
+#include <cstring>
 #include <opencv2/highgui/highgui.hpp>
 using namespace cv;
 
@@ -231,6 +232,13 @@ QRect Image::getValidRect() const
     return QRect(x, y, brect.width+2, brect.height+2);
 }
 
+
+void Image::drawRectangle(int x1, int y1, int x2, int y2, const Scalar &color, int thickness, int lineType)
+{
+    cv::rectangle(_mat, cv::Point(x1,y1), cv::Point(x2, y2), color, thickness, lineType);
+}
+
+
 // JPEG保存
 bool Image::save(const QString &path) const
 {
@@ -243,4 +251,21 @@ bool Image::save(const QString &path) const
     params[0] = CV_IMWRITE_JPEG_QUALITY; // JPEG品質
     params[1] = 95;
     return imwrite(qPrintable(path), _mat, params);
+}
+
+// エンコード. ext:拡張子
+QByteArray Image::toEncoded(const QString &ext, const QVector<int> &params)
+{
+    QByteArray encoded;
+    std::vector<uchar> buf;
+    auto e = ext;
+    if (! e.startsWith(".")) {
+        e.prepend(".");
+    }
+
+    if (imencode(e.toStdString(), _mat, buf, params.toStdVector())) {
+        encoded.resize(buf.size());
+        std::memcpy(encoded.data(), buf.data(), buf.size());
+    }
+    return encoded;
 }

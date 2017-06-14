@@ -1,17 +1,25 @@
 #ifndef SSDDETECTOR_H
 #define SSDDETECTOR_H
 
-#include <caffe/caffe.hpp>
-#include <opencv2/core/core.hpp>
 #include <vector>
 #include <QtCore>
+#include <TGlobal>
 using namespace std;
+
+namespace caffe {
+template<typename T> class Blob;
+template<typename T> class Net;
+}
+namespace cv {
+class Mat;
+}
 
 
 class SsdDetector
 {
 public:
     SsdDetector(const string& model_file, const string& weights_file, const string& mean_file, const string& mean_value);
+    ~SsdDetector();
     vector<vector<float>> Detect(const cv::Mat& img);
 
     static QList<QVector<float>> detect(const QString &imgFile, float threshold, const QString& modelFile, const QString &weightsFile, const QString &meanValue);
@@ -21,10 +29,11 @@ private:
     void WrapInputLayer(std::vector<cv::Mat>* input_channels);
     void Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channels);
 
-    shared_ptr<caffe::Net<float>> net_;
-    cv::Size input_geometry_;
-    int num_channels_;
-    cv::Mat mean_;
+    struct SsdDetectorPrivate;
+    SsdDetectorPrivate *d {nullptr};
+
+    T_DISABLE_COPY(SsdDetector)
+    T_DISABLE_MOVE(SsdDetector)
 };
 
 #endif // SSDDETECTOR_H

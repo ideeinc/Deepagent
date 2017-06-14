@@ -6,9 +6,9 @@ QT -= gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += qml
 DEFINES += TF_DLL
 DESTDIR = ../lib
-INCLUDEPATH += ../helpers ../models
+INCLUDEPATH += ../helpers ../models ${CAFFE_ROOT}/build/include ${CAFFE_ROOT}/include /usr/local/cuda/include
 DEPENDPATH  += ../helpers ../models
-LIBS += -L../lib -lhelper -lmodel
+LIBS += -L../lib -lhelper -lmodel -Wl,-rpath,${CAFFE_ROOT}/build/lib -L${CAFFE_ROOT}/build/lib -lcaffe -lglog
 MOC_DIR = .obj/
 OBJECTS_DIR = .obj/
 

@@ -1,4 +1,6 @@
 #include "ssddetector.h"
+#include <caffe/caffe.hpp>
+#include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <algorithm>
@@ -9,53 +11,64 @@
 #include <utility>
 using namespace caffe;
 
+// #ifndef GFLAGS_GFLAGS_H_
+//   namespace gflags = google;
+// #endif
+
+struct SsdDetector::SsdDetectorPrivate {
+    std::shared_ptr<caffe::Net<float>> net_;
+    cv::Size input_geometry_;
+    int num_channels_ {0};
+    cv::Mat mean_;
+};
+
 
 SsdDetector::SsdDetector(const string& model_file, const string& weights_file,
                          const string& mean_file, const string& mean_value)
+    : d(new SsdDetectorPrivate)
 {
-#ifdef CPU_ONLY
-    Caffe::set_mode(Caffe::CPU);
-#else
-    Caffe::set_mode(Caffe::GPU);
-#endif
-
     /* Load the network. */
-    net_.reset(new Net<float>(model_file, TEST));
-    net_->CopyTrainedLayersFrom(weights_file);
+    d->net_.reset(new Net<float>(model_file, TEST));
+    d->net_->CopyTrainedLayersFrom(weights_file);
 
-    CHECK_EQ(net_->num_inputs(), 1) << "Network should have exactly one input.";
-    CHECK_EQ(net_->num_outputs(), 1) << "Network should have exactly one output.";
+    CHECK_EQ(d->net_->num_inputs(), 1) << "Network should have exactly one input.";
+    CHECK_EQ(d->net_->num_outputs(), 1) << "Network should have exactly one output.";
 
-    Blob<float>* input_layer = net_->input_blobs()[0];
-    num_channels_ = input_layer->channels();
-    CHECK(num_channels_ == 3 || num_channels_ == 1) << "Input layer should have 1 or 3 channels.";
-    input_geometry_ = cv::Size(input_layer->width(), input_layer->height());
+    Blob<float>* input_layer = d->net_->input_blobs()[0];
+    d->num_channels_ = input_layer->channels();
+    CHECK(d->num_channels_ == 3 || d->num_channels_ == 1) << "Input layer should have 1 or 3 channels.";
+    d->input_geometry_ = cv::Size(input_layer->width(), input_layer->height());
 
     /* Load the binaryproto mean file. */
     SetMean(mean_file, mean_value);
 }
 
 
+SsdDetector::~SsdDetector()
+{
+    delete d;
+}
+
+
 std::vector<vector<float> > SsdDetector::Detect(const cv::Mat& img)
 {
-    Blob<float>* input_layer = net_->input_blobs()[0];
-    input_layer->Reshape(1, num_channels_,
-                       input_geometry_.height, input_geometry_.width);
+    Blob<float>* input_layer = d->net_->input_blobs()[0];
+    input_layer->Reshape(1, d->num_channels_, d->input_geometry_.height, d->input_geometry_.width);
     /* Forward dimension change to all layers. */
-    net_->Reshape();
+    d->net_->Reshape();
 
     std::vector<cv::Mat> input_channels;
     WrapInputLayer(&input_channels);
 
     Preprocess(img, &input_channels);
 
-    net_->Forward();
+    d->net_->Forward();
 
     /* Copy the output layer to a std::vector */
-    Blob<float>* result_blob = net_->output_blobs()[0];
+    Blob<float>* result_blob = d->net_->output_blobs()[0];
     const float* result = result_blob->cpu_data();
     const int num_det = result_blob->height();
-    vector<vector<float> > detections;
+    vector<vector<float>> detections;
     for (int k = 0; k < num_det; ++k) {
         if (result[0] == -1) {
             // Skip invalid detection.
@@ -69,7 +82,6 @@ std::vector<vector<float> > SsdDetector::Detect(const cv::Mat& img)
     return detections;
 }
 
-
 /* Load the mean file in binaryproto format. */
 void SsdDetector::SetMean(const string& mean_file, const string& mean_value)
 {
@@ -82,12 +94,12 @@ void SsdDetector::SetMean(const string& mean_file, const string& mean_value)
         /* Convert from BlobProto to Blob<float> */
         Blob<float> mean_blob;
         mean_blob.FromProto(blob_proto);
-        CHECK_EQ(mean_blob.channels(), num_channels_) << "Number of channels of mean file doesn't match input layer.";
+        CHECK_EQ(mean_blob.channels(), d->num_channels_) << "Number of channels of mean file doesn't match input layer.";
 
         /* The format of the mean file is planar 32-bit float BGR or grayscale. */
         std::vector<cv::Mat> channels;
         float* data = mean_blob.mutable_cpu_data();
-        for (int i = 0; i < num_channels_; ++i) {
+        for (int i = 0; i < d->num_channels_; ++i) {
             /* Extract an individual channel. */
           cv::Mat channel(mean_blob.height(), mean_blob.width(), CV_32FC1, data);
           channels.push_back(channel);
@@ -101,7 +113,7 @@ void SsdDetector::SetMean(const string& mean_file, const string& mean_value)
         /* Compute the global mean pixel value and create a mean image
          * filled with this value. */
         channel_mean = cv::mean(mean);
-        mean_ = cv::Mat(input_geometry_, mean.type(), channel_mean);
+        d->mean_ = cv::Mat(d->input_geometry_, mean.type(), channel_mean);
     }
     if (!mean_value.empty()) {
         CHECK(mean_file.empty()) << "Cannot specify mean_file and mean_value at the same time";
@@ -112,16 +124,16 @@ void SsdDetector::SetMean(const string& mean_file, const string& mean_value)
           float value = std::atof(item.c_str());
           values.push_back(value);
         }
-        CHECK(values.size() == 1 || values.size() == num_channels_) << "Specify either 1 mean_value or as many as channels: " << num_channels_;
+        CHECK(values.size() == 1 || values.size() == d->num_channels_) << "Specify either 1 mean_value or as many as channels: " << d->num_channels_;
 
         std::vector<cv::Mat> channels;
-        for (int i = 0; i < num_channels_; ++i) {
+        for (int i = 0; i < d->num_channels_; ++i) {
             /* Extract an individual channel. */
-          cv::Mat channel(input_geometry_.height, input_geometry_.width, CV_32FC1,
+          cv::Mat channel(d->input_geometry_.height, d->input_geometry_.width, CV_32FC1,
               cv::Scalar(values[i]));
           channels.push_back(channel);
       }
-      cv::merge(channels, mean_);
+      cv::merge(channels, d->mean_);
     }
 }
 
@@ -132,7 +144,7 @@ void SsdDetector::SetMean(const string& mean_file, const string& mean_value)
  * layer. */
 void SsdDetector::WrapInputLayer(std::vector<cv::Mat>* input_channels)
 {
-    Blob<float>* input_layer = net_->input_blobs()[0];
+    Blob<float>* input_layer = d->net_->input_blobs()[0];
 
     int width = input_layer->width();
     int height = input_layer->height();
@@ -148,31 +160,31 @@ void SsdDetector::Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_cha
 {
     /* Convert the input image to the input image format of the network. */
     cv::Mat sample;
-    if (img.channels() == 3 && num_channels_ == 1)
+    if (img.channels() == 3 && d->num_channels_ == 1)
         cv::cvtColor(img, sample, cv::COLOR_BGR2GRAY);
-    else if (img.channels() == 4 && num_channels_ == 1)
+    else if (img.channels() == 4 && d->num_channels_ == 1)
         cv::cvtColor(img, sample, cv::COLOR_BGRA2GRAY);
-    else if (img.channels() == 4 && num_channels_ == 3)
+    else if (img.channels() == 4 && d->num_channels_ == 3)
         cv::cvtColor(img, sample, cv::COLOR_BGRA2BGR);
-    else if (img.channels() == 1 && num_channels_ == 3)
+    else if (img.channels() == 1 && d->num_channels_ == 3)
         cv::cvtColor(img, sample, cv::COLOR_GRAY2BGR);
     else
         sample = img;
 
     cv::Mat sample_resized;
-    if (sample.size() != input_geometry_)
-        cv::resize(sample, sample_resized, input_geometry_);
+    if (sample.size() != d->input_geometry_)
+        cv::resize(sample, sample_resized, d->input_geometry_);
     else
         sample_resized = sample;
 
     cv::Mat sample_float;
-    if (num_channels_ == 3)
+    if (d->num_channels_ == 3)
         sample_resized.convertTo(sample_float, CV_32FC3);
     else
         sample_resized.convertTo(sample_float, CV_32FC1);
 
     cv::Mat sample_normalized;
-    cv::subtract(sample_float, mean_, sample_normalized);
+    cv::subtract(sample_float, d->mean_, sample_normalized);
 
     /* This operation will write the separate BGR planes directly to the
      * input layer of the network because it is wrapped by the cv::Mat
@@ -180,16 +192,16 @@ void SsdDetector::Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_cha
     cv::split(sample_normalized, *input_channels);
 
     CHECK(reinterpret_cast<float*>(input_channels->at(0).data)
-          == net_->input_blobs()[0]->cpu_data()) << "Input channels are not wrapping the input layer of the network.";
+          == d->net_->input_blobs()[0]->cpu_data()) << "Input channels are not wrapping the input layer of the network.";
 }
 
 // Return value format: [image_id, label, score, xmin, ymin, xmax, ymax]
 QList<QVector<float>> SsdDetector::detect(const QString &imgFile, float threshold, const QString& modelFile, const QString &weightsFile, const QString &meanValue)
 {
     QList<QVector<float>>  ret;
-    cv::Mat img = cv::imread(imgFile.toStdString(), -1);
+    auto img = cv::imread(imgFile.toStdString(), -1);
     SsdDetector detector(modelFile.toStdString(), weightsFile.toStdString(), string(), meanValue.toStdString());
-    std::vector<vector<float>> detections = detector.Detect(img);
+    auto detections = detector.Detect(img);
 
     /* Print the detection results. */
     for (int i = 0; i < detections.size(); ++i) {

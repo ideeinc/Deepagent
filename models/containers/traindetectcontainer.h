@@ -8,7 +8,9 @@
 class TrainDetectContainer
 {
 public:
-    CaffeModel trainingModel;
+    CaffeModel caffeModel;
+    QByteArray jpegBin;
+    QList<QVector<float>> detections;
 };
 
 Q_DECLARE_METATYPE(TrainDetectContainer)

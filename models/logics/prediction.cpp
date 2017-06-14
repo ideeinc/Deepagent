@@ -50,23 +50,13 @@ Prediction::~Prediction()
 }
 
 
-static bool initonce()
-{
-    google::InitGoogleLogging(qPrintable(QCoreApplication::arguments().at(0)));
-    google::InstallFailureSignalHandler();
-    return true;
-}
-
-
 bool Prediction::init(const QString &trainedModelFilePath, const QString &meanFilePath)
 {
     try {
-        static bool once = initonce();
-        Q_UNUSED(once);
 #ifdef CPU_ONLY
-        Caffe::set_mode(Caffe::CPU);
+//        Caffe::set_mode(Caffe::CPU);
 #else
-        Caffe::set_mode(_gpuEnable ? Caffe::GPU : Caffe::CPU);
+//        Caffe::set_mode(_gpuEnable ? Caffe::GPU : Caffe::CPU);
         Caffe::SetDevice(_gpuDevice);
 #endif
         //Caffe::set_multiprocess(true);
