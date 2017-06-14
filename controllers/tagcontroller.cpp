@@ -3,12 +3,18 @@
 #include <QtCore>
 
 const QString kTagImageListKey = "Tag_ImageListKey";
+const QString kTagImageTableInfo = "Tag_ImageTableInfo";
 
 
 void TagController::index()
 {
     const QList<TagGroup> allGroups = service.allGroups();
     texport(allGroups);
+
+    if (session().contains(kTagImageTableInfo)) {
+        session().remove(kTagImageTableInfo);
+    }
+
     render();
 }
 
@@ -54,12 +60,46 @@ void TagController::show(const QString& groupName, const QString& tagName, const
         const TaggedImageInfoContainer container = service.image(groupName, tagName, images, i);
         texport(container);
 
+        QUrl listUrl(urla("show", { container.primaryGroup.name(), container.primaryTag.name() }));
+        QVariantMap imageTableInfo = session().value(kTagImageTableInfo).toMap();
+        if (imageTableInfo.contains("rowGroupName") && imageTableInfo.contains("colGroupName")) {
+            listUrl = urla("table");
+        }
+        texport(listUrl);
+
         const QList<TagGroup> allGroups = service.allGroups();
         texport(allGroups);
         render("image");
     }
     else {
         redirect(urla("show", tagName));
+    }
+}
+
+
+void TagController::show(const QString& rowGroupName, const QString& rowTagName, const QString& colGroupName, const QString colTagName)
+{
+    const QPair<QStringList, TaggedImageInfoContainer> data = service.showTableImage(rowGroupName, rowTagName, colGroupName, colTagName);
+
+    if (data.first.size() > 0) {
+        QVariantMap imageTableInfo;
+        imageTableInfo["rowGroupName"] = rowGroupName;
+        imageTableInfo["colGroupName"] = colGroupName;
+
+        session().insert(kTagImageTableInfo, imageTableInfo);
+        session().insert(kTagImageListKey, data.first);
+        const TaggedImageInfoContainer& container = data.second;
+        texport(container);
+
+        QUrl listURL(urla("table"));
+        texport(listURL);
+
+        const auto& allGroups = service.allGroups();
+        texport(allGroups);
+
+        render("image");
+    } else {
+        render("table");
     }
 }
 
@@ -93,6 +133,31 @@ void TagController::upload()
 
     render();
 }
+
+void TagController::table()
+{
+    QString rowGroupName, colGroupName;
+
+    if (Tf::Get == httpRequest().method()) {
+        if (session().contains(kTagImageTableInfo)) {
+            QVariantMap imageTableInfo = session().value(kTagImageTableInfo).toMap();
+            rowGroupName = imageTableInfo["rowGroupName"].toString();
+            colGroupName = imageTableInfo["colGroupName"].toString();
+            session().remove(kTagImageTableInfo);
+        } else {
+            render();
+            return;
+        }
+    } else if (Tf::Post == httpRequest().method()) {
+        rowGroupName = httpRequest().formItemValue("rowGroupName");
+        colGroupName = httpRequest().formItemValue("colGroupName");
+    }
+
+    const TagTableContainer& container = service.table(rowGroupName, colGroupName);
+    texport(container);
+    render();
+}
+
 
 void TagController::create()
 {

@@ -17,7 +17,9 @@ public slots:
     void show(const QString& groupName);
     void show(const QString& groupName, const QString& tagName);
     void show(const QString& groupName, const QString& tagName, const QString& index);
+    void show(const QString& rowGroupName, const QString& rowTagName, const QString& colGroupName, const QString colTagName);
     void upload();
+    void table();
 
     void create();
     void destroy();

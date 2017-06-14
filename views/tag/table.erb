@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<%#include "services/tagservice.h"%>
+<% const QList<TagGroup> allGroups = TagService().allGroups(); %>
+<%#include "containers/tagtablecontainer.h" %>
+<% tfetch(TagTableContainer, container) %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+  <script src="/js/jquery-1.11.3.min.js" type="text/javascript"></script>
+  <script type="text/javascript">
+      $(window).load(function() {
+          $('input:submit[name=table]').on('click', function(e) {
+              var error = '';
+              var rowGroupName = $('select[name=rowGroupName] option:selected').val();
+              var colGroupName = $('select[name=colGroupName] option:selected').val();
+              if (! rowGroupName || ! colGroupName) {
+                  if (! rowGroupName && ! colGroupName) {
+                      error = '行グループと列グループのドロップダウンボックスから科目を選択ください。'
+                  } else if (! rowGroupName) {
+                      error = '行グループのドロップダウンボックスから項目を選択ください。'
+                  } else {
+                      error = '列グループのドロップダウンボックスから項目を選択ください。'
+                  }
+              }
+              
+              if (rowGroupName === colGroupName) {
+                  error = '行グループと列グループのドロップダウンボックスから選択された項目は異なる必要があります。'
+              }
+
+              if (error.length > 0) {
+                  e.preventDefault();
+                  window.alert(error);
+                  return false;
+              }
+          });
+      });
+  </script>
+  <style type="text/css">
+      <!--
+      td.number:not(:first-child) { text-align: center; }
+      td a { display: block; width: 100%; height: 100%; }
+      -->
+      </style>
+</head>
+<body>
+
+<fieldset>
+<legend>表の作成</legend>
+<%== formTag(urla("table"), Tf::Post, true) %>
+<div><label>行グループ: 
+<select name="rowGroupName">
+<option></option>
+<% for (const auto &g : allGroups) { %>
+<%== optionTag(g.name(), g.name(), container.rowGroupName == g.name()) %>
+<% } %>
+</select></label></div>
+<div><label>列グループ: 
+<select name="colGroupName">
+<option></option>
+<% for (const auto &g : allGroups) { %>
+<%== optionTag(g.name(), g.name(), container.colGroupName == g.name()) %>
+<% } %>
+</select></label></div>
+<div><%== inputTag("submit", "table", "　作成　") %></div>
+<%== endTag() %>
+</fieldset>
+<br />
+<br />
+<% if (container.rows.count() > 0) { %>
+<table rules="all" style="border: 1px;">
+    <% if (container.headers.count() > 0) {
+        echo("<thead><tr><th>名称</th>");
+        for (const QString h : container.headers) {
+            echo("<th>" + h + "</th>");
+        }
+        echo("</tr></thead>");
+    } %>
+    <% if (container.footers.count() > 0) {
+        echo("<tfoot><tr><td></td>");
+        for (const QString f : container.footers) {
+            echo("<th>" + f + "</th>");
+        }
+        echo("</tr></tfoot>");
+    } %>
+    <tbody>
+    <% for (int i = 0; i < container.rows.size(); i++) {
+        echo("<tr>");
+        echo("<td>" + container.rows[i][0] + "</td>");
+        for (int j = 1; j < container.rows[i].size(); j++) {
+            const int v = container.rows[i][j].toInt();
+            echo("<td class=\"number\">" + ((v == 0) ? "0" : linkTo(QString::number(v), urla("show", QStringList({ container.rowGroupName, container.rowTagNames[i], container.colGroupName, container.colTagNames[j - 1] })))) + "</td>");
+        }
+        echo("</tr>");
+    } %>
+    </tbody>
+</table>
+<% } %>
+
+</body>
+</html>
+

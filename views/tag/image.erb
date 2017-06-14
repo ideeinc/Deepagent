@@ -3,6 +3,7 @@
 <% tfetch(QList<TagGroup>, allGroups) %>
 <%#include "containers/taggedimageinfocontainer.h" %>
 <% tfetch(TaggedImageInfoContainer, container) %>
+<% tfetch(QUrl, listUrl) %>
 <html>
 <head>
   <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
@@ -112,7 +113,7 @@
 <%
     echo((container.index > 0) ? linkTo("<< 前へ", urla("show", QStringList({ container.primaryGroup.name(), container.primaryTag.name(), QString::number(container.index - 1) })), Tf::Get, THtmlAttribute("class", "prev")) : "<< 前へ");
     echo(" &nbsp; | &nbsp; ");
-    echo(linkTo("一覧", urla("show", QStringList({ container.primaryGroup.name(), container.primaryTag.name() }))));
+    echo(linkTo("一覧", listUrl));
     echo(" &nbsp; | &nbsp; ");
     echo((container.index < (container.count - 1)) ? linkTo("次へ >>", urla("show", QStringList({ container.primaryGroup.name(), container.primaryTag.name(), QString::number(container.index + 1) })), Tf::Get, THtmlAttribute("class", "next")) : "次へ >>");
 %>
