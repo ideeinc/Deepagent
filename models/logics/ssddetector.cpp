@@ -9,11 +9,9 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <TDebug>
 using namespace caffe;
 
-// #ifndef GFLAGS_GFLAGS_H_
-//   namespace gflags = google;
-// #endif
 
 struct SsdDetector::SsdDetectorPrivate {
     std::shared_ptr<caffe::Net<float>> net_;
@@ -25,8 +23,17 @@ struct SsdDetector::SsdDetectorPrivate {
 
 SsdDetector::SsdDetector(const string& model_file, const string& weights_file,
                          const string& mean_file, const string& mean_value)
-    : d(new SsdDetectorPrivate)
 {
+    reset(model_file, weights_file, mean_file, mean_value);
+}
+
+void SsdDetector::reset(const string& model_file, const string& weights_file, const string& mean_file, const string& mean_value)
+{
+    if (d) {
+        delete d;
+    }
+    d = new SsdDetectorPrivate;
+
     /* Load the network. */
     d->net_.reset(new Net<float>(model_file, TEST));
     d->net_->CopyTrainedLayersFrom(weights_file);
@@ -50,7 +57,7 @@ SsdDetector::~SsdDetector()
 }
 
 
-std::vector<vector<float> > SsdDetector::Detect(const cv::Mat& img)
+QList<QVector<float>> SsdDetector::detect(const cv::Mat& img, float threshold)
 {
     Blob<float>* input_layer = d->net_->input_blobs()[0];
     input_layer->Reshape(1, d->num_channels_, d->input_geometry_.height, d->input_geometry_.width);
@@ -63,21 +70,26 @@ std::vector<vector<float> > SsdDetector::Detect(const cv::Mat& img)
     Preprocess(img, &input_channels);
 
     d->net_->Forward();
+    tDebug() << "CNN forward ... done";
 
     /* Copy the output layer to a std::vector */
     Blob<float>* result_blob = d->net_->output_blobs()[0];
     const float* result = result_blob->cpu_data();
     const int num_det = result_blob->height();
-    vector<vector<float>> detections;
+    QList<QVector<float>> detections;
     for (int k = 0; k < num_det; ++k) {
+
         if (result[0] == -1) {
             // Skip invalid detection.
             result += 7;
             continue;
-      }
-      vector<float> detection(result, result + 7);
-      detections.push_back(detection);
-      result += 7;
+        }
+        // Detection format: [image_id, label, score, xmin, ymin, xmax, ymax].
+        const float score = result[2];
+        if (score >= threshold) {
+            detections << QVector<float>({result[0], result[1], score, result[3]*img.cols, result[4]*img.rows, result[5]*img.cols, result[6]*img.rows});
+        }
+        result += 7;
     }
     return detections;
 }
@@ -198,20 +210,7 @@ void SsdDetector::Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_cha
 // Return value format: [image_id, label, score, xmin, ymin, xmax, ymax]
 QList<QVector<float>> SsdDetector::detect(const QString &imgFile, float threshold, const QString& modelFile, const QString &weightsFile, const QString &meanValue)
 {
-    QList<QVector<float>>  ret;
     auto img = cv::imread(imgFile.toStdString(), -1);
     SsdDetector detector(modelFile.toStdString(), weightsFile.toStdString(), string(), meanValue.toStdString());
-    auto detections = detector.Detect(img);
-
-    /* Print the detection results. */
-    for (int i = 0; i < detections.size(); ++i) {
-        const vector<float>& detc = detections[i];
-        // Detection format: [image_id, label, score, xmin, ymin, xmax, ymax].
-        const float score = detc[2];
-        if (score >= threshold) {
-            QVector<float> d = { detc[0], detc[1], score, detc[3]*img.cols, detc[4]*img.rows, detc[5]*img.cols, detc[6]*img.rows };
-            ret << d;
-        }
-    }
-    return ret;
+    return detector.detect(img, threshold);
 }

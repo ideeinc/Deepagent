@@ -17,6 +17,7 @@ public:
     ~Image();
 
     Image clone() const;
+    const cv::Mat &mat() const { return _mat; }
 
     int width() const;
     int height() const;

@@ -1,4 +1,5 @@
 #include "applicationcontroller.h"
+#include "logics/cudatool.h"
 #include <glog/logging.h>
 #include <caffe/caffe.hpp>
 
@@ -19,10 +20,22 @@ void ApplicationController::staticInitialize()
     google::SetLogDestination(google::INFO, qPrintable(Tf::app()->logPath() + "caffe-"));
     FLAGS_logtostderr = 0;
 
+    // caffe
 #ifdef CPU_ONLY
     caffe::Caffe::set_mode(caffe::Caffe::CPU);
 #else
-    caffe::Caffe::set_mode(caffe::Caffe::GPU);
+    // Set device id and mode
+    auto gpus = CudaTool::getGpus();
+    if (gpus.isEmpty()) {
+        caffe::Caffe::set_mode(caffe::Caffe::CPU);
+    } else {
+        tInfo() << "Use GPU with device ID " << gpus[0];
+        cudaDeviceProp deviceProp;
+        cudaGetDeviceProperties(&deviceProp, gpus[0]);
+        tInfo() << "GPU device name: " << deviceProp.name;
+        caffe::Caffe::SetDevice(gpus[0]);
+        caffe::Caffe::set_mode(caffe::Caffe::GPU);
+    }
 #endif
 }
 

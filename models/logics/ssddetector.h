@@ -20,7 +20,9 @@ class SsdDetector
 public:
     SsdDetector(const string& model_file, const string& weights_file, const string& mean_file, const string& mean_value);
     ~SsdDetector();
-    vector<vector<float>> Detect(const cv::Mat& img);
+
+    QList<QVector<float>> detect(const cv::Mat& img, float threshold);
+    void reset(const string& model_file, const string& weights_file, const string& mean_file, const string& mean_value);
 
     static QList<QVector<float>> detect(const QString &imgFile, float threshold, const QString& modelFile, const QString &weightsFile, const QString &meanValue);
 

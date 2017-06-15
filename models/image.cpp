@@ -263,7 +263,7 @@ QByteArray Image::toEncoded(const QString &ext, const QVector<int> &params)
         e.prepend(".");
     }
 
-    if (imencode(e.toStdString(), _mat, buf, params.toStdVector())) {
+    if (! isEmpty() && imencode(e.toStdString(), _mat, buf, params.toStdVector())) {
         encoded.resize(buf.size());
         std::memcpy(encoded.data(), buf.data(), buf.size());
     }

@@ -21,10 +21,63 @@
     color: #999;
     min-height: 90px;
 }
+.zoom {
+    -webkit-transform: scale(2.0);
+    -moz-transform: scale(2.0);
+    -o-transform: scale(2.0);
+    -ms-transform: scale(2.0);
+    transform: scale(2.0);
+}
 </style>
 <script>
-// 送信準備
 var dsup = {};
+
+dsup.zoomImage = function() {
+    // イメージ拡大
+    $('img').hover(function(e) {
+        $(this).addClass('zoom');
+    }, function(e) {
+        $(this).removeClass('zoom');
+    });
+};
+
+// POST
+//dsup.post = function(blob, filename, mimetype) {
+dsup.post = function(files) {
+    var formData = new FormData(document.getElementById("form1"));
+    for (var i = 0; i < files.length; i++) {
+        formData.append("imageFile[]", files[i], files[i].name);
+    }
+
+    $.post({
+        type: "POST",
+        url: "/Train/detect/<%= caffeModel.id() %>",
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(msg) {
+            ;;; console.log("POST success : " + msg);
+            // レスポンスで書き換え
+            var domarray = $($.parseHTML(msg));
+            var h = domarray.filter('#result')[0].innerHTML;
+            $('#result').html(h);
+
+            // イメージ拡大セット
+            dsup.zoomImage();
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
+            ;;; console.log("POST error");
+            ;;; console.log(XMLHttpRequest.status);
+            ;;; console.log(textStatus);
+            ;;; console.log(errorThrown.message);
+        },
+        complete: function(data) {
+            ;;; console.log("POST completed");
+        }
+    });
+};
+
+// 送信準備
 dsup.sendRequest = function(files) {
     dsup.blobToSend = null;
     if (files == null || files.length == 0) {
@@ -36,16 +89,8 @@ dsup.sendRequest = function(files) {
         return;
     }
 
-    if (files.length == 1) {
-        // ファイル１つ
-        var f = files[0];
-        //modal.showWaiting(500, null, null, f.name);
-        //dsup.post(f, f.name, f.type);
-        alert(f.name);
-        ;;; console.log("file size: " + f.size);
-
-    } else {
-        // ファイル2つ以上
+    if (files.length > 0) {
+        dsup.post(files);
     }
 };
 
@@ -67,20 +112,22 @@ $(function(){
         evt.preventDefault();
         dsup.sendRequest(evt.dataTransfer.files);
     });
+
+    dsup.zoomImage();
 });
 </script>
 </head>
-<body>
+<body style="width: 1000px; margin-right: auto; margin-left: auto;">
 <p style="color: red"><%=$ error %></p>
 <p style="color: green"><%=$ notice %></p>
 
 <h1>病変検出</h1>
 
-<%== formTag(urla("detect", caffeModel.id() ), Tf::Post, true) %>
+<%== formTag(urla("detect", caffeModel.id() ), Tf::Post, true, a("id", "form1")) %>
+  <div id="drop_zone"><span id="msg_drag"><i class="fa fa-files-o"></i>　Drag file here, up to 3<br>or<br></span><i class="fa fa-folder-open-o"></i>　Click to choose file to send</div>
   <p>
-    <label>アップロード画像ファイル: <input name="imageFile" value="" type="file" /></label>
+    <label>アップロード画像ファイル: <input name="imageFile[]" id="imageFile[]" value="" type="file" /></label>
   </p>
-  <div id="drop_zone"><span id="msg_drag"><i class="fa fa-files-o"></i>　Drag file here<br>or<br></span><i class="fa fa-folder-open-o"></i>　Click to choose file to send</div>
   <p>
     <label>mean value: <input name="meanValue" value="53,74,144" /></label>
   </p>
@@ -94,17 +141,25 @@ $(function(){
   <input type="submit" value="Detect" />
 </form>
 <br>
-<div>
-  <%== inlineImageTag(container.jpegBin, "image/jpeg"); %>
-</div>
-<p>
-  <% for (auto &c : container.detections) {
+<div id="result" style="width: 100%;">
+  <% for (int i=0; i < container.jpegBinList.count(); ++i) { %>
+  <div style="float: left; padding: 4px;">
+    <div>
+      <%== inlineImageTag(container.jpegBinList[i], "image/jpeg"); %>
+    </div>
+    <p>
+      <% for (auto &c : container.detectionsList[i]) {
         QString str = QString("class:%1 score:%2  (%3,%4) (%5,%6)").arg(c[1]).arg(c[2], 0, 'g', 3).arg((int)c[3]).arg((int)c[4]).arg((int)c[5]).arg((int)c[6]);
         eh(str);
         echo("<br>");
       }
-  %>
-</p>
+      %>
+    </p>
+  </div>
+  <% } %>
+  <div style="clear: both;"></div>
+</div>
+
 <br>
 <hr>
 <h3>モデル情報</h3>

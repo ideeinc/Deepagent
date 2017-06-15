@@ -16,7 +16,7 @@ macx {
   INCLUDEPATH += $${HOMEBREW_PREFIX}/include $${VECLIB_FRAMEWORK}/Versions/Current/Headers
   LIBS += -framework Accelerate -L$${HOMEBREW_PREFIX}/lib -lopencv_imgproc -lopencv_highgui
 }
-LIBS += -L../lib -lhelper -Wl,-rpath,${CAFFE_ROOT}/build/lib -L${CAFFE_ROOT}/build/lib -lboost_system -lcaffe -lglog -lprotobuf -lopencv_core -lopencv_highgui -lopencv_imgproc
+LIBS += -L../lib -lhelper -Wl,-rpath,${CAFFE_ROOT}/build/lib -L${CAFFE_ROOT}/build/lib -lboost_system -lcaffe -lglog -lprotobuf -lopencv_core -lopencv_highgui -lopencv_imgproc  -Wl,-rpath,/usr/local/cuda/lib64 -L/usr/local/cuda/lib64 -lcudart
 MOC_DIR = .obj/
 OBJECTS_DIR = .obj/
 QMAKE_CXXFLAGS += -Wno-sign-compare
@@ -44,6 +44,8 @@ HEADERS += logics/prediction.h
 SOURCES += logics/prediction.cpp
 HEADERS += logics/ssddetector.h
 SOURCES += logics/ssddetector.cpp
+HEADERS += logics/cudatool.h
+SOURCES += logics/cudatool.cpp
 HEADERS += logics/roccurve.h
 SOURCES += logics/roccurve.cpp
 
