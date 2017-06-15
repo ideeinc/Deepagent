@@ -14,9 +14,12 @@ macx {
   ACCELERATE_FRAMEWORK = /System/Library/Frameworks/Accelerate.framework
   VECLIB_FRAMEWORK = $${ACCELERATE_FRAMEWORK}/Versions/Current/Frameworks/vecLib.framework
   INCLUDEPATH += $${HOMEBREW_PREFIX}/include $${VECLIB_FRAMEWORK}/Versions/Current/Headers
-  LIBS += -framework Accelerate -L$${HOMEBREW_PREFIX}/lib -lopencv_imgproc -lopencv_highgui
+  LIBS += -framework Accelerate -L$${HOMEBREW_PREFIX}/lib
 }
-LIBS += -L../lib -lhelper -Wl,-rpath,${CAFFE_ROOT}/build/lib -L${CAFFE_ROOT}/build/lib -lboost_system -lcaffe -lglog -lprotobuf -lopencv_core -lopencv_highgui -lopencv_imgproc  -Wl,-rpath,/usr/local/cuda/lib64 -L/usr/local/cuda/lib64 -lcudart
+LIBS += -L../lib -lhelper -Wl,-rpath,${CAFFE_ROOT}/build/lib -L${CAFFE_ROOT}/build/lib -lboost_system -lcaffe -lglog -lprotobuf -lopencv_core -lopencv_highgui -lopencv_imgproc
+contains(DEFINES, CPU_ONLY) else {
+  LIBS += -Wl,-rpath,/usr/local/cuda/lib64 -L/usr/local/cuda/lib64 -lcudart
+}
 MOC_DIR = .obj/
 OBJECTS_DIR = .obj/
 QMAKE_CXXFLAGS += -Wno-sign-compare

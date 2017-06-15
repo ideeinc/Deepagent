@@ -9,6 +9,14 @@ DESTDIR = ../lib
 INCLUDEPATH += ../helpers ../models ${CAFFE_ROOT}/build/include ${CAFFE_ROOT}/include /usr/local/cuda/include
 DEPENDPATH  += ../helpers ../models
 LIBS += -L../lib -lhelper -lmodel -Wl,-rpath,${CAFFE_ROOT}/build/lib -L${CAFFE_ROOT}/build/lib -lcaffe -lglog
+macx {
+  DEFINES += USE_ACCELERATE CPU_ONLY
+  HOMEBREW_PREFIX = $$system(brew --prefix)
+  ACCELERATE_FRAMEWORK = /System/Library/Frameworks/Accelerate.framework
+  VECLIB_FRAMEWORK = $${ACCELERATE_FRAMEWORK}/Versions/Current/Frameworks/vecLib.framework
+  INCLUDEPATH += $${HOMEBREW_PREFIX}/include $${VECLIB_FRAMEWORK}/Versions/Current/Headers
+  LIBS += -framework Accelerate -L$${HOMEBREW_PREFIX}/lib -lboost_system
+}
 MOC_DIR = .obj/
 OBJECTS_DIR = .obj/
 
