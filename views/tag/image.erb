@@ -39,6 +39,20 @@
             } });
             return false;
         });
+
+        // arrow key navigation
+        $(document).on('keyup', function(e){
+            var keymap = {};
+            keymap[37] = 'a.prev'; // left
+            keymap[39] = 'a.next'; // right
+            var selector = keymap[ e.which ];
+            if (selector) {
+                var href = $(selector).attr('href');
+                if (href) {
+                    window.location = href;
+                }
+            }
+        });
     });
   </script>
 </head>
@@ -96,11 +110,11 @@
 
 <p>
 <%
-    echo((container.index > 0) ? linkTo("<< 前へ", urla("show", QStringList({ container.primaryGroup.name(), container.primaryTag.name(), QString::number(container.index - 1) }))) : "<< 前へ");
+    echo((container.index > 0) ? linkTo("<< 前へ", urla("show", QStringList({ container.primaryGroup.name(), container.primaryTag.name(), QString::number(container.index - 1) })), Tf::Get, THtmlAttribute("class", "prev")) : "<< 前へ");
     echo(" &nbsp; | &nbsp; ");
     echo(linkTo("一覧", urla("show", QStringList({ container.primaryGroup.name(), container.primaryTag.name() }))));
     echo(" &nbsp; | &nbsp; ");
-    echo((container.index < (container.count - 1)) ? linkTo("次へ >>", urla("show", QStringList({ container.primaryGroup.name(), container.primaryTag.name(), QString::number(container.index + 1) }))) : "次へ >>");
+    echo((container.index < (container.count - 1)) ? linkTo("次へ >>", urla("show", QStringList({ container.primaryGroup.name(), container.primaryTag.name(), QString::number(container.index + 1) })), Tf::Get, THtmlAttribute("class", "next")) : "次へ >>");
 %>
 </p>
 
