@@ -53,13 +53,11 @@ Prediction::~Prediction()
 bool Prediction::init(const QString &trainedModelFilePath, const QString &meanFilePath)
 {
     try {
-#ifdef CPU_ONLY
-//        Caffe::set_mode(Caffe::CPU);
-#else
-//        Caffe::set_mode(_gpuEnable ? Caffe::GPU : Caffe::CPU);
+#ifndef CPU_ONLY
+        Caffe::set_mode(_gpuEnable ? Caffe::GPU : Caffe::CPU);
         Caffe::SetDevice(_gpuDevice);
-#endif
         //Caffe::set_multiprocess(true);
+#endif
 
         if (netPtr) {
             tWarn("Already initialized network");
@@ -181,11 +179,11 @@ Image Prediction::convertMeanBlobToImage(const Blob<float> &blob)
     const int width = blob.width();
 
     int type = (channels == 3) ? CV_8UC3 : CV_8U;
-    Image ret(cv::Mat(height, width, type));
+    cv::Mat mat(height, width, type);
 
     const float *transdata = blob.cpu_data();
     for (int h = 0; h < height; ++h) {
-        uchar *ptr = ret._mat.ptr<uchar>(h);
+        uchar *ptr = mat.ptr<uchar>(h);
         int imgIndex = 0;
         for (int w = 0; w < width; ++w) {
             for (int c = 0; c < channels; ++c) {
@@ -194,7 +192,7 @@ Image Prediction::convertMeanBlobToImage(const Blob<float> &blob)
             }
         }
     }
-    return ret;
+    return Image(mat);
 }
 
 
@@ -213,7 +211,7 @@ void Prediction::convertImageToBlob(const Image &image, Blob<float> &blob) const
 
     float *transdata = blob.mutable_cpu_data();
     for (int h = 0; h < imgHeight; ++h) {
-        const uchar *ptr = image._mat.ptr<uchar>(h);
+        const uchar *ptr = image.mat().ptr<uchar>(h);
         int imgIndex = 0;
         for (int w = 0; w < imgWidth; ++w) {
             for (int c = 0; c < imgChannels; ++c) {
@@ -247,8 +245,8 @@ bool Prediction::substractMeanImage(const Image &src, const Image &mean, Blob<fl
 
     float *transdata = blob.mutable_cpu_data();
     for (int h = 0; h < imgHeight; ++h) {
-        const uchar *iptr = src._mat.ptr<uchar>(h);
-        const uchar *mptr = mean._mat.ptr<uchar>(h);
+        const uchar *iptr = src.mat().ptr<const uchar>(h);
+        const uchar *mptr = mean.mat().ptr<const uchar>(h);
         int imgIndex = 0;
         for (int w = 0; w < imgWidth; ++w) {
             for (int c = 0; c < imgChannels; ++c) {

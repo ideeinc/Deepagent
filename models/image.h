@@ -7,12 +7,12 @@
 
 class Image {
     cv::Mat _mat;
-    Image(const cv::Mat &other);
 
 public:
     Image() {}
     Image(const QString &path, bool color = true);
     Image(const Image &other);  // shallow copy
+    Image(const cv::Mat &other);
     Image &operator=(const Image &other);  // shallow copy
     ~Image();
 
@@ -48,22 +48,19 @@ public:
     QRect getValidRect() const;
 
     // 矩形描画
-    void drawRectangle(int x1, int y1, int x2, int y2, const cv::Scalar& color, int thickness=1, int lineType=8);
+    void drawRectangle(int x1, int y1, int x2, int y2, const cv::Scalar &color, int thickness=1, int lineType=8);
+
+    // 文字列描画
+    void putText(const QString &text, int x, int y, int fontFace=cv::FONT_HERSHEY_SIMPLEX, double fontScale=1.0, const cv::Scalar &color=CV_RGB(0,0,0),
+                 int thickness=1);
+    void drawLabel(const QString &text, int x, int y, int fontFace=cv::FONT_HERSHEY_SIMPLEX, double fontScale=1.0, const cv::Scalar &color=CV_RGB(0,0,0),
+                  int thickness=1, const cv::Scalar &bgColor=CV_RGB(255,255,255), double alpha=1.0);
 
     // 保存
     bool save(const QString &path) const;
 
     // エンコード
     QByteArray toEncoded(const QString &ext, const QVector<int> &params=QVector<int>());
-
-    // // 表示
-    // void show(const QString &title)
-    // {
-    //     cv::namedWindow(qPrintable(title), cv::WINDOW_AUTOSIZE);
-    //     cv::imshow(qPrintable(title), mat);
-    // }
-
-    friend class Prediction;
 };
 
 #endif // IMAGE_H

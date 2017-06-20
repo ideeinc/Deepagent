@@ -21,15 +21,15 @@ public:
     SsdDetector(const string& model_file, const string& weights_file, const string& mean_file, const string& mean_value);
     ~SsdDetector();
 
-    QList<QVector<float>> detect(const cv::Mat& img, float threshold);
+    QList<QVector<float>> detect(const cv::Mat& img, float threshold) const;
     void reset(const string& model_file, const string& weights_file, const string& mean_file, const string& mean_value);
 
     static QList<QVector<float>> detect(const QString &imgFile, float threshold, const QString& modelFile, const QString &weightsFile, const QString &meanValue);
 
 private:
     void SetMean(const string& mean_file, const string& mean_value);
-    void WrapInputLayer(std::vector<cv::Mat>* input_channels);
-    void Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channels);
+    void WrapInputLayer(std::vector<cv::Mat>* input_channels) const;
+    void Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channels) const;
 
     struct SsdDetectorPrivate;
     SsdDetectorPrivate *d {nullptr};

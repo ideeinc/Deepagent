@@ -29,6 +29,11 @@ SsdDetector::SsdDetector(const string& model_file, const string& weights_file,
 
 void SsdDetector::reset(const string& model_file, const string& weights_file, const string& mean_file, const string& mean_value)
 {
+#ifndef CPU_ONLY
+    Caffe::set_mode(Caffe::GPU);
+    Caffe::SetDevice(0);
+#endif
+
     if (d) {
         delete d;
     }
@@ -57,7 +62,7 @@ SsdDetector::~SsdDetector()
 }
 
 
-QList<QVector<float>> SsdDetector::detect(const cv::Mat& img, float threshold)
+QList<QVector<float>> SsdDetector::detect(const cv::Mat& img, float threshold) const
 {
     Blob<float>* input_layer = d->net_->input_blobs()[0];
     input_layer->Reshape(1, d->num_channels_, d->input_geometry_.height, d->input_geometry_.width);
@@ -66,9 +71,7 @@ QList<QVector<float>> SsdDetector::detect(const cv::Mat& img, float threshold)
 
     std::vector<cv::Mat> input_channels;
     WrapInputLayer(&input_channels);
-
     Preprocess(img, &input_channels);
-
     d->net_->Forward();
     tDebug() << "CNN forward ... done";
 
@@ -87,7 +90,8 @@ QList<QVector<float>> SsdDetector::detect(const cv::Mat& img, float threshold)
         // Detection format: [image_id, label, score, xmin, ymin, xmax, ymax].
         const float score = result[2];
         if (score >= threshold) {
-            detections << QVector<float>({result[0], result[1], score, result[3]*img.cols, result[4]*img.rows, result[5]*img.cols, result[6]*img.rows});
+            detections << QVector<float>({result[0], result[1], score, qMax(result[3]*img.cols, 0.f), qMax(result[4]*img.rows, 0.f),
+                                          qMin(result[5]*img.cols, (float)img.cols), qMin(result[6]*img.rows, (float)img.rows)});
         }
         result += 7;
     }
@@ -154,7 +158,7 @@ void SsdDetector::SetMean(const string& mean_file, const string& mean_value)
  * don't need to rely on cudaMemcpy2D. The last preprocessing
  * operation will write the separate channels directly to the input
  * layer. */
-void SsdDetector::WrapInputLayer(std::vector<cv::Mat>* input_channels)
+void SsdDetector::WrapInputLayer(std::vector<cv::Mat>* input_channels) const
 {
     Blob<float>* input_layer = d->net_->input_blobs()[0];
 
@@ -168,7 +172,7 @@ void SsdDetector::WrapInputLayer(std::vector<cv::Mat>* input_channels)
     }
 }
 
-void SsdDetector::Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channels)
+void SsdDetector::Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channels) const
 {
     /* Convert the input image to the input image format of the network. */
     cv::Mat sample;

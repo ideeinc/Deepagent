@@ -10,9 +10,6 @@
 #include "ssddetector.h"
 #include "image.h"
 
-// 仮！！！！！！
-static SsdDetector *globalDetector;
-
 
 TrainIndexContainer TrainService::index()
 {
@@ -144,6 +141,29 @@ static void plotResultPng(const QString &caffeLogPath, const QString &keyword, i
 }
 
 
+static QList<QVector<float>> ssdDetect(const SsdDetector &detector, float threshold, float drawThreshold, Image &image)
+{
+    const QMap<int, cv::Scalar> colorMap = {{1,CV_RGB(255,255,0)}, {2,CV_RGB(255,255,0)}, {5,CV_RGB(255,255,0)}, {8,CV_RGB(255,255,0)},
+                                            {9,CV_RGB(255,255,0)}, {13,CV_RGB(0,0,200)}};
+
+    auto detects = detector.detect(image.mat(), threshold);
+
+    for (const auto &c : detects) {
+        auto score = c[2];
+        if (score > drawThreshold) {
+            auto color = colorMap.value(c[1], CV_RGB(0,200,0));
+
+            image.drawRectangle(c[3], c[4], c[5], c[6], color, 1);
+            auto text = QString("C%1 : %2").arg(c[1]).arg(score, 0, 'g', 3);
+            image.drawLabel(text, c[3], c[4], cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0), 1, color, 0.5); // label
+            tInfo() << "class:" << c[1] << " score:"  << score << " w:" << (int)(c[3]) << " h:"  << (int)c[4]
+                    << " w:" << (int)c[5] << " h:"  << (int)c[6];
+        }
+    }
+    return detects;
+}
+
+
 TrainDetectContainer TrainService::detect(const QString &id, THttpRequest &request)
 {
     TrainDetectContainer container;
@@ -152,56 +172,43 @@ TrainDetectContainer TrainService::detect(const QString &id, THttpRequest &reque
 
     switch (request.method()) {
     case Tf::Get: {
-        if (! cm.isNull()) {
-            auto meanValue = request.formItemValue("meanValue", "53,74,144");
-            auto trainedModel = request.formItemValue("trainedModel", "VGG_SSD300x300_iter_120000.caffemodel");  // TODO delete the value
-            if (! globalDetector) {
-                globalDetector = new SsdDetector(cm.deployFilePath().toStdString(), cm.trainedModelFilePath(trainedModel).toStdString(),
-                   string(), meanValue.toStdString());
-            } else {
-                globalDetector->reset(cm.deployFilePath().toStdString(), cm.trainedModelFilePath(trainedModel).toStdString(),
-                   string(), meanValue.toStdString());
-            }
-        }
         break; }
 
     case Tf::Post: {
         auto &formdata = request.multipartFormData();
         auto entities = formdata.entityList("imageFile[]");
-        auto meanValue = request.formItemValue("meanValue", "53,74,144");
+        auto meanValue = request.formItemValue("meanValue", "104,117,123");
         auto trainedModel = request.formItemValue("trainedModel");
+        auto imageDir = formdata.formItemValue("imageDir");
 
-        if (entities.isEmpty()) {
-            tWarn() << "empty image!";
+        if (trainedModel.isEmpty()) {
+            tWarn() << "empty trained model!";
+            break;
         }
 
-        // SsdDetector detector(cm.deployFilePath().toStdString(), cm.trainedModelFilePath(trainedModel).toStdString(),
-        //                      string(), meanValue.toStdString());
-        const QMap<int, cv::Scalar> colorMap = {{1,CV_RGB(255,255,0)}, {2,CV_RGB(255,255,0)}, {5,CV_RGB(255,255,0)}, {8,CV_RGB(255,255,0)},
-                                                {9,CV_RGB(255,255,0)}, {13,CV_RGB(0,0,200)}};
+        SsdDetector detector(cm.deployFilePath().toStdString(), cm.trainedModelFilePath(trainedModel).toStdString(),
+                             string(), meanValue.toStdString());
 
-        for (auto &ent : entities) {
-            auto jpg = ent.uploadedFilePath();
-            tInfo() << jpg;
-            auto image = Image(jpg);
-            QList<QVector<float>> detections;
+        if (! imageDir.isEmpty()) {
+            // ディレクトリ
 
-            if (! cm.isNull() && ! image.isEmpty() && ! trainedModel.isEmpty()) {
-                //auto detects = detector.detect(jpg, 0.4, cm.deployFilePath(), cm.trainedModelFilePath(trainedModel), meanValue);
-                auto detects = globalDetector->detect(image.mat(), 0.4);
-                for (const auto &c : detects) {
-                    auto color = colorMap.value(c[1], CV_RGB(0,200,0));
+        } else if (! entities.isEmpty()) {
+            // 画像ファイル
+            for (auto &ent : entities) {
+                auto jpg = ent.uploadedFilePath();
+                tInfo() << jpg;
+                auto image = Image(jpg);
+                QList<QVector<float>> detections;
 
-                    image.drawRectangle(c[3], c[4], c[5], c[6], color, 2, 8);
-                    tInfo() << "class:" << c[1] << " score:"  << c[2] << " w:" << (int)(c[3]) << " h:"  << (int)c[4]
-                            << " w:" << (int)c[5] << " h:"  << (int)c[6];
-
+                if (! cm.isNull() && ! image.isEmpty()) {
+                    detections << ssdDetect(detector, 0.1, 0.5, image);
                 }
-                detections << detects;
-            }
 
-            container.detectionsList << detections;
-            container.jpegBinList << image.toEncoded("jpg");
+                container.detectionsList << detections;
+                container.jpegBinList << image.toEncoded("jpg");
+            }
+        } else {
+            tWarn() << "empty image!";
         }
         break; }
 

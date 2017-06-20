@@ -232,12 +232,31 @@ QRect Image::getValidRect() const
     return QRect(x, y, brect.width+2, brect.height+2);
 }
 
-
+// 矩形描画  thickness<0:塗りつぶし
 void Image::drawRectangle(int x1, int y1, int x2, int y2, const Scalar &color, int thickness, int lineType)
 {
     cv::rectangle(_mat, cv::Point(x1,y1), cv::Point(x2, y2), color, thickness, lineType);
 }
 
+// 文字列描画
+void Image::putText(const QString &text, int x, int y, int fontFace, double fontScale, const Scalar &color, int thickness)
+{
+    cv::putText(_mat, text.toStdString(), cv::Point(x, y), fontFace, fontScale, color, thickness);
+}
+
+// ラベル描画
+void Image::drawLabel(const QString &text, int x, int y, int fontFace, double fontScale, const cv::Scalar &color,
+                      int thickness, const cv::Scalar &bgColor, double alpha)
+{
+    int baseline = 0;
+    Size textSize = getTextSize(text.toStdString(), fontFace, fontScale, thickness, &baseline);
+    int textX = x;
+    int textY = y + textSize.height;
+    Image alphaMat(cv::Mat(_mat.rows, _mat.cols, _mat.type(), cv::Scalar(0)));
+    alphaMat.drawRectangle(x, y, x+textSize.width, y+textSize.height+thickness, bgColor, -1);
+    cv::addWeighted(_mat, 1.0, alphaMat.mat(), alpha, 0, _mat);
+    putText(text, textX, textY, fontFace, fontScale, color, thickness);
+}
 
 // JPEG保存
 bool Image::save(const QString &path) const
