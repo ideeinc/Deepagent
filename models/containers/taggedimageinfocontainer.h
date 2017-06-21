@@ -9,6 +9,7 @@ class TaggedImageInfoContainer
 {
 public:
     QString path;
+    QString displayName;
     long index;
     long count;
 

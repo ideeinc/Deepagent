@@ -1,38 +1,8 @@
 #include "tagservice.h"
-#include "image.h"
+#include "managedfileservice.h"
 #include <QtCore>
 #include <TWebApplication>
-#include <THttpRequest>
 #include <functional>
-
-namespace {
-    QByteArray checksum(const QString& path, QCryptographicHash::Algorithm algorithm = QCryptographicHash::Md5)
-    {
-        QFile file(path);
-        if (file.open(QFile::ReadOnly)) {
-            QCryptographicHash hash(algorithm);
-            if (hash.addData(&file)) {
-                return hash.result();
-            }
-        }
-        return QByteArray();
-    }
-
-    void find(const QString& path, const QString& filename, const std::function<bool(const QString&)> action)
-    {
-        const QString needle = QFileInfo(filename).completeBaseName();
-        QDirIterator i(path, {needle + ".*"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
-        while (i.hasNext()) {
-            const QString name = i.next();
-            const QFileInfo info(name);
-            if (info.completeBaseName() == needle) {
-                if (! action(info.absoluteFilePath())) {
-                    break;
-                }
-            }
-        }
-    }
-}
 
 
 TagService::TagService()
@@ -177,99 +147,20 @@ void TagService::updateImages(const QStringList& images, const QVariantMap& tags
     }
 }
 
-QMap<QString, QStringList> TagService::extractImages(const QList<TMimeEntity>& files, const QString& groupName, const QString& tagName, const bool cropImage)
+QMap<QString, QStringList> TagService::extractImages(const QList<TMimeEntity>& files, const QString& groupName, const QString& tagName, const bool isCropImage)
 {
-    const auto baseDir = Tf::conf("settings").value("OriginalImagesDir").toString();
-    const auto basePath = QDir(baseDir).filePath( QDir::toNativeSeparators(QDateTime::currentDateTime().toString("yyyy/MMdd/")) + QString::number(QDateTime::currentDateTime().toMSecsSinceEpoch()) );
-    if (! QDir(basePath).exists()) {
-        QDir(basePath).mkpath(".");
-    }
+    const auto results = ManagedFileService().append(files, isCropImage);
+    const auto images = std::get<0>(results);
 
-    const QTemporaryDir tempDir;
-    const auto workPath = tempDir.path();
-    for (const auto& f : files) {
-        QProcess inflator;
-        const QString originalName = f.originalFileName();
-        const QString extension = QFileInfo(originalName).completeSuffix();
-        const QString contentType = f.contentType();
-        if ((extension == "zip") || (contentType == "application/zip") || (contentType == "application/x-zip-compressed")) {
-            inflator.start("unzip", { f.uploadedFilePath(), "-d", workPath });
-            inflator.waitForFinished(-1);
-        }
-        else if ((extension == "tar") || (contentType == "application/x-tar")) {
-            inflator.start("tar", { "xf", f.uploadedFilePath(), "-C", workPath });
-            inflator.waitForFinished(-1);
-        }
-        else if ((extension == "tar.gz") || (contentType == "application/x-gzip") || (contentType == "application/gzip")) {
-            inflator.start("tar", { "xf", f.uploadedFilePath(), "-C", workPath });
-            inflator.waitForFinished(-1);
-        }
-        else if (contentType == "image/jpeg") {
-            const_cast<TMimeEntity*>(&f)->renameUploadedFile(QDir(workPath).filePath(originalName));
-        }
-        else {
-            tDebug() << "Not processed: [" << contentType << "] " << f.uploadedFilePath() << "/" << originalName;
-        }
-    }
-
-    // cache the all hashes.
-    QStringList caches;
-    QDirIterator i(baseDir, {"*.jpg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
-    while (i.hasNext()) {
-        const QString path = i.next();
-        caches << QFileInfo(path).completeBaseName();
-    }
-
-    QMap<QString, QStringList> errors;
-    QStringList images;
-    QDirIterator search(workPath, {"*.jpg", "*.jpeg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
-    while (search.hasNext()) {
-        const QString original = search.next();
-        // 重複を検出するため checksum をファイル名する (重複していた場合、新しいファイルは処理しない)
-        const QString hash = QString(checksum(original).toHex());
-        // 移動先の sources ディレクトリ (オリジナル画像置き場) から重複を検索
-        bool duplicated = false;
-        if (caches.contains(hash)) {
-            duplicated = true;
-        }
-        // 適切な場所に配置
-        QString errorKey = "";
-        if (! duplicated) {
-            const QString destination = QDir(basePath).filePath(hash + ".jpg");
-            if (cropImage) {
-                Image originalImage(original);
-                const QRect frame = originalImage.getValidRect();
-                const auto size = std::min(frame.width(), frame.height());
-                if (originalImage.cropped(frame.x(), frame.y(), size, size).save(destination)) {
-                    images << QFileInfo(destination).absoluteFilePath();
-                }
-                else {
-                    errorKey = "cropImage";
-                }
-            }
-            if ((! cropImage) || (! errorKey.isEmpty())) {
-                if (QFile::rename(original, destination)) {
-                    images << QFileInfo(destination).absoluteFilePath();
-                }
-                else {
-                    errorKey = "unknown";
-                }
-            }
-        }
-        // 重複ファイルは警告
-        else {
-            errorKey = "duplicated";
-        }
-        // エラーを記録
-        if (! errorKey.isEmpty()) {
-            errors[ errorKey ] << QString(original).replace(workPath + QDir::separator(), "");
-        }
-    }
     if (images.count() > 0) {
         // タグを更新
         updateImages(images, {{groupName, tagName}});
     }
 
+    QMap<QString, QStringList> errors;
+    for (const auto& err : std::get<1>(results)) {
+        errors[ err.typeName() ] << err.file();
+    }
     return errors;
 }
 
@@ -306,6 +197,7 @@ TaggedImageInfoContainer TagService::image(const QString& groupName, const QStri
     }
 
     container.path = images[index];
+    container.displayName = ManagedFile::fromLink(container.path).name();
     container.index = index;
     container.count = images.count();
 

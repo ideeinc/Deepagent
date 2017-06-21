@@ -3,6 +3,7 @@
 <% tfetch(TagInfoContainer, container) %>
 <%#include "services/taggroup.h" %>
 <% tfetch(QList<TagGroup>, allGroups) %>
+<%#include "managedfile.h" %>
 <html>
 <head>
   <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
@@ -197,9 +198,9 @@
 <% } %>
 
 <div style="display: inline;">
-<% for (long i = container.min; i < container.max; ++i) { const auto& path = container.images[i]; %>
+<% for (long i = container.min; i < container.max; ++i) { const auto& path = container.images[i]; const auto original = ManagedFile::fromLink(path); %>
     <div style="display: inline-block; width: 130px;">
-    <%== linkTo(inlineImageTag(path, "image/jpeg", THtmlAttribute("width", "128px") | THtmlAttribute("alt", QFileInfo(path).fileName()) | THtmlAttribute("title", QFileInfo(path).fileName())), urla("show", QStringList({ container.groupName, container.name, QString::number(i) })), Tf::Get, "", THtmlAttribute("title", QFileInfo(path).fileName())) %><br />
+    <%== linkTo(inlineImageTag(path, "image/jpeg", THtmlAttribute("width", "128px") | THtmlAttribute("alt", original.name()) | THtmlAttribute("title", original.name())), urla("show", QStringList({ container.groupName, container.name, QString::number(i) })), Tf::Get, "", THtmlAttribute("title", original.name())) %><br />
     <label><%== checkBoxTag("images[]", QFileInfo(path).absoluteFilePath(), false) %></label>
     </div>
 <% } %>

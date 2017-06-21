@@ -59,7 +59,7 @@
 </head>
 <body>
 
-<div style="font-size: small"><%= QFileInfo(container.path).fileName() %></div>
+<div style="font-size: small"><%= container.displayName %></div>
 <%== inlineImageTag(container.path, "image/jpeg", THtmlAttribute("height", "500px")) %>
 
 <p>
