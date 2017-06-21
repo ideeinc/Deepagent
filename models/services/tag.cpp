@@ -64,7 +64,21 @@ bool Tag::changeGroup(const QString& groupName) const
 
 long Tag::countOfImages() const
 {
-    return QDir(_baseDir.filePath(_name)).entryList({"*.jpg", "*.jpeg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot).count();
+    QProcess ls, wc;
+    ls.setStandardOutputProcess(&wc);
+
+    ls.start("ls", {"-U", _baseDir.filePath(_name)});
+    wc.start("wc", {"-l"});
+
+    wc.setProcessChannelMode(QProcess::ForwardedChannels);
+
+    if (! ls.waitForStarted())
+        return 0;
+    wc.waitForFinished(-1);
+
+    return QString(wc.readAll()).toLong();
+
+    // return QDir(_baseDir.filePath(_name)).entryList({"*.jpg", "*.jpeg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot).count();
 }
 
 QStringList Tag::images() const
@@ -72,8 +86,8 @@ QStringList Tag::images() const
     QStringList images;
 
     const QDir dir = QDir(_baseDir.filePath(_name)).absolutePath();
-    for (const QFileInfo& p : dir.entryList({"*.jpg", "*.jpeg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot)) {
-        images << dir.filePath(p.fileName()); // ??? p.absoluteFilePath() is something wrong.
+    for (const QString& s : dir.entryList({"*.jpg", "*.jpeg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot)) {
+        images << dir.filePath(s);
     }
 
     return images;
@@ -84,10 +98,10 @@ QStringList Tag::imageNames() const
     QStringList names;
 
     const QDir dir = QDir(_baseDir.filePath(_name)).absolutePath();
-    for (const QFileInfo& p : dir.entryList({"*.jpg", "*.jpeg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot)) {
-        names << p.fileName();
+    for (const QString& s : dir.entryList({"*.jpg", "*.jpeg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot)) {
+        names << s;
     }
-    
+
     return names;
 }
 
@@ -96,8 +110,8 @@ QStringList Tag::imagePaths() const
     QStringList paths;
 
     const QDir dir = QDir(_baseDir.filePath(_name)).absolutePath();
-    for (const QFileInfo& p : dir.entryInfoList({"*.jpg", "*.jpeg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot)) {
-        paths << QFile::symLinkTarget(p.absoluteFilePath());
+    for (const QString& s : dir.entryList({"*.jpg", "*.jpeg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot)) {
+        paths << QFile::symLinkTarget(dir.filePath(s));
     }
 
     return paths;

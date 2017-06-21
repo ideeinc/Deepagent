@@ -112,9 +112,10 @@
 
 <% if (! uploadResult.errors.isEmpty()) { %>
     <% const QMap<QString, QString> errorDescriptions({
-        {"duplicated", "以下のファイルはすでにサーバー上に存在するためスキップしました"}, 
-        {"cropImage", "以下のファイルは画像処理に失敗しました"},
-        {"unknown", "以下のファイルは何らかのエラーが起きたためアップロードできませんでした"}
+        {"DUPLICATED", "以下のファイルはすでにサーバー上に存在するためスキップしました"}, 
+        {"IMAGECROP", "以下のファイルは画像処理に失敗しました"},
+        {"INVALIDCONTENT", "以下のファイルは不明なコンテンツのためスキップしました"},
+        {"UNKNOWN", "以下のファイルは何らかのエラーが起きたためアップロードできませんでした"}
     }); %>
     <% for (const auto& k : uploadResult.errors.keys()) {
         const QString description = errorDescriptions[k];

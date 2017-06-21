@@ -175,6 +175,9 @@ TagInfoContainer TagService::info(const QString& groupName, const QString& tagNa
     container.displayName = tag.displayName();
     container.groupName = group.name();
     container.images = tag.images();
+    qSort(container.images.begin(), container.images.end(), [](const QString& p1, const QString& p2) {
+        return ManagedFile::fromLink(p1).name() < ManagedFile::fromLink(p2).name();
+    });
 
     if ((0 < limit) && (limit < 1000)) {
         container.itemsPerPage = limit;
