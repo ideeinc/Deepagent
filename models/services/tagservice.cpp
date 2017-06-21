@@ -248,18 +248,17 @@ TagTableContainer TagService::table(const QString& rowGroupName, const QString& 
         for (const Tag& rowTag : rowGroup.tags()) {
             QStringList rowContent;
             const QSet<QString> rowFolder = rowTag.imageNames().toSet();
-            QSet<QString> colTagImageNamesAll, taggedImageNamesAll, noTaggedImageNamesAll;
+            QSet<QString> taggedImageNamesAll, noTaggedImageNamesAll;
 
             container.rowTagNames << rowTag.name();
             rowContent << rowTag.displayName();
             for (const auto &colImageNames : columns) {
-                colTagImageNamesAll += colImageNames;
                 const QSet<QString> taggedImageNames = (colImageNames & rowFolder);
                 taggedImageNamesAll += taggedImageNames;
                 rowContent << QString::number(taggedImageNames.count());
             }
 
-            noTaggedImageNamesAll = (rowFolder.count() >= colTagImageNamesAll.count()) ? (rowFolder - taggedImageNamesAll) : (colTagImageNamesAll - taggedImageNamesAll);
+            noTaggedImageNamesAll = (rowFolder - taggedImageNamesAll);
             rowContent.insert(1, QString::number(noTaggedImageNamesAll.count()));
             rowContent << QString::number(noTaggedImageNamesAll.count() + taggedImageNamesAll.count());
             container.rows << rowContent;
@@ -303,36 +302,18 @@ QPair<QStringList, TaggedImageInfoContainer> TagService::showTableImage(const QS
             }
             images = taggedImages;
         } else {
-            QStringList allColTagImages;
-            for (const Tag& tag : colGroup.tags()) {
-                allColTagImages += tag.images();
-            }
-
             if (colTagName == "残数") {
-                if (primaryFolder.count() >= allColTagImages.count()) {
-                    QStringList taggedImagesAll;
-                    for (const auto& path : primaryFolder) {
-                        for (const Tag& tag : colGroup.tags()) {
-                            if (tag.hasImage(QFileInfo(path).fileName())) {
-                                taggedImagesAll << path;
-                            }
+                QStringList taggedImagesAll;
+                for (const auto& path : primaryFolder) {
+                    for (const Tag& tag : colGroup.tags()) {
+                        if (tag.hasImage(QFileInfo(path).fileName())) {
+                            taggedImagesAll << path;
                         }
                     }
-                    images = (primaryFolder.toSet() - taggedImagesAll.toSet()).toList();
-                } else {
-                    // When the sum of images from all columns is hihger than the amount of images that the rowGroup contains,
-                    // this extra calculation is necessary to properly determine all non-tagged images.
-                    QStringList noTaggedImagesAll;
-                    QSet<QString> rowImageNames = container.primaryTag.imageNames().toSet();
-                    for (const auto& path : allColTagImages) {
-                        if (! rowImageNames.contains(QFileInfo(path).fileName())) {
-                            noTaggedImagesAll << path;
-                        }
-                    }
-                    images = noTaggedImagesAll;
                 }
+                images = (primaryFolder.toSet() - taggedImagesAll.toSet()).toList();
             } else { // colTagName == "総数"
-                images = (primaryFolder.count() >= allColTagImages.count()) ? container.primaryTag.images() : allColTagImages;
+                images = container.primaryTag.images();
             }
         }
 
