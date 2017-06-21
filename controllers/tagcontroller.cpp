@@ -91,8 +91,8 @@ void TagController::show(const QString& rowGroupName, const QString& rowTagName,
         const TaggedImageInfoContainer& container = data.second;
         texport(container);
 
-        QUrl listURL(urla("table"));
-        texport(listURL);
+        QUrl listUrl(urla("table"));
+        texport(listUrl);
 
         const auto& allGroups = service.allGroups();
         texport(allGroups);
