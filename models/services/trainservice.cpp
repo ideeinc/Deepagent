@@ -164,8 +164,21 @@ static QList<QVector<float>> ssdDetect(const SsdDetector &detector, float thresh
 }
 
 
+static QFileInfoList searchRecursive(const QDir &dir, const QStringList &nameFilters, QDir::SortFlags sort=QDir::Name)
+{
+    auto files = dir.entryInfoList(nameFilters, QDir::Files, sort);
+    auto subdirs = dir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
+    for (auto &d : subdirs) {
+       files << searchRecursive(QDir(d.absoluteFilePath()), nameFilters, sort);
+   }
+   return files;
+}
+
+
 TrainDetectContainer TrainService::detect(const QString &id, THttpRequest &request)
 {
+    const QString outDir("/home/aoyama/cancer_pics/");
+
     TrainDetectContainer container;
     container.caffeModel = CaffeModel::get(id);
     const auto &cm = container.caffeModel;
@@ -189,11 +202,40 @@ TrainDetectContainer TrainService::detect(const QString &id, THttpRequest &reque
         SsdDetector detector(cm.deployFilePath().toStdString(), cm.trainedModelFilePath(trainedModel).toStdString(),
                              string(), meanValue.toStdString());
 
-        if (! imageDir.isEmpty()) {
-            // ディレクトリ
+        if (! imageDir.isEmpty()) { // ディレクトリ指定
+            QDir(outDir).mkpath(".");
 
-        } else if (! entities.isEmpty()) {
-            // 画像ファイル
+            const QStringList nameFilters = {"*.jpg", "*.jpeg"};
+            auto images = searchRecursive(imageDir, nameFilters);
+
+            for (auto &img : images) {
+                Image jpg(img.absoluteFilePath());
+                if (jpg.width() < 50 || jpg.height() < 50) {
+                    tWarn() << "too small size: " << img.fileName();
+                    continue;
+                }
+                jpg.trim();
+
+                auto detections = ssdDetect(detector, 0.1, 0.5, jpg);
+                // Sort by score
+                std::sort(detections.begin(), detections.end(), [](const QVector<float> &v1, const QVector<float> &v2) -> bool {
+                    return v1[2] > v2[2];
+                });
+
+                tDebug() << "image file name: " << img.fileName();
+                const QString outpath = outDir % img.dir().dirName() % "/" % img.fileName();
+                QDir(outDir % img.dir().dirName()).mkpath(".");
+                jpg.save(outpath);
+                QString logmsg;
+                const QString format = "\"class:%1, score:%2, x1:%3, y1:%4, x2:%5, y2:%6\", ";
+                for (auto &c : detections) {
+                    logmsg += format.arg(c[1]).arg(c[2],0,'g',3).arg((int)c[3]).arg((int)c[4]).arg((int)c[5]).arg((int)c[6]);
+                }
+                logmsg.chop(2);
+                tInfo() << "#" % img.dir().dirName() % ", " % img.fileName() % ", " % logmsg;
+            }
+
+        } else if (! entities.isEmpty()) { // 画像ファイル
             for (auto &ent : entities) {
                 auto jpg = ent.uploadedFilePath();
                 tInfo() << jpg;
