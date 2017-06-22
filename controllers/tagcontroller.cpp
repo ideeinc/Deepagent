@@ -3,6 +3,7 @@
 #include <QtCore>
 
 const QString kTagImageListKey = "Tag_ImageListKey";
+const QString kTagImageFindKey = "Tag_ImageFindKey";
 const QString kTagImageTableInfo = "Tag_ImageTableInfo";
 
 
@@ -18,7 +19,7 @@ void TagController::index()
     render();
 }
 
-
+// show group
 void TagController::show(const QString& groupName)
 {
     TagGroup group(groupName);
@@ -31,7 +32,7 @@ void TagController::show(const QString& groupName)
     }
 }
 
-
+// show tag
 void TagController::show(const QString& groupName, const QString& tagName)
 {
     const long limit = (httpRequest().hasQueryItem("limit") ? httpRequest().parameter("limit").toLong() : 200);
@@ -44,6 +45,9 @@ void TagController::show(const QString& groupName, const QString& tagName)
         const auto& allGroups = service.allGroups();
         texport(allGroups);
 
+        const auto& baseUrl = urla("show", { groupName, tagName });
+        texport(baseUrl);
+
         render();
     }
     else {
@@ -51,7 +55,7 @@ void TagController::show(const QString& groupName, const QString& tagName)
     }
 }
 
-
+// show image (from tag, or find)
 void TagController::show(const QString& groupName, const QString& tagName, const QString& index)
 {
     const QStringList images = session().value(kTagImageListKey).toStringList();
@@ -65,6 +69,10 @@ void TagController::show(const QString& groupName, const QString& tagName, const
         if (imageTableInfo.contains("rowGroupName") && imageTableInfo.contains("colGroupName")) {
             listUrl = urla("table");
         }
+        const QVariantMap findInfo = session().value(kTagImageFindKey).toMap();
+        if (findInfo.contains("filter")) {
+            listUrl =urla("find", QStringList(), findInfo);
+        }
         texport(listUrl);
 
         const QList<TagGroup> allGroups = service.allGroups();
@@ -72,11 +80,11 @@ void TagController::show(const QString& groupName, const QString& tagName, const
         render("image");
     }
     else {
-        redirect(urla("show", tagName));
+        redirect(urla("show", { groupName, tagName }));
     }
 }
 
-
+// show image (from table)
 void TagController::show(const QString& rowGroupName, const QString& rowTagName, const QString& colGroupName, const QString colTagName)
 {
     const QPair<QStringList, TaggedImageInfoContainer> data = service.showTableImage(rowGroupName, rowTagName, colGroupName, colTagName);
@@ -363,6 +371,29 @@ void TagController::batchUpdate()
     else {
         renderErrorResponse(Tf::MethodNotAllowed);
     }
+}
+
+void TagController::find()
+{
+    const QList<TagGroup> allGroups = service.allGroups();
+    texport(allGroups);
+
+    const TagInfoContainer container = service.find(httpRequest());
+    if (container.available) {
+        const QVariantMap query{
+            { "filter", container.filter },
+            { "group", container.groupName },
+            { "tag", container.name }
+        };
+        session().insert(kTagImageListKey, container.images);
+        session().insert(kTagImageFindKey, query);
+        texport(container);
+
+        QUrl baseUrl = urla("find", QStringList(), query);
+        texport(baseUrl);
+    }
+
+    render();
 }
 
 T_DEFINE_CONTROLLER(TagController)

@@ -164,6 +164,103 @@ QMap<QString, QStringList> TagService::extractImages(const QList<TMimeEntity>& f
     return errors;
 }
 
+TagInfoContainer TagService::find(THttpRequest& request)
+{
+    TagInfoContainer container;
+
+    QString filter;
+    TagGroup targetGroup;
+    Tag targetTag;
+    long page = 0, limit = 200;
+
+    if (request.method() == Tf::Get) {
+        filter = request.queryItemValue("filter");
+        if ((! filter.isEmpty()) && request.hasQueryItem("group")) {
+            targetGroup = TagGroup(request.queryItemValue("group"));
+            if (targetGroup.exists() && request.hasQueryItem("tag")) {
+                targetTag = Tag(request.queryItemValue("tag"), &targetGroup);
+            }
+        }
+        if (request.hasQueryItem("page")) {
+            page = request.queryItemValue("page").toLong();
+        }
+        if (request.hasQueryItem("limit")) {
+            limit = request.queryItemValue("limit").toLong();
+        }
+    }
+    else if (request.method() == Tf::Post) {
+        if (request.hasJson()) {
+            const QJsonObject json = request.jsonData().object();
+            filter = json["filter"].toString();
+            if ((! filter.isEmpty()) && (! json["group"].toString().isEmpty())) {
+                targetGroup = TagGroup(json["group"].toString());
+                if (targetGroup.exists() && (! json["tag"].toString().isEmpty())) {
+                    targetTag = Tag(json["tag"].toString(), &targetGroup);
+                }
+            }
+            if (! json["page"].toString().isEmpty()) {
+                page = json["page"].toInt();
+            }
+            if (! json["limit"].toString().isEmpty()) {
+                limit = json["limit"].toInt();
+            }
+        }
+        else {
+            filter = request.formItemValue("filter");
+            if ((! filter.isEmpty()) && request.hasFormItem("group")) {
+                targetGroup = TagGroup(request.formItemValue("group"));
+                if (targetGroup.exists() && request.hasFormItem("tag")) {
+                    targetTag = Tag(request.formItemValue("tag"), &targetGroup);
+                }
+            }
+            if (request.hasFormItem("page")) {
+                page = request.formItemValue("page").toLong();
+            }
+            if (request.hasFormItem("limit")) {
+                limit = request.formItemValue("limit").toLong();
+            }
+        }
+    }
+
+    if (! filter.isEmpty()) {
+        QList<ManagedFile> list;
+        if (targetTag.exists()) {
+            container.name = targetTag.name();
+            container.displayName = targetTag.displayName();
+            container.groupName = targetTag.groupName();
+            list = ManagedFileService::findInDirectory(filter, targetTag.path());
+        }
+        else if (targetGroup.exists()) {
+            container.groupName = targetGroup.name();
+            list = ManagedFileService::findInDirectory(filter, targetGroup.path().absolutePath());
+        }
+        else {
+            list = ManagedFileService::find(filter);
+        }
+
+        for (const auto& file : list) {
+            const QString p = file.path();
+            tDebug() << "file: " << p;
+            container.images << p;
+        }
+
+        if (container.images.count() > 0) {
+            container.available = true;
+            container.filter = filter;
+            if ((0 < limit) && (limit < 1000)) {
+                container.itemsPerPage = limit;
+            }
+            container.page = std::min(page, (container.images.count() / container.itemsPerPage));
+            if (container.page < 0) container.page = 0;
+            container.min = (container.page * container.itemsPerPage);
+            container.max = std::min(static_cast<int>(container.min + container.itemsPerPage), container.images.count());
+            container.maxNumberOfPage = (container.images.count() / container.itemsPerPage) + ((container.images.count() % container.itemsPerPage) > 0 ? 1 : 0);
+        }
+    }
+
+    return container;
+}
+
 TagInfoContainer TagService::info(const QString& groupName, const QString& tagName, const long& page, const long& limit) const
 {
     const TagGroup group(groupName);

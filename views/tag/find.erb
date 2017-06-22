@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<%#include "containers/taginfocontainer.h" %>
+<% tfetch(TagInfoContainer, container) %>
+<%#include "services/taggroup.h" %>
+<% tfetch(QList<TagGroup>, allGroups) %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+  <script src="/js/jquery-1.11.3.min.js" type="text/javascript"></script>
+  <script type="text/javascript">
+  $(function() {
+    var allGroups = {
+        <% for (const TagGroup& g : allGroups) {
+            echo("'" + g.name() + "': [");
+            for (const Tag& t : g.tags()) {
+                echo("{ 'name': '" + t.name() + "', 'displayName': '" + t.displayName() + "' }, ");
+            }
+            echo("], ");
+        } %>
+    };
+
+    $('input:text[name=filter]').on('keyup', function(e) {
+        $('input:submit[name=find]').prop('disabled', ($(this).val().length < 1));
+    });
+
+    $('select[name=group]').on('change', function(e) {
+        var currentGroupName = $(this).val();
+        var currentTags = allGroups[ currentGroupName ];
+        
+        var picker = $('select[name=tag]');
+        picker.find('option').remove();
+        picker.append('<option></option>');
+
+        if (currentGroupName.length > 0) {
+            $.each(currentTags, function(i, v) {
+                var selected = ((currentGroupName == '<%= container.groupName %>') && (v.name == '<%= container.name %>')) ? ' selected' : '';
+                picker.append('<option value="' + v.name + '"' + selected + '>' + v.displayName + '</option>');
+            });
+            picker.closest('span').show();
+        } else {
+            picker.closest('span').hide();
+        }
+    });
+
+    /*
+    $('input:submit[name=find]').on('click', function(e) {
+        e.preventDefault();
+        $('#statusMessage').show();
+        var data = {
+            'filter': $('input:text[name=filter]').val(),
+            'group': $('select[name=group]').val(),
+            'tag': $('select[name=tag]').val(),
+        };
+        if (data.filter.length < 1) {
+            window.console.log('can not find');
+            return false;
+        }
+        $.ajax({
+            type: 'post', url: '<%= urla("find") %>', data: JSON.stringify(data), contentType: 'application/json', scriptCharset: 'utf-8',
+            success: function(response, type) {
+                window.location.href = '';
+            },
+            error: function(response, status, error) {
+            },
+            complete: function() {
+                $('#statusMessage').hide();
+            }
+        });
+        return false;
+    })
+    */
+  });
+  $(function(){
+    $('select[name=group]').trigger('change');
+    $('input:text[name=filter]').trigger('keyup');
+  });
+  </script>
+</head>
+<body>
+
+<%== formTag(urla("find")) %>
+<fieldset>
+<legend>検索条件</legend>
+<div><label>画像名称: <%== inputTextTag("filter", container.filter) %></label></div>
+<div><label>グループ: <select name="group"><option></option><% for (const TagGroup& g : allGroups) { %>
+<%== optionTag(g.name(), g.name(), container.groupName == g.name()) %>
+<% } %></select></label>　<span style="display: none;"><label>タグ: <select name="tag"><option></option></select></label></span></div>
+<div style="text-align: center;"><%== inputTag("submit", "find", "　検索　") %></div>
+</fieldset>
+<%== endTag() %>
+
+<div id="statusMessage" style="display: none;">検索中</div>
+
+<%== renderPartial("thumbnails") %>
+
+</body>
+</html>
+

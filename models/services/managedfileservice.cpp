@@ -153,9 +153,9 @@ QList<ManagedFile> ManagedFileService::find(const QString& word)
 {
     QList<ManagedFile> images;
 
-    QDirIterator search(ManagedFileService()._originalDir, {"*.txt"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+    QDirIterator search(ManagedFileService()._sourceDir, {"*.jpg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
     while (search.hasNext()) {
-        const ManagedFile file = ManagedFile::fromConfig(search.next());
+        const ManagedFile file = ManagedFile::fromLink(search.next());
         if (file.name().contains(word, Qt::CaseInsensitive)) {
             images << file;
         }
@@ -170,8 +170,7 @@ QList<ManagedFile> ManagedFileService::findInDirectory(const QString& word, cons
 
     QDirIterator search(path, {"*.jpg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
     while (search.hasNext()) {
-        const QString hash = QFileInfo(search.next()).completeBaseName();
-        ManagedFile file = ManagedFile::fromHash(hash);
+        ManagedFile file = ManagedFile::fromLink(search.next());
         if (file.name().contains(word, Qt::CaseInsensitive)) {
             images << file;
         }

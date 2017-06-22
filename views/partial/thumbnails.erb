@@ -3,6 +3,13 @@
 <%#include "services/taggroup.h" %>
 <% tfetch(QList<TagGroup>, allGroups) %>
 <%#include "managedfile.h" %>
+<% tfetch(QUrl, baseUrl) %>
+<% 
+    QUrlQuery prevQuery(baseUrl); prevQuery.addQueryItem("page", QString::number(container.page - 1)); prevQuery.addQueryItem("limit", QString::number(container.itemsPerPage));
+    QUrlQuery nextQuery(baseUrl); nextQuery.addQueryItem("page", QString::number(container.page + 1)); nextQuery.addQueryItem("limit", QString::number(container.itemsPerPage));
+    QUrl prevUrl(baseUrl); prevUrl.setQuery(prevQuery);
+    QUrl nextUrl(baseUrl); nextUrl.setQuery(nextQuery);
+%>
 
 <% if (container.images.count() > 0) { %>
 <style type="text/css">
@@ -86,9 +93,9 @@ $(function() {
 
 <% if (container.images.count() > container.itemsPerPage) { %>
 <div style="width: 100%; text-align: center; font-size: small; margin-bottom: 10px;">
-    <span><% if (container.min > 0) { echo(linkTo("<< Prev", urla("show", {container.groupName, container.name}, {{"page", QString::number(container.page - 1)}, {"limit", QString::number(container.itemsPerPage)}}))); } else { echo("<< Prev"); } %></span>
+    <span><% if (container.min > 0) { echo(linkTo("<< Prev", prevUrl)); } else { echo("<< Prev"); } %></span>
     <span>[Page <%= container.page + 1 %> / <%= container.maxNumberOfPage %>]</span>
-    <span><% if (container.max < container.images.count()) { echo(linkTo("Next >>", urla("show", {container.groupName, container.name}, {{"page", QString::number(container.page + 1)},{"limit", QString::number(container.itemsPerPage)}}))); } else { echo("Next >>"); } %></span>
+    <span><% if (container.max < container.images.count()) { echo(linkTo("Next >>", nextUrl)); } else { echo("Next >>"); } %></span>
 </div>
 <% } %>
 
@@ -103,9 +110,9 @@ $(function() {
 
 <% if (container.images.count() > container.itemsPerPage) { %>
 <div style="width: 100%; text-align: center; font-size: small; margin-top: 5px;">
-    <span><% if (container.min > 0) { echo(linkTo("<< Prev", urla("show", {container.groupName, container.name}, {{"page", QString::number(container.page - 1)},{"limit", QString::number(container.itemsPerPage)}}))); } else { echo("<< Prev"); } %></span>
+    <span><% if (container.min > 0) { echo(linkTo("<< Prev", prevUrl)); } else { echo("<< Prev"); } %></span>
     <span>[Page <%= container.page + 1 %> / <%= container.maxNumberOfPage %>]</span>
-    <span><% if (container.max < container.images.count()) { echo(linkTo("Next >>", urla("show", {container.groupName, container.name}, {{"page", QString::number(container.page + 1)}, {"limit", QString::number(container.itemsPerPage)}}))); } else { echo("Next >>"); } %></span>
+    <span><% if (container.max < container.images.count()) { echo(linkTo("Next >>", nextUrl)); } else { echo("Next >>"); } %></span>
 </div>
 <% } %>
 

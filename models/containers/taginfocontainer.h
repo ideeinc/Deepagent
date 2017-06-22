@@ -8,6 +8,7 @@ class TagInfoContainer
 {
 public:
     bool available;
+    QString filter;
     QString name;
     QString displayName;
     QString groupName;

@@ -32,7 +32,7 @@
                     window.alert(response.error);
                 }
                 else {
-                    window.location.href = '<%= urla("index") %>';
+                    window.location.href = '<%= urla("show") %>/' + groupName;
                 }
             }, error: function(response) {
                 alert('error');
@@ -77,6 +77,8 @@
 <body>
 
 <h2>グループ: <%= group.name() %> のタグ一覧</h2>
+
+<p><%== linkTo("<< 戻る", urla("index")) %></p>
 
 <fieldset>
 <legend>グループ名称の変更</legend>

@@ -6,6 +6,7 @@
 #include "containers/taggedimageinfocontainer.h"
 #include "containers/tagtablecontainer.h"
 #include "services/taggroup.h"
+#include <THttpRequest>
 
 class TMimeEntity;
 
@@ -29,6 +30,7 @@ public:
     void updateImages(const QStringList& images, const QVariantMap& tags) const;
     QMap<QString, QStringList> extractImages(const QList<TMimeEntity>& files, const QString& groupName, const QString& tagName, const bool cropImage = true);
 
+    TagInfoContainer find(THttpRequest&);
     TagInfoContainer info(const QString& groupName, const QString& tagName, const long& page = 0, const long& limit = 200) const;
     QPair<QStringList, TaggedImageInfoContainer> showTableImage(const QString& rowGroupName, const QString& rowTagName, const QString& colGroupName, const QString colTagName) const;
     TaggedImageInfoContainer image(const QString& groupName, const QString& primaryTag, const QStringList& images, const long& index) const;

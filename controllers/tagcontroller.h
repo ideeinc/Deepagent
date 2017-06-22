@@ -28,6 +28,7 @@ public slots:
     void update();
     void updateGroup();
     void batchUpdate();
+    void find();
 
 private:
     TagService service {};
