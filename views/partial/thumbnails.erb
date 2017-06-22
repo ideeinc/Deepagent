@@ -1,0 +1,135 @@
+<%#include "containers/taginfocontainer.h" %>
+<% tfetch(TagInfoContainer, container) %>
+<%#include "services/taggroup.h" %>
+<% tfetch(QList<TagGroup>, allGroups) %>
+<%#include "managedfile.h" %>
+
+<% if (container.images.count() > 0) { %>
+<style type="text/css">
+.zoom {
+    -webkit-transform: scale(2.0);
+    -moz-transform: scale(2.0);
+    -o-transform: scale(2.0);
+    -ms-transform: scale(2.0);
+    transform: scale(2.0);
+}
+</style>
+<script type="text/javascript">
+$(function() {
+    $('img').hover(function(e) {
+        if (e.shiftKey) { $(this).addClass('zoom'); } else { $(this).removeClass('zoom'); }
+    }, function(e) {
+        $(this).removeClass('zoom');
+    });
+    $('img').mousemove(function(e) {
+        if (e.shiftKey) { $(this).addClass('zoom'); } else { $(this).removeClass('zoom'); }
+    });
+    $(window).keydown(function(e){
+        var hovered = $('img').parent().find(':hover');
+        if ((hovered.length > 0) && e.shiftKey) { hovered.addClass('zoom'); } else { hovered.removeClass('zoom'); }
+    });
+    $(window).keyup(function(e){
+        $('img').parent().find(':hover').removeClass('zoom');
+    });
+});
+$(function() {
+    $('input:submit[name="batchUpdate"]').on('click', function(e){
+        e.preventDefault();
+        var images = $('input:checkbox[name^=images]:checked');
+        if (images.length < 1) {
+            window.alert("画像が選択されていません");
+            return false;
+        }
+        if ($('input:checkbox[name^=enabled]:checked').length < 1) {
+            window.alert("変更がありません");
+            return false;
+        }
+        var data = { images: [], tags: {} };
+        $.each(images, function(i ,v){
+            data.images.push($(v).val());
+        });
+        $.each($('select[name^="groups"] option:selected'), function(i, v){
+            var groupName = $(v).parent('select').attr('name').replace(/^groups\[(.+)\]$/, '$1');
+            if ($('input:checkbox[name="enabled\[' + groupName +'\]"]').prop('checked')) {
+                var selectedTag = $(v).val();
+                data.tags[ groupName ] = selectedTag;
+            }
+        });
+        if (data.tags['<%= container.groupName %>'] == '') {
+            var isOtherTagApplied = false;
+            $.each(data.tags, function(k, v) {
+                if ((k != '<%= container.groupName %>') && (v.length > 0)) {
+                    isOtherTagApplied = true; return false;
+                }
+            });
+            if ((! isOtherTagApplied) && (!confirm("画像からタグが１つもなくなる可能性があります。この操作を実行しますか？"))) {
+                return false;
+            }
+        }
+        $.ajax({ type: 'post', url: '<%= urla("batchUpdate") %>', data: JSON.stringify(data), contentType: 'application/json', scriptCharset: 'utf-8', success: function(data) {
+            window.location.reload();
+        }, error: function(data) {
+            window.alert('error');
+        } });
+        return false;
+    });
+    $('input:checkbox#checkAll').on('click', function(e){
+        $('input:checkbox[name^=images]').prop('checked', $(this).prop('checked'));
+    });
+    $('select[name^="groups"]').on('change', function(e){
+        var groupName = $(this).attr('name').replace(/^groups\[(.+)\]$/, '$1');
+        $('input:checkbox[name="enabled\[' + groupName +'\]"]').prop('checked', true);
+    });
+});
+</script>
+<hr />
+
+<% if (container.images.count() > container.itemsPerPage) { %>
+<div style="width: 100%; text-align: center; font-size: small; margin-bottom: 10px;">
+    <span><% if (container.min > 0) { echo(linkTo("<< Prev", urla("show", {container.groupName, container.name}, {{"page", QString::number(container.page - 1)}, {"limit", QString::number(container.itemsPerPage)}}))); } else { echo("<< Prev"); } %></span>
+    <span>[Page <%= container.page + 1 %> / <%= container.maxNumberOfPage %>]</span>
+    <span><% if (container.max < container.images.count()) { echo(linkTo("Next >>", urla("show", {container.groupName, container.name}, {{"page", QString::number(container.page + 1)},{"limit", QString::number(container.itemsPerPage)}}))); } else { echo("Next >>"); } %></span>
+</div>
+<% } %>
+
+<div style="display: inline;">
+<% for (long i = container.min; i < container.max; ++i) { const auto& path = container.images[i]; const auto original = ManagedFile::fromLink(path); %>
+    <div style="display: inline-block; width: 130px;">
+    <%== linkTo(inlineImageTag(path, "image/jpeg", THtmlAttribute("width", "128px") | THtmlAttribute("alt", original.name()) | THtmlAttribute("title", original.name())), urla("show", QStringList({ container.groupName, container.name, QString::number(i) })), Tf::Get, "", THtmlAttribute("title", original.name())) %><br />
+    <label><%== checkBoxTag("images[]", QFileInfo(path).absoluteFilePath(), false) %></label>
+    </div>
+<% } %>
+</div>
+
+<% if (container.images.count() > container.itemsPerPage) { %>
+<div style="width: 100%; text-align: center; font-size: small; margin-top: 5px;">
+    <span><% if (container.min > 0) { echo(linkTo("<< Prev", urla("show", {container.groupName, container.name}, {{"page", QString::number(container.page - 1)},{"limit", QString::number(container.itemsPerPage)}}))); } else { echo("<< Prev"); } %></span>
+    <span>[Page <%= container.page + 1 %> / <%= container.maxNumberOfPage %>]</span>
+    <span><% if (container.max < container.images.count()) { echo(linkTo("Next >>", urla("show", {container.groupName, container.name}, {{"page", QString::number(container.page + 1)}, {"limit", QString::number(container.itemsPerPage)}}))); } else { echo("Next >>"); } %></span>
+</div>
+<% } %>
+
+<hr />
+
+<label for"checkAll"><%== checkBoxTag("checkAll", "", false, THtmlAttribute("id", "checkAll")) %> すべてをチェック</label>
+<fieldset>
+<legend>画像のタグ一括更新</legend>
+<div style="display: table;">
+<%== formTag(urla("batchUpdate")) %>
+<% for (const auto& g : allGroups) { %>
+    <div style="display: table-row;">
+    <span style="display: table-cell;"><label><%== checkBoxTag("enabled[" + g.name() + "]", "", false) %><%= g.name() %>: </label></span>
+    <select name="groups[<%= g.name() %>]">
+    <option></option>
+    <% for (const auto& t : g.tags()) { %>
+    <%== optionTag(t.displayName(), t.name(), ((container.groupName == g.name()) && (container.name == t.name()))) %>
+    <% } %>
+    </select>
+    </div>
+<% } %>
+<div><%== inputTag("submit", "batchUpdate", "一括更新") %></div>
+<%== endTag() %>
+</div>
+</fieldset>
+
+<% } %>
