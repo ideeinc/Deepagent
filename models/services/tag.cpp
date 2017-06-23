@@ -23,7 +23,7 @@ QString Tag::path() const
 
 bool Tag::exists() const
 {
-    return _baseDir.exists(_name);
+    return ((! _name.isEmpty()) && _baseDir.exists(_name));
 }
 
 QString Tag::name() const
@@ -74,7 +74,8 @@ long Tag::countOfImages() const
 
     if (! ls.waitForStarted())
         return 0;
-    wc.waitForFinished(-1);
+    wc.waitForFinished();
+    ls.waitForFinished();
 
     return QString(wc.readAll()).toLong();
 

@@ -14,12 +14,12 @@ TagGroup::TagGroup(const TagGroup& other)
 
 bool TagGroup::exists() const
 {
-    return _dir.exists(_name);
+    return ((! _name.isEmpty()) && _dir.exists(_name));
 }
 
 bool TagGroup::hasTag(const QString& name) const
 {
-    return QDir(_dir.filePath(_name)).exists(name);
+    return ((! name.isEmpty()) && QDir(_dir.filePath(_name)).exists(name));
 }
 
 QString TagGroup::name() const
@@ -30,7 +30,7 @@ QString TagGroup::name() const
 bool TagGroup::setName(const QString &newName)
 {
     bool success = false;
-    if (_name != newName) {
+    if ((! newName.isEmpty()) && (_name != newName)) {
         if (_dir.rename(_name, newName)) {
             _name = newName;
             success = true;
