@@ -12,10 +12,13 @@
 
 class DatasetStatistics {
 public:
-    QMap<QString, QVariant> original;
-    QMap<QString, QVariant> training;
-    QMap<QString, QVariant> validation;
-    QMap<QString, QVariant> augmented;
+    QMap<QString, QVariant> originalTotal;
+    QMap<QString, QVariant> originalTraining;
+    QMap<QString, QVariant> originalValidation;
+    QMap<QString, QVariant> augmentedTraining;
+    QMap<QString, QVariant> augmentedValidation;
+    int augmentationRate{0};
+    float validationRate{0};
 
     void saveTo(const QString& dir, const QString& filename)
     {
@@ -23,10 +26,19 @@ public:
         if (file.open(QFile::WriteOnly)) {
             QVariantMap data{
                 { "created", QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss") },
-                { "original", original },
-                { "training", training },
-                { "validation", validation },
-                { "augmented", augmented }
+                { "rate", QVariantMap{
+                    { "validation", validationRate },
+                    { "augmentation", augmentationRate }
+                } },
+                { "original",QVariantMap{
+                    { "total", originalTotal },
+                    { "training", originalTraining },
+                    { "validation", originalValidation }
+                 } },
+                { "augmented", QVariantMap{
+                    { "training", augmentedTraining },
+                    { "validation", augmentedValidation }
+                } }
             };
             file.write(QJsonDocument::fromVariant(data).toJson());
             file.close();
@@ -53,7 +65,7 @@ namespace {
         const float num = rand(0, UINT_MAX) / static_cast<float>(UINT_MAX); // 0.0 - 1.0
         return std::abs(max - min) * num + qMin(max, min);
     }
-    void augmentation(const QDir& sourceDir, const QDir& destinationDir, const QSize& size, const long multiple)
+    void copyAugmentedImage(const QDir& sourceDir, const QDir& destinationDir, const QSize& size, const long multiple)
     {
         const float rotationRange = 180.0;
         const float zoomRange = 0.2;
@@ -79,17 +91,6 @@ namespace {
     }
 }
 namespace {
-    //
-    QString labelFromFile(const QString& path)
-    {
-        QString label;
-        QFile file(path);
-        if (file.open(QFile::ReadOnly)) {
-            label = QTextStream(&file).readLine().split(' ')[0];
-            file.close();
-        }
-        return label;
-    }
     //
     QString rotateLabelFromLineBuffer(const QString &lineBuffer, const float angle, const QPointF &center)
     {
@@ -123,7 +124,7 @@ namespace {
         }
         return output.join(" ");
     }
-    void rotateImageAndLabelFromFile(const QString &sourceImagePath, const QString &destinationImagePath, const QString &sourceLabelPath, const QString &destinationLabelPath, const float angle)
+    void copyRotatedImageAndLabel(const QString &sourceImagePath, const QString &destinationImagePath, const QString &sourceLabelPath, const QString &destinationLabelPath, const float angle)
     {
         Image srcImg(sourceImagePath);
         Image dstImg = srcImg.rotated(-angle, 1);
@@ -170,7 +171,7 @@ namespace {
         }
         return output.join(" ");
     }
-    void scaleImageAndLabelFromFile(const QString &sourceImagePath, const QString &destinationImagePath, const QString &sourceLabelPath, const QString &destinationLabelPath, const QSize& size, const QString& alternateLabel = "")
+    void copyScaledImageAndLabel(const QString &sourceImagePath, const QString &destinationImagePath, const QString &sourceLabelPath, const QString &destinationLabelPath, const QSize& size, const QString& alternateLabel = "")
     {
         Image srcImg(sourceImagePath);
         Image dstImg = srcImg.resized(size.width(), size.height());
@@ -196,65 +197,98 @@ namespace {
 }
 namespace {
     //
+    QDir makeLayoutSource(const QString& workDir, const QMap<QString, QStringList>& labeledImages, const float validationRate)
+    {
+        const QDir archiveDir(workDir);
+        const QDir sourceDir(archiveDir.absoluteFilePath("source")); archiveDir.mkpath("source");
+        const QDir trainingDir(sourceDir.filePath("train")); sourceDir.mkpath("train");
+        const QDir validationDir(sourceDir.filePath("val")); sourceDir.mkpath("val");
+
+        // make source data
+        for (const QString& label : labeledImages.keys()) {
+            // training
+            trainingDir.mkpath(label);
+            const QDir trainingLabelDir(trainingDir.filePath(label));
+            for (const QString& imagePath : labeledImages[ label ]) {
+                const QString fileName = QFileInfo(imagePath).fileName();
+                QFile::link(imagePath, trainingLabelDir.filePath(fileName));
+            }
+
+            // validation
+            if ((0 < validationRate) && (validationRate < 1)) {
+                validationDir.mkpath(label);
+                const QDir validationLabelDir(validationDir.filePath(label));
+
+                QFileInfoList images = trainingLabelDir.entryInfoList({"*.jpg"});
+                std::shuffle(images.begin(), images.end(), std::mt19937());
+
+                const int validationCount = ((images.count() > 1) ? std::max(images.count() * validationRate, 1.0f) : 0);
+                for (int i = 0; i < validationCount; ++i) {
+                    const QFileInfo& info = images.takeFirst();
+                    QFile::rename(info.absoluteFilePath(), validationLabelDir.absoluteFilePath(info.fileName()));
+                }
+            }
+        }
+
+        return sourceDir;
+    }
+    //
     void layoutByClassification(const QString& workDir, const QMap<QString, QStringList>& labeledImages, const QSize& size, const long augmentationRate, const float validationRate)
     {
         const QDir archiveDir(workDir);
-        const QDir trainDir = QDir(archiveDir.absoluteFilePath("train")); archiveDir.mkpath("train");
+        const QDir trainDir = QDir(archiveDir.absoluteFilePath("train"));
+        const QDir sourceDir = makeLayoutSource(workDir, labeledImages, validationRate);
 
         // record statistics
         DatasetStatistics stat;
 
+        // determine augmetation value (with source training images)
+        long maxAugmentation = 1;
+        QMap<QString, float> trainingRates;
+        if (augmentationRate > 0) {
+            for (const QString& label : labeledImages.keys()) {
+                const QDir sourceLabelDir(sourceDir.filePath("train"));
+                const QDir currentLabelDir(sourceLabelDir.filePath(label));
+                maxAugmentation = std::max(maxAugmentation, currentLabelDir.entryList({"*.jpg"}).count() * augmentationRate);
+            }
+            stat.augmentationRate = augmentationRate;
+        }
+
         // make training data
         for (const QString& label : labeledImages.keys()) {
             trainDir.mkpath(label);
-            const QDir currentLabelDir(trainDir.filePath(label));
-            for (const QString& imagePath : labeledImages[ label ]) {
-                Image image(imagePath);
-                image.resize(size.width(), size.height());
-                image.save(currentLabelDir.filePath(QFileInfo(imagePath).fileName()));
-            }
-            stat.original[label] = labeledImages[label].count();
+            const QDir currentSourceDir(QDir(sourceDir.filePath("train")).filePath(label));
+            const int numberOfImages = currentSourceDir.entryList({"*.jpg"}).count();
+            const float currentRate =(numberOfImages > 0) ? std::roundf(static_cast<float>(maxAugmentation) / static_cast<float>(numberOfImages)) : 0;
+            const QDir trainTargetDir(trainDir.filePath(label));
+            copyAugmentedImage(currentSourceDir, trainTargetDir, size, currentRate);
+
+            trainingRates[label] = currentRate;
+            stat.originalTotal[label] = labeledImages[label].count();
+            stat.originalTraining[label] = numberOfImages;
+            stat.augmentedTraining[label] = trainTargetDir.entryList({"*.jpg"}).count();
         }
 
-        // move to validation
+        // make validation data
         if ((0 < validationRate) && (validationRate < 1)) {
             const QDir valDir(archiveDir.absoluteFilePath("val"));
             for (const QString& label : labeledImages.keys()) {
                 valDir.mkpath(label);
-                QFileInfoList images = QDir(trainDir.filePath(label)).entryInfoList({"*.jpg"});
-                const int validationCount = images.count() * validationRate;
-                for (int i = 0; i < validationCount; ++i) {
-                    std::shuffle(images.begin(), images.end(), std::mt19937());
-                    const QFileInfo& info = images.takeFirst();
-                    QFile::rename(info.absoluteFilePath(), QDir(valDir.filePath(label)).absoluteFilePath(info.fileName()));
-                }
-                stat.validation[label] = validationCount;
-                stat.training[label] = (stat.original[label].toInt() - validationCount);
-            }
-        }
+                const QDir currentSourceDir(QDir(sourceDir.filePath("val")).filePath(label));
+                const float currentRate = trainingRates[label];
+                const QDir valTargetDir(valDir.filePath(label));
+                copyAugmentedImage(currentSourceDir, valTargetDir, size, currentRate);
 
-        // data augmentation (train-only)
-        if (augmentationRate > 0) {
-            long maxRate = 0;
-            for (const QString& label : labeledImages.keys()) {
-                const QDir trainTargetDir(trainDir.filePath(label));
-                maxRate = std::max(maxRate, trainTargetDir.entryList({"*.jpg"}).count() * augmentationRate);
+                stat.originalValidation[label] = currentSourceDir.entryList({"*.jpg"}).count();
+                stat.augmentedValidation[label] = valTargetDir.entryList({"*.jpg"}).count();
             }
-            for (const QString& label : labeledImages.keys()) {
-                const QDir trainTargetDir(trainDir.filePath(label));
-                const QDir cloneTargetDir(trainDir.filePath("." + label)); trainDir.mkpath("." + label);
-                const int count = trainTargetDir.entryList({"*.jpg"}).count();
-                const float rate = (count > 0) ? std::roundf(static_cast<float>(maxRate) / static_cast<float>(count)) : 0;
-                augmentation(trainTargetDir, cloneTargetDir, size, rate);
-                if (QDir(trainTargetDir).removeRecursively()) {
-                    QDir(trainDir).rename("." + label, label);
-                }
-                stat.augmented[label] = trainTargetDir.entryList({"*.jpg"}).count();
-            }
+            stat.validationRate = validationRate;
         }
 
         // save statistics
-        stat.saveTo(workDir, "stat.json");
+        stat.saveTo(workDir, "info.json");
+        // clean up
+        QDir(sourceDir).removeRecursively();
     }
     void layoutByObjectDetection(const QString& workDir, const QMap<QString, QStringList>& labeledImages, const QSize& size, const long augmentationRate, const float validationRate)
     {
@@ -264,64 +298,100 @@ namespace {
         const QDir trainImageDir = QDir(archiveDir.absoluteFilePath("train") + QDir::separator() + "images");
         const QDir trainLabelDir = QDir(archiveDir.absoluteFilePath("train") + QDir::separator() + "labels");
 
+        const QDir sourceDir = makeLayoutSource(workDir, labeledImages, validationRate);
+        const QDir sourceTrainDir(sourceDir.filePath("train"));
+        const QDir sourceValDir(sourceDir.filePath("val"));
+
         // record statistics
         DatasetStatistics stat;
+
+        if (augmentationRate > 0) {
+            stat.augmentationRate = 4;
+        }
 
         // make training data
         const QDir labelDir(Tf::conf("settings").value("ObjectDetectionLabelDir").toString());
         for (const QString& label : labeledImages.keys()) {
-            for (const QString& image : labeledImages[ label ]) {
-                const QString labelFileName = QFileInfo(image).completeBaseName() + ".txt";
+            const QFileInfoList images = QDir(sourceTrainDir.filePath(label)).entryInfoList({"*.jpg"});
+            for (const QFileInfo& originalImage : images) {
+                const QString labelFileName = originalImage.completeBaseName() + ".txt";
                 if (labelDir.exists(labelFileName)) {
+                    const QFileInfo trainImage = trainImageDir.filePath(originalImage.fileName());
+                    const QFileInfo originalLabel = labelDir.filePath(labelFileName);
+                    const QFileInfo trainLabel = trainLabelDir.filePath(labelFileName);
                     // copy original image to destination
-                    scaleImageAndLabelFromFile(
-                        image, trainImageDir.filePath(QFileInfo(image).fileName()),
-                        labelDir.absoluteFilePath(labelFileName), trainLabelDir.filePath(labelFileName),
+                    copyScaledImageAndLabel(
+                        originalImage.absoluteFilePath(), trainImage.absoluteFilePath(),
+                        originalLabel.absoluteFilePath(), trainLabel.absoluteFilePath(),
                         size, label
                     );
-                    stat.original[label] = (stat.original[label].toInt() + 1);
+                    stat.originalTraining[label] = (stat.originalTraining[label].toInt() + 1);
+                    stat.originalTotal[label] = (stat.originalTotal[label].toInt() + 1);
+
+                    // generate augmented images and labels
+                    if (augmentationRate > 0) {
+                        for (const QString& angle : QStringList({"90", "180", "270"})) {
+                            const QString dstImagePath = trainImageDir.filePath(trainImage.completeBaseName() + "_" + angle + ".jpg");
+                            const QString dstLabelPath = trainLabelDir.filePath(trainLabel.completeBaseName() + "_" + angle + ".txt");
+                            copyRotatedImageAndLabel(
+                                trainImage.absoluteFilePath(), dstImagePath,
+                                trainLabel.absoluteFilePath(), dstLabelPath,
+                                angle.toFloat()
+                            );
+                        }
+                        stat.augmentedTraining[label] = (stat.augmentedTraining[label].toInt() + 4);
+                    }
                 }
             }
         }
 
-        // move to validation
+        // make validation data
         if ((0 < validationRate) && (validationRate < 1)) {
             archiveDir.mkpath(QString("val") + QDir::separator() + "images");
             archiveDir.mkpath(QString("val") + QDir::separator() + "labels");
             const QDir valImageDir = QDir(archiveDir.absoluteFilePath("val") + QDir::separator() + "images");
             const QDir valLabelDir = QDir(archiveDir.absoluteFilePath("val") + QDir::separator() + "labels");
-            QFileInfoList images = trainImageDir.entryInfoList({"*.jpg"});
-            const long validationCount = images.count() * validationRate;
-            for (int i = 0; i < validationCount; ++i) {
-                std::shuffle(images.begin(), images.end(), std::mt19937());
-                const QFileInfo& info = images.takeFirst();
-                QFile::rename(info.absoluteFilePath(), valImageDir.absoluteFilePath(info.fileName()));
-                QFile::rename(trainLabelDir.absoluteFilePath(info.completeBaseName() + ".txt"), valLabelDir.absoluteFilePath(info.completeBaseName() + ".txt"));
 
-                const QString label = labelFromFile(valLabelDir.absoluteFilePath(info.completeBaseName() + ".txt"));
-                stat.validation[label] = (stat.validation[label].toInt() + 1);
-                stat.training[label] = (stat.original[label].toInt() - stat.validation[label].toInt());
-            }
-        }
+            for (const QString& label : labeledImages.keys()) {
+                const QFileInfoList images = QDir(sourceValDir.filePath(label)).entryInfoList({"*.jpg"});
+                for (const QFileInfo& originalImage : images) {
+                    const QString labelFileName = originalImage.completeBaseName() + ".txt";
+                    if (labelDir.exists(labelFileName)) {
+                        const QFileInfo valImage = valImageDir.filePath(originalImage.fileName());
+                        const QFileInfo originalLabel = labelDir.filePath(labelFileName);
+                        const QFileInfo valLabel = valLabelDir.filePath(labelFileName);
+                        // copy original image to destination
+                        copyScaledImageAndLabel(
+                            originalImage.absoluteFilePath(), valImage.absoluteFilePath(),
+                            originalLabel.absoluteFilePath(), valLabel.absoluteFilePath(),
+                            size, label
+                        );
+                        stat.originalValidation[label] = (stat.originalValidation[label].toInt() + 1);
+                        stat.originalTotal[label] = (stat.originalTotal[label].toInt() + 1);
 
-        // data augmentation (train-only)
-        if (augmentationRate > 0) {
-            for (const QFileInfo& img : trainImageDir.entryInfoList({"*.jpg"})) {
-                const QString srcImagePath = img.absoluteFilePath();
-                const QString srcLabelPath = trainLabelDir.absoluteFilePath(img.completeBaseName() + ".txt");
-                for (const QString& angle : QStringList({"90", "180", "270"})) {
-                    const QString dstImagePath = img.absolutePath() + QDir::separator() + img.completeBaseName() + "_" + angle + ".jpg";
-                    const QString dstLabelPath = trainLabelDir.absoluteFilePath(img.completeBaseName() + "_" + angle + ".txt");
-                    rotateImageAndLabelFromFile(srcImagePath, dstImagePath, srcLabelPath, dstLabelPath, angle.toFloat());
+                        // generate augmented images and labels
+                        if (augmentationRate > 0) {
+                            for (const QString& angle : QStringList({"90", "180", "270"})) {
+                                const QString dstImagePath = valImageDir.filePath(valImage.completeBaseName() + "_" + angle + ".jpg");
+                                const QString dstLabelPath = valLabelDir.filePath(valLabel.completeBaseName() + "_" + angle + ".txt");
+                                copyRotatedImageAndLabel(
+                                    valImage.absoluteFilePath(), dstImagePath,
+                                    valLabel.absoluteFilePath(), dstLabelPath,
+                                    angle.toFloat()
+                                );
+                            }
+                            stat.augmentedValidation[label] = (stat.augmentedValidation[label].toInt() + 4);
+                        }
+                    }
                 }
-
-                const QString label = labelFromFile(srcLabelPath);
-                stat.augmented[label] = (stat.training[label].toInt() + 3);
             }
+            stat.validationRate = validationRate;
         }
 
         // save statistics
-        stat.saveTo(workDir, "stat.json");
+        stat.saveTo(workDir, "info.json");
+        // clean up
+        QDir(sourceDir).removeRecursively();
     }
     //
     QString archiveByTar(const QString& sourceDir, const QString& destinationDir, const QString& destinationName)
