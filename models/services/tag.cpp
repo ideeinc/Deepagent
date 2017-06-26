@@ -129,7 +129,7 @@ void Tag::appendImage(const QString& path) const
     if (file.exists() && exists()) {
         // force append
         removeImage(file.fileName());
-        QFile::link(path, QDir(_baseDir.filePath(_name)).filePath(file.fileName()));
+        QFile::link(file.absoluteFilePath(), QDir(_baseDir.filePath(_name)).filePath(file.fileName()));
     }
 }
 

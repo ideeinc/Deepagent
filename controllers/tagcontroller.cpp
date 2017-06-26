@@ -39,7 +39,7 @@ void TagController::show(const QString& groupName, const QString& tagName)
     const TagInfoContainer& container = service.info(groupName, tagName, httpRequest().parameter("page").toInt(), limit);
 
     if (container.available) {
-        session().insert(kTagImageListKey, container.images);
+        setThumbnailImages(container.images);
         texport(container);
 
         const auto& allGroups = service.allGroups();
@@ -58,7 +58,7 @@ void TagController::show(const QString& groupName, const QString& tagName)
 // show image (from tag, or find)
 void TagController::show(const QString& groupName, const QString& tagName, const QString& index)
 {
-    const QStringList images = session().value(kTagImageListKey).toStringList();
+    const QStringList images = thumbnailImages();
     const long i = index.toLong();
     if ( (! images.isEmpty()) && ((0 <= i) && (i < images.count())) ) {
         const TaggedImageInfoContainer container = service.image(groupName, tagName, images, i);
@@ -71,7 +71,7 @@ void TagController::show(const QString& groupName, const QString& tagName, const
         }
         const QVariantMap findInfo = session().value(kTagImageFindKey).toMap();
         if (findInfo.contains("filter")) {
-            listUrl =urla("find", QStringList(), findInfo);
+            listUrl = urla("find", QStringList(), findInfo);
         }
         texport(listUrl);
 
@@ -95,7 +95,7 @@ void TagController::show(const QString& rowGroupName, const QString& rowTagName,
         imageTableInfo["colGroupName"] = colGroupName;
 
         session().insert(kTagImageTableInfo, imageTableInfo);
-        session().insert(kTagImageListKey, data.first);
+        setThumbnailImages(data.first, kTagImageTableInfo);
         const TaggedImageInfoContainer& container = data.second;
         texport(container);
 
@@ -239,7 +239,7 @@ void TagController::append()
             service.updateImages(images, {{group, tag}});
 
             if (refresh) {
-                QStringList data = session().value(kTagImageListKey).toStringList();
+                QStringList data = thumbnailImages();
                 for (const QString& s : images) {
                     const auto i = std::find_if(data.begin(), data.end(), [=](const QString& path) {
                         return (QFileInfo(path).fileName() == QFileInfo(s).fileName());
@@ -248,7 +248,7 @@ void TagController::append()
                         data.erase(i);
                     }
                 }
-                session().insert(kTagImageListKey, data);
+                updateThumbnailImages(data);
             }
         }
     }
@@ -270,7 +270,7 @@ void TagController::remove()
         service.removeImages(group, tag, images);
 
         if (refresh) {
-            QStringList data = session().value(kTagImageListKey).toStringList();
+            QStringList data = thumbnailImages();
             for (const QString& s : images) {
                 const auto i = std::find_if(data.begin(), data.end(), [=](const QString& path) {
                     return (QFileInfo(path).fileName() == QFileInfo(s).fileName());
@@ -279,7 +279,7 @@ void TagController::remove()
                     data.erase(i);
                 }
             }
-            session().insert(kTagImageListKey, data);
+            updateThumbnailImages(data);
         }
     }
 
@@ -385,7 +385,7 @@ void TagController::find()
             { "group", container.groupName },
             { "tag", container.name }
         };
-        session().insert(kTagImageListKey, container.images);
+        setThumbnailImages(container.images, kTagImageFindKey);
         session().insert(kTagImageFindKey, query);
         texport(container);
 
@@ -394,6 +394,28 @@ void TagController::find()
     }
 
     render();
+}
+
+void TagController::setThumbnailImages(const QStringList& images, const QString& forKey)
+{
+    const QStringList keys{ kTagImageTableInfo, kTagImageFindKey };
+    for (const auto& k : keys) {
+        if (forKey.isEmpty() || (k != forKey)) {
+            session().remove(k);
+        }
+    }
+
+    updateThumbnailImages(images);
+}
+
+void TagController::updateThumbnailImages(const QStringList& images)
+{
+    session().insert(kTagImageListKey, images);
+}
+
+QStringList TagController::thumbnailImages() const
+{
+    return session().value(kTagImageListKey).toStringList();
 }
 
 T_DEFINE_CONTROLLER(TagController)
