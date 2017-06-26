@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<%#include "containers/traindetectcontainer.h" %>
-<% tfetch(TrainDetectContainer, container); %>
+<%#include "containers/trainclassifycontainer.h" %>
+<% tfetch(TrainClassifyContainer, container); %>
 <% const auto &caffeModel = container.caffeModel; %>
 <html>
 <head>
@@ -51,17 +51,14 @@ dsup.post = function(files) {
 
     $.post({
         type: "POST",
-        url: "/Train/detect/<%= caffeModel.id() %>",
+        url: "/Train/classify/<%= caffeModel.id() %>",
         data: formData,
         processData: false,
         contentType: false,
         success: function(msg) {
             ;;; console.log("POST success : " + msg);
             // レスポンスで書き換え
-            var domarray = $($.parseHTML(msg));
-            var h = domarray.filter('#result')[0].innerHTML;
-            $('#result').html(h);
-
+            $("#result").html($(msg).find('#result').html());
             // イメージ拡大セット
             dsup.zoomImage();
         },
@@ -117,13 +114,14 @@ $(function(){
 });
 </script>
 </head>
-<body style="width: 1000px; margin-right: auto; margin-left: auto;">
+<body>
+<div style="min-width: 1000px; max-width: 1200px; margin: 0 auto;">
 <p style="color: red"><%=$ error %></p>
 <p style="color: green"><%=$ notice %></p>
 
-<h1>病変検出</h1>
+<h1>病変分類</h1>
 
-<%== formTag(urla("detect", caffeModel.id() ), Tf::Post, true, a("id", "form1")) %>
+<%== formTag(urla("classify", caffeModel.id() ), Tf::Post, true, a("id", "form1")) %>
   <div id="drop_zone"><span id="msg_drag"><i class="fa fa-files-o"></i>　Drag files here<br>or<br></span><i class="fa fa-folder-open-o"></i>　Click to choose file to send</div>
   <p>
     <label>アップロード画像ファイル: <input name="imageFile[]" id="imageFile[]" value="" type="file" /></label>
@@ -132,27 +130,25 @@ $(function(){
     <label>画像ディレクトリ: <input type="text" name="imageDir" id="imageDir" value=""/></label>
   </p>
   <p>
-    <label>mean value: <input name="meanValue" value="53,74,144" /></label>
-  </p>
-  <p>
     <label for="trainedModel">Select a trained model<br />
-      <select name="trainedModel" size=6>
+      <select name="trainedModel" size=4>
       <%== optionTags(caffeModel.trainedModelFiles()); %>
       </select>
     </label>
+    <input type="submit" value="Classify" />
   </p>
-  <input type="submit" value="Detect" />
 </form>
 <br>
 <div id="result" style="width: 100%;">
   <% for (int i=0; i < container.jpegBinList.count(); ++i) { %>
-  <div style="float: left; padding: 4px;">
+  <div style="display: inline-block; padding: 4px;">
     <div>
-      <%== inlineImageTag(container.jpegBinList[i], "image/jpeg"); %>
+      <%== inlineImageTag(container.jpegBinList[i], "image/jpeg", a("style", "width:200px")); %>
     </div>
     <p>
-      <% for (auto &c : container.detectionsList[i]) {
-        QString str = QString("class:%1 score:%2  (%3,%4) (%5,%6)").arg(c[1]).arg(c[2], 0, 'g', 3).arg((int)c[3]).arg((int)c[4]).arg((int)c[5]).arg((int)c[6]);
+      <% for (int j = 0; j < container.predictionsList[i].count(); j++) {
+        auto &pred = container.predictionsList[i][j];
+        QString str = QString("#%1 score:%2 : %3").arg(j+1).arg(pred.second, 0, 'f', 2).arg(pred.first);
         eh(str);
         echo("<br>");
       }
@@ -160,7 +156,6 @@ $(function(){
     </p>
   </div>
   <% } %>
-  <div style="clear: both;"></div>
 </div>
 
 <br>
@@ -169,5 +164,6 @@ $(function(){
 <dt>ID</dt><dd><%= caffeModel.id()  %></dd><br />
 <dt>Deploy prototxt</dt><dd><%= caffeModel.deployFile() %></dd><br />
 
+</div>
 </body>
 </html>

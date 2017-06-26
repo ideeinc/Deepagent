@@ -51,11 +51,13 @@ void TrainController::createSsd()
 void TrainController::classify(const QString &id)
 {
     switch (httpRequest().method()) {
-    case Tf::Get: {
+    case Tf::Get:
+    case Tf::Post: {
+        auto container = service.classify(id, httpRequest());
+        texport(container);
         render();
         break; }
 
-    case Tf::Post:
     default:
         renderErrorResponse(Tf::NotFound);
         break;

@@ -17,7 +17,7 @@ public:
     Prediction(const QString &netPrototxtPath);
     ~Prediction();
 
-    bool init(const QString &trainedModelFilePath, const QString &meanFilePath);
+    bool init(const QString &weightFilePath, const QString &meanFilePath);
     void release();
     QList<float> predict(const QString &filePath) const;
     QList<QPair<int, float>> predictTop(const QString &filePath, int resultNum) const;

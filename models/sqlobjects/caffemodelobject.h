@@ -9,8 +9,6 @@ class T_MODEL_EXPORT CaffeModelObject : public TSqlObject, public QSharedData
 {
 public:
     QString dataset_id;
-    QString mean_file;
-    QString mean_data;
     QString solver_file;
     QString train_file;
     QString deploy_file;
@@ -20,8 +18,6 @@ public:
 
     enum PropertyIndex {
         DatasetId = 0,
-        MeanFile,
-        MeanData,
         SolverFile,
         TrainFile,
         DeployFile,
@@ -38,10 +34,6 @@ private:    /*** Don't modify below this line ***/
     Q_OBJECT
     Q_PROPERTY(QString dataset_id READ getdataset_id WRITE setdataset_id)
     T_DEFINE_PROPERTY(QString, dataset_id)
-    Q_PROPERTY(QString mean_file READ getmean_file WRITE setmean_file)
-    T_DEFINE_PROPERTY(QString, mean_file)
-    Q_PROPERTY(QString mean_data READ getmean_data WRITE setmean_data)
-    T_DEFINE_PROPERTY(QString, mean_data)
     Q_PROPERTY(QString solver_file READ getsolver_file WRITE setsolver_file)
     T_DEFINE_PROPERTY(QString, solver_file)
     Q_PROPERTY(QString train_file READ gettrain_file WRITE settrain_file)

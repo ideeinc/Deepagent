@@ -11,6 +11,7 @@
 class TModelObject;
 class CaffeModelObject;
 class QJsonArray;
+class Dataset;
 
 
 class T_MODEL_EXPORT CaffeModel : public CaffeData
@@ -22,24 +23,25 @@ public:
 
     QString datasetId() const;
     void setDatasetId(const QString &datasetId);
-    QString meanFile() const;
-    void setMeanFile(const QString &meanFile);
-    QString meanData() const;
-    void setMeanData(const QString &meanData);
+    // QString meanFile() const;
+    // QString meanFilePath() const { return dirPath() % meanFile(); }
+    // void setMeanFile(const QString &meanFile);
+    // QString meanData() const;
+    // void setMeanData(const QString &meanData);
     QString solverFile() const;
-    QString solverFilePath() const { return dirPath() % solverFile(); }
+    QString solverFilePath() const { return dirPath() + solverFile(); }
     void setSolverFile(const QString &solverFile);
     QString solverPrototxt() const;
     QString trainFile() const;
-    QString trainFilePath() const { return dirPath() % trainFile(); }
+    QString trainFilePath() const { return dirPath() + trainFile(); }
     void setTrainFile(const QString &trainFile);
     QString trainPrototxt() const;
     QString deployFile() const;
-    QString deployFilePath() const { return dirPath() % deployFile(); }
+    QString deployFilePath() const { return dirPath() + deployFile(); }
     void setDeployFile(const QString &deployFile);
     QString deployPrototxt() const;
     QString networkFile() const;
-    QString networkFilePath() const { return dirPath() % networkFile(); }
+    QString networkFilePath() const { return dirPath() + networkFile(); }
     void setNetworkFile(const QString &networkFile);
     QString networkPrototxt() const;
     QStringList trainedModelFiles() const;
@@ -51,6 +53,7 @@ public:
 
     QString solverPrototxtPath() const;
     QString caffeInfoLogPath() const;
+    Dataset getDataset() const;
 
     bool create() override;
     bool update() override;

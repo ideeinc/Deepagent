@@ -50,7 +50,7 @@ Prediction::~Prediction()
 }
 
 
-bool Prediction::init(const QString &trainedModelFilePath, const QString &meanFilePath)
+bool Prediction::init(const QString &weightFilePath, const QString &meanFilePath)
 {
     try {
 #ifndef CPU_ONLY
@@ -65,13 +65,21 @@ bool Prediction::init(const QString &trainedModelFilePath, const QString &meanFi
         }
 
         if (_netPrototxtPath.isEmpty()) {
-            tDebug() << "getNeuralNetwork is empty";
+            tError() << "getNeuralNetwork is empty";
             return false;
         }
+
+        if (! QFileInfo(weightFilePath).exists()) {
+            tError() << "weight file not found: " << weightFilePath;
+            return false;
+        } else {
+            tDebug() << "weight file: " << weightFilePath;
+        }
+
         _trainedNet = new Net<float>(_netPrototxtPath.toStdString(), TEST);
         tDebug() << "Loads layer: " << _netPrototxtPath;
-        netPtr->CopyTrainedLayersFrom(trainedModelFilePath.toStdString());
-        tDebug() << "Loads trained-model: " << trainedModelFilePath;
+        netPtr->CopyTrainedLayersFrom(weightFilePath.toStdString());
+        tDebug() << "Loads trained-model: " << weightFilePath;
 
         const vector<Blob<float>*> &netInputBlobs = netPtr->input_blobs();
         if (netInputBlobs.size() == 0) {
@@ -87,7 +95,7 @@ bool Prediction::init(const QString &trainedModelFilePath, const QString &meanFi
 
         QFileInfo meanInfo(meanFilePath);
 
-        if (!meanInfo.exists()) {
+        if (! meanInfo.exists()) {
             tWarn() << "mean file not found: " << meanInfo.filePath();
         } else {
             auto suffix = meanInfo.suffix().toLower();

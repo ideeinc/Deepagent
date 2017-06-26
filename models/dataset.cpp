@@ -62,9 +62,19 @@ void Dataset::setMeanFile(const QString &meanFile)
     d->mean_file = meanFile;
 }
 
+QString Dataset::meanData() const
+{
+    return QString::fromUtf8(readFile(meanFilePath()));
+}
+
 QString Dataset::labelFile() const
 {
     return d->label_file;
+}
+
+QString Dataset::labelData() const
+{
+    return QString::fromUtf8(readFile(labelFilePath()));
 }
 
 void Dataset::setLabelFile(const QString &labelFile)

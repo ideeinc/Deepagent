@@ -62,6 +62,7 @@ HEADERS += containers/trainindexcontainer.h
 HEADERS += containers/traincreatecontainer.h
 SOURCES += containers/traincreatecontainer.cpp
 HEADERS += containers/traincreatessdcontainer.h
+HEADERS += containers/trainclassifycontainer.h
 HEADERS += containers/traindetectcontainer.h
 HEADERS += containers/trainshowcontainer.h
 HEADERS += containers/taginfocontainer.h

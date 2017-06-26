@@ -8,7 +8,9 @@
 #include "trainservice.h"
 #include "caffeprocess.h"
 #include "ssddetector.h"
+#include "prediction.h"
 #include "image.h"
+#include "dataset.h"
 
 
 TrainIndexContainer TrainService::index()
@@ -175,12 +177,94 @@ static QFileInfoList searchRecursive(const QDir &dir, const QStringList &nameFil
 }
 
 
+static QMap<int,QString> parseLabel(const QByteArray &data)
+{
+    QMap<int, QString> labels;
+    QJsonParseError error;
+    auto jsonDoc = QJsonDocument::fromJson(data, &error);
+
+    if (jsonDoc.isEmpty()) {
+        tWarn() << "JSON parse error : " << error.errorString();
+    } else {
+        auto jsonMap = jsonDoc.toVariant().toMap();
+
+        for (auto it = jsonMap.constBegin(); it != jsonMap.constEnd(); ++it) {
+            labels.insert(it.key().toInt(), it.value().toString());
+            tDebug() << "label " << it.key() << ": " << it.value();
+        }
+    }
+    return labels;
+}
+
+
+TrainClassifyContainer TrainService::classify(const QString &id, THttpRequest &request)
+{
+    TrainClassifyContainer container;
+    container.caffeModel = CaffeModel::get(id);
+    if (container.caffeModel.category().toLower() != "classification") {
+        container.caffeModel.clear();
+        return container;
+    }
+    const auto &cm = container.caffeModel;
+    const auto dataset = cm.getDataset();
+
+    switch (request.method()) {
+    case Tf::Get: {
+        break; }
+
+    case Tf::Post: {
+        auto &formdata = request.multipartFormData();
+        auto entities = formdata.entityList("imageFile[]");
+        auto trainedModel = request.formItemValue("trainedModel");
+        auto imageDir = formdata.formItemValue("imageDir");
+
+        if (trainedModel.isEmpty()) {
+            tWarn() << "empty trained model!";
+            break;
+        }
+
+        if (dataset.isNull()) {
+            tWarn() << "Null dataset";
+        }
+
+        Prediction prediction(cm.deployFilePath());
+        prediction.init(cm.trainedModelFilePath(trainedModel), dataset.meanFilePath());
+
+        QMap<int, QString> labels = parseLabel(dataset.labelData().toUtf8());
+
+        for (auto &ent : entities) {
+            auto jpg = ent.uploadedFilePath();
+            auto results = prediction.predictTop(jpg, 5);
+            QList<QPair<QString, float>> predictions;
+
+            for (auto &p : results) {
+                auto name = labels.value(p.first, QString::number(p.first));
+                predictions << QPair<QString, float>(name, p.second);
+                tInfo() << name << " : " << p.second;
+            }
+
+            container.predictionsList << predictions;
+            container.jpegBinList << Image(jpg).toEncoded("jpg");
+        }
+        break; }
+
+    default:
+        break;
+    }
+    return container;
+}
+
+
 TrainDetectContainer TrainService::detect(const QString &id, THttpRequest &request)
 {
     const QString outDir("/home/aoyama/cancer_pics/");
 
     TrainDetectContainer container;
     container.caffeModel = CaffeModel::get(id);
+    if (container.caffeModel.category().toLower() != "detection") {
+        container.caffeModel.clear();
+        return container;
+    }
     const auto &cm = container.caffeModel;
 
     switch (request.method()) {
@@ -201,6 +285,8 @@ TrainDetectContainer TrainService::detect(const QString &id, THttpRequest &reque
 
         SsdDetector detector(cm.deployFilePath().toStdString(), cm.trainedModelFilePath(trainedModel).toStdString(),
                              string(), meanValue.toStdString());
+
+        QMap<int, QString> labels = parseLabel(cm.getDataset().labelData().toUtf8());
 
         if (! imageDir.isEmpty()) { // ディレクトリ指定
             QDir(outDir).mkpath(".");
@@ -229,7 +315,8 @@ TrainDetectContainer TrainService::detect(const QString &id, THttpRequest &reque
                 QString logmsg;
                 const QString format = "\"class:%1, score:%2, x1:%3, y1:%4, x2:%5, y2:%6\", ";
                 for (auto &c : detections) {
-                    logmsg += format.arg(c[1]).arg(c[2],0,'g',3).arg((int)c[3]).arg((int)c[4]).arg((int)c[5]).arg((int)c[6]);
+                    auto name = labels[(int)c[1]];
+                    logmsg += format.arg(name).arg(c[2],0,'g',3).arg((int)c[3]).arg((int)c[4]).arg((int)c[5]).arg((int)c[6]);
                 }
                 logmsg.chop(2);
                 tInfo() << "#" % img.dir().dirName() % ", " % img.fileName() % ", " % logmsg;

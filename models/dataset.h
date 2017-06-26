@@ -25,8 +25,12 @@ public:
     int imageHeight() const;
     void setImageHeight(int imageHeight);
     QString meanFile() const;
+    QString meanFilePath() const { return dirPath() + meanFile(); }
+    QString meanData() const;
     void setMeanFile(const QString &meanFile);
     QString labelFile() const;
+    QString labelFilePath() const { return dirPath() + labelFile(); }
+    QString labelData() const;
     void setLabelFile(const QString &labelFile);
     QString trainDbPath() const;
     void setTrainDbPath(const QString &trainDbPath);

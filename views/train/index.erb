@@ -15,14 +15,20 @@
 <br />
 <table border="1" cellpadding="5" style="border: 1px #d0d0d0 solid; border-collapse: collapse;">
   <tr>
+    <th>ID</th>
+    <th>Category</th>
     <th>Name</th>
+    <th>Note</th>
     <th>Status</th>
     <th>Created</th>
   </tr>
 
 <% for (const auto &i : container.trainingModels) { %>
   <tr>
+    <td><%= i.id() %></td>
+    <td><%= i.category() %></td>
     <td><%= i.name() %></td>
+    <td><%= i.note() %></td>
     <td><%= i.state() %></td>
     <td><%= i.createdAt() %></td>
     <td>

@@ -1,6 +1,7 @@
 #include <TreeFrogModel>
 #include "caffemodel.h"
 #include "caffemodelobject.h"
+#include "dataset.h"
 
 
 CaffeModel::CaffeModel()
@@ -33,25 +34,25 @@ void CaffeModel::setDatasetId(const QString &datasetId)
     d->dataset_id = datasetId;
 }
 
-QString CaffeModel::meanFile() const
-{
-    return d->mean_file;
-}
+// QString CaffeModel::meanFile() const
+// {
+//     return d->mean_file;
+// }
 
-void CaffeModel::setMeanFile(const QString &meanFile)
-{
-    d->mean_file = meanFile;
-}
+// void CaffeModel::setMeanFile(const QString &meanFile)
+// {
+//     d->mean_file = meanFile;
+// }
 
-QString CaffeModel::meanData() const
-{
-    return d->mean_data;
-}
+// QString CaffeModel::meanData() const
+// {
+//     return d->mean_data;
+// }
 
-void CaffeModel::setMeanData(const QString &meanData)
-{
-    d->mean_data = meanData;
-}
+// void CaffeModel::setMeanData(const QString &meanData)
+// {
+//     d->mean_data = meanData;
+// }
 
 QString CaffeModel::solverFile() const
 {
@@ -210,6 +211,11 @@ QString CaffeModel::solverPrototxtPath() const
 QString CaffeModel::caffeInfoLogPath() const
 {
     return dirPath() % "caffe.INFO";
+}
+
+Dataset CaffeModel::getDataset() const
+{
+    return Dataset::get(datasetId());
 }
 
 bool CaffeModel::create()
