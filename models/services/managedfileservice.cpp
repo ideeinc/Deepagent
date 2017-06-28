@@ -32,6 +32,33 @@ namespace {
                 }
             }
         }
+        FileError::Type saveTrimmingImage(const TrimmingMode& mode, const QString& destination) const
+        {
+            FileError::Type err = FileError::Type::NOERR;
+            switch (mode) {
+                case TrimmingMode::NoTrimming: {
+                    if (! QFile::rename(path, destination)) {
+                        err = FileError::Type::UNKNOWN;
+                    }
+                }
+                    break;
+                case TrimmingMode::Default: {
+                    if (! image.trimmed().save(destination)) {
+                        err = FileError::Type::IMAGECROP;
+                    }
+                }
+                    break;
+                case TrimmingMode::Square: {
+                    const QRect frame = image.getValidRect();
+                    const auto size = std::min(frame.width(), frame.height());
+                    if (! image.cropped(frame.x(), frame.y(), size, size).save(destination)) {
+                        err = FileError::Type::IMAGECROP;
+                    }
+                }
+                    break;
+            }
+            return err;
+        }
     } OriginalFile;
 };
 
@@ -83,7 +110,7 @@ ManagedFileService::ManagedFileService()
     QDir().mkpath(_originalDir);
 }
 
-std::tuple<QStringList, FileErrorList> ManagedFileService::append(const QList<TMimeEntity>& files, const bool& isCropImage)
+std::tuple<QStringList, FileErrorList> ManagedFileService::append(const QList<TMimeEntity>& files, const TrimmingMode& trimmingMode)
 {
     const auto basePath = QDir(_sourceDir).filePath( QDir::toNativeSeparators(QDateTime::currentDateTime().toString("yyyy/MMdd/")) + QString::number(QDateTime::currentDateTime().toMSecsSinceEpoch()) );
     if (! QDir(basePath).exists()) {
@@ -116,24 +143,10 @@ std::tuple<QStringList, FileErrorList> ManagedFileService::append(const QList<TM
         FileError::Type errorKey = FileError::Type::NOERR;
         if (! duplicated) {
             const QString destination = QDir(basePath).filePath(original.hash + ".jpg");
-
-            if (isCropImage) {
-                const QRect frame = original.image.getValidRect();
-                const auto size = std::min(frame.width(), frame.height());
-                if (original.image.cropped(frame.x(), frame.y(), size, size).save(destination)) {
-                    success << QFileInfo(destination).absoluteFilePath();
-                    original.saveTo(_originalDir, destination);
-                } else {
-                    errorKey = FileError::Type::IMAGECROP;
-                }
-            }
-            if ((! isCropImage) || (errorKey != FileError::Type::NOERR)) {
-                if (QFile::rename(original.path, destination)) {
-                    success << QFileInfo(destination).absoluteFilePath();
-                    original.saveTo(_originalDir, destination);
-                } else {
-                    errorKey = FileError::Type::UNKNOWN;
-                }
+            errorKey = original.saveTrimmingImage(trimmingMode, destination);
+            if (errorKey == FileError::Type::NOERR) {
+                success << QFileInfo(destination).absoluteFilePath();
+                original.saveTo(_originalDir, destination);
             }
         }
         // 重複ファイルは警告

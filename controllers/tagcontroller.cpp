@@ -130,8 +130,8 @@ void TagController::upload()
             }
         }
         if ((! tagName.isEmpty()) && (! groupName.isEmpty())) {
-            const bool cropImage = ((httpRequest().formItemValue("cropImage", "1")) == "1" ? true : false);
-            uploadResult.errors = service.extractImages(httpRequest().multipartFormData().entityList("files[]"), groupName, tagName, cropImage);
+            const int trimmingMode = (httpRequest().hasFormItem("trimmingMode") ? httpRequest().formItemValue("trimmingMode").toInt() : 2);
+            uploadResult.errors = service.uploadImages(httpRequest().multipartFormData().entityList("files[]"), groupName, tagName, trimmingMode);
         }
         uploadResult.completed = true;
         uploadResult.backPageURL = httpRequest().formItemValue("page");

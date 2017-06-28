@@ -8,6 +8,13 @@
  */
 class TMimeEntity;
 
+/*
+ */
+enum class TrimmingMode : int {
+    NoTrimming = 0,
+    Default = 1,
+    Square = 2,
+};
 
 /*
  */
@@ -50,7 +57,7 @@ class ManagedFileService {
 public:
     ManagedFileService();
 
-    std::tuple<QStringList, FileErrorList> append(const QList<TMimeEntity>&, const bool&);
+    std::tuple<QStringList, FileErrorList> append(const QList<TMimeEntity>&, const TrimmingMode& = TrimmingMode::Square);
 
     static QList<ManagedFile> find(const QString&);
     static QList<ManagedFile> findInDirectory(const QString&, const QString&);

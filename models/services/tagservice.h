@@ -28,7 +28,7 @@ public:
     void appendImages(const QString& groupName, const QString& tagName, const QStringList& imagePaths) const;
     void removeImages(const QString& groupName, const QString& tagName, const QStringList& imageNames) const;
     void updateImages(const QStringList& images, const QVariantMap& tags) const;
-    QMap<QString, QStringList> extractImages(const QList<TMimeEntity>& files, const QString& groupName, const QString& tagName, const bool cropImage = true);
+    QMap<QString, QStringList> uploadImages(const QList<TMimeEntity>& files, const QString& groupName, const QString& tagName, const int trimmngMode = 2);
 
     TagInfoContainer find(THttpRequest&);
     TagInfoContainer info(const QString& groupName, const QString& tagName, const long& page = 0, const long& limit = 200) const;

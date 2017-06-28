@@ -147,9 +147,9 @@ void TagService::updateImages(const QStringList& images, const QVariantMap& tags
     }
 }
 
-QMap<QString, QStringList> TagService::extractImages(const QList<TMimeEntity>& files, const QString& groupName, const QString& tagName, const bool isCropImage)
+QMap<QString, QStringList> TagService::uploadImages(const QList<TMimeEntity>& files, const QString& groupName, const QString& tagName, const int trimmingMode)
 {
-    const auto results = ManagedFileService().append(files, isCropImage);
+    const auto results = ManagedFileService().append(files, static_cast<TrimmingMode>(trimmingMode));
     const auto images = std::get<0>(results);
 
     if (images.count() > 0) {

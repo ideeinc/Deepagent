@@ -90,7 +90,11 @@
 <fieldset>
 <legend>画像とタグの選択</legend>
 <p><label>ファイル: <%== inputFileTag("files[]", THtmlAttribute("multiple", "multiple") | THtmlAttribute("accept", ".zip,.tar,.gz,image/jpeg")) %></label> <span>（JPEG ファイルまたは zip, tar, tar.gz アーカイブファイル）</span></p>
-<p><label>画像の黒フチ切り取りをスキップ: <%== checkBoxTag("cropImage", "0", false) %></label></p>
+<p><label>画像のトリミング: <select name="trimmingMode">
+<option value="0">なし</option>
+<option value="1">デフォルト</option>
+<option value="2" selected>正方形</option>
+</select></label></p>
 <label>グループ:
 <select name="group">
   <% for (const auto& group : allGroups) { %>

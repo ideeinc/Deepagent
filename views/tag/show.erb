@@ -108,7 +108,11 @@
 <%== inputHiddenTag("tag", container.name) %>
 <%== inputHiddenTag("page", urla("show", {container.groupName, container.name})) %>
 <div><label>ファイル: <%== inputFileTag("files[]", THtmlAttribute("multiple", "multiple") | THtmlAttribute("accept", ".zip,.tar,.gz,image/jpeg")) %></label> <span>（JPEG ファイルまたは zip, tar, tar.gz アーカイブファイル）</span></div>
-<div><label>画像の黒フチ切り取りをスキップ: <%== checkBoxTag("cropImage", "0", false) %></label></div>
+<div><label>画像のトリミング: <select name="trimmingMode">
+<option value="0">なし</option>
+<option value="1">デフォルト</option>
+<option value="2" selected>正方形</option>
+</select></label></div>
 <div><%== submitTag("アップロード", THtmlAttribute("name", "upload")) %></div>
 <%== endTag() %>
 </fieldset>
