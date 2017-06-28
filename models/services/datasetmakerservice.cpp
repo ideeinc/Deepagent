@@ -198,7 +198,7 @@ namespace {
 }
 namespace {
     //
-    QDir makeLayoutSource(const QString& workDir, const QMap<QString, QStringList>& labeledImages, const float validationRate)
+    QDir makeLayoutSource(const QString& workDir, const QMap<QString, QStringList>& labeledImages, const float validationRate, std::function<bool(const QString&)> filter = nullptr)
     {
         const QDir archiveDir(workDir);
         const QDir sourceDir(archiveDir.absoluteFilePath("source")); archiveDir.mkpath("source");
@@ -211,8 +211,10 @@ namespace {
             trainingDir.mkpath(label);
             const QDir trainingLabelDir(trainingDir.filePath(label));
             for (const QString& imagePath : labeledImages[ label ]) {
-                const QString fileName = QFileInfo(imagePath).fileName();
-                QFile::link(imagePath, trainingLabelDir.filePath(fileName));
+                if ((filter == nullptr) || filter(imagePath)) {
+                    const QString fileName = QFileInfo(imagePath).fileName();
+                    QFile::link(imagePath, trainingLabelDir.filePath(fileName));
+                }
             }
 
             // validation
@@ -301,7 +303,12 @@ namespace {
         const QDir trainLabelDir = QDir(archiveDir.absoluteFilePath("train") + QDir::separator() + "labels");
         const QDir trainXmlDir = QDir(archiveDir.absoluteFilePath("train") + QDir::separator() + "xml");
 
-        const QDir sourceDir = makeLayoutSource(workDir, labeledImages, validationRate);
+        const QDir labelDir(Tf::conf("settings").value("ObjectDetectionLabelDir").toString());
+
+        const QDir sourceDir = makeLayoutSource(workDir, labeledImages, validationRate, [&labelDir](const QString& path) {
+            const QString labelFileName = QFileInfo(path).completeBaseName() + ".txt";
+            return labelDir.exists(labelFileName);
+        });
         const QDir sourceTrainDir(sourceDir.filePath("train"));
         const QDir sourceValDir(sourceDir.filePath("val"));
 
@@ -313,7 +320,6 @@ namespace {
         }
 
         // make training data
-        const QDir labelDir(Tf::conf("settings").value("ObjectDetectionLabelDir").toString());
         for (const QString& label : labeledImages.keys()) {
             const QFileInfoList images = QDir(sourceTrainDir.filePath(label)).entryInfoList({"*.jpg"});
             for (const QFileInfo& originalImage : images) {
