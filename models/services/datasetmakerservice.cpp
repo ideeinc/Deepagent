@@ -8,6 +8,7 @@
 #include <functional>
 #include <random>
 #include <algorithm>
+#include <logics/formatconverter.h>
 
 
 class DatasetStatistics {
@@ -295,8 +296,10 @@ namespace {
         const QDir archiveDir(workDir);
         archiveDir.mkpath(QString("train") + QDir::separator() + "images");
         archiveDir.mkpath(QString("train") + QDir::separator() + "labels");
+        archiveDir.mkpath(QString("train") + QDir::separator() + "xml");
         const QDir trainImageDir = QDir(archiveDir.absoluteFilePath("train") + QDir::separator() + "images");
         const QDir trainLabelDir = QDir(archiveDir.absoluteFilePath("train") + QDir::separator() + "labels");
+        const QDir trainXmlDir = QDir(archiveDir.absoluteFilePath("train") + QDir::separator() + "xml");
 
         const QDir sourceDir = makeLayoutSource(workDir, labeledImages, validationRate);
         const QDir sourceTrainDir(sourceDir.filePath("train"));
@@ -319,12 +322,16 @@ namespace {
                     const QFileInfo trainImage = trainImageDir.filePath(originalImage.fileName());
                     const QFileInfo originalLabel = labelDir.filePath(labelFileName);
                     const QFileInfo trainLabel = trainLabelDir.filePath(labelFileName);
+                    const QFileInfo trainXml = trainXmlDir.filePath(originalImage.completeBaseName() + ".xml");
                     // copy original image to destination
                     copyScaledImageAndLabel(
                         originalImage.absoluteFilePath(), trainImage.absoluteFilePath(),
                         originalLabel.absoluteFilePath(), trainLabel.absoluteFilePath(),
                         size, label
                     );
+                    FormatConverter(
+                        trainLabel.absoluteFilePath(), FormatConverter::Type::KITTI, trainImage.absoluteFilePath()
+                    ).convertTo(FormatConverter::Type::PASCAL_VOC, trainXml.absoluteFilePath());
                     stat.originalTraining[label] = (stat.originalTraining[label].toInt() + 1);
                     stat.originalTotal[label] = (stat.originalTotal[label].toInt() + 1);
 
@@ -333,11 +340,15 @@ namespace {
                         for (const QString& angle : QStringList({"90", "180", "270"})) {
                             const QString dstImagePath = trainImageDir.filePath(trainImage.completeBaseName() + "_" + angle + ".jpg");
                             const QString dstLabelPath = trainLabelDir.filePath(trainLabel.completeBaseName() + "_" + angle + ".txt");
+                            const QString dstXmlPath = trainXmlDir.filePath(trainXml.completeBaseName() + "_" + angle + ".xml");
                             copyRotatedImageAndLabel(
                                 trainImage.absoluteFilePath(), dstImagePath,
                                 trainLabel.absoluteFilePath(), dstLabelPath,
                                 angle.toFloat()
                             );
+                            FormatConverter(
+                                dstLabelPath, FormatConverter::Type::KITTI, dstImagePath
+                            ).convertTo(FormatConverter::Type::PASCAL_VOC, dstXmlPath);
                         }
                         stat.augmentedTraining[label] = (stat.augmentedTraining[label].toInt() + 4);
                     }
@@ -349,8 +360,10 @@ namespace {
         if ((0 < validationRate) && (validationRate < 1)) {
             archiveDir.mkpath(QString("val") + QDir::separator() + "images");
             archiveDir.mkpath(QString("val") + QDir::separator() + "labels");
+            archiveDir.mkpath(QString("val") + QDir::separator() + "xml");
             const QDir valImageDir = QDir(archiveDir.absoluteFilePath("val") + QDir::separator() + "images");
             const QDir valLabelDir = QDir(archiveDir.absoluteFilePath("val") + QDir::separator() + "labels");
+            const QDir valXmlDir = QDir(archiveDir.absoluteFilePath("val") + QDir::separator() + "xml");
 
             for (const QString& label : labeledImages.keys()) {
                 const QFileInfoList images = QDir(sourceValDir.filePath(label)).entryInfoList({"*.jpg"});
@@ -360,12 +373,16 @@ namespace {
                         const QFileInfo valImage = valImageDir.filePath(originalImage.fileName());
                         const QFileInfo originalLabel = labelDir.filePath(labelFileName);
                         const QFileInfo valLabel = valLabelDir.filePath(labelFileName);
+                        const QFileInfo valXml = valXmlDir.filePath(originalImage.completeBaseName() + ".xml");
                         // copy original image to destination
                         copyScaledImageAndLabel(
                             originalImage.absoluteFilePath(), valImage.absoluteFilePath(),
                             originalLabel.absoluteFilePath(), valLabel.absoluteFilePath(),
                             size, label
                         );
+                        FormatConverter(
+                            valLabel.absoluteFilePath(), FormatConverter::Type::KITTI, valImage.absoluteFilePath()
+                        ).convertTo(FormatConverter::Type::PASCAL_VOC, valXml.absoluteFilePath());
                         stat.originalValidation[label] = (stat.originalValidation[label].toInt() + 1);
                         stat.originalTotal[label] = (stat.originalTotal[label].toInt() + 1);
 
@@ -374,11 +391,15 @@ namespace {
                             for (const QString& angle : QStringList({"90", "180", "270"})) {
                                 const QString dstImagePath = valImageDir.filePath(valImage.completeBaseName() + "_" + angle + ".jpg");
                                 const QString dstLabelPath = valLabelDir.filePath(valLabel.completeBaseName() + "_" + angle + ".txt");
+                                const QString dstXmlPath = valXmlDir.filePath(valXml.completeBaseName() + "_" + angle + ".xml");
                                 copyRotatedImageAndLabel(
                                     valImage.absoluteFilePath(), dstImagePath,
                                     valLabel.absoluteFilePath(), dstLabelPath,
                                     angle.toFloat()
                                 );
+                                FormatConverter(
+                                    dstLabelPath, FormatConverter::Type::KITTI, dstImagePath
+                                ).convertTo(FormatConverter::Type::PASCAL_VOC, dstXmlPath);
                             }
                             stat.augmentedValidation[label] = (stat.augmentedValidation[label].toInt() + 4);
                         }
