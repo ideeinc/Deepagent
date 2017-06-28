@@ -53,8 +53,10 @@ QList<Tag> TagGroup::tags() const
             }
         }
 
-        qSort(_tags.begin(), _tags.end(), [](const Tag& t1, const Tag& t2) -> bool {
-            return t1.displayName() < t2.displayName();
+        QCollator collator;
+        collator.setNumericMode(true);
+        qSort(_tags.begin(), _tags.end(), [&collator](const Tag& t1, const Tag& t2) -> bool {
+            return (collator.compare(t1.displayName(), t2.displayName()) < 0);
         });
     }
     return _tags;
