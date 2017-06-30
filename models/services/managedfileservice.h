@@ -66,11 +66,13 @@ public:
     static QStringList filterInList(const QString& word, const QStringList& list);
 
     static QByteArray checksum(const QString& path, QCryptographicHash::Algorithm algorithm = QCryptographicHash::Md5);
+    static void load();
 protected:
 
 private:
     const QString _sourceDir;
     const QString _originalDir;
+    static QSet<QString> hashes;
 
     static FileErrorList extract(const TMimeEntity&, const QString&);
 };

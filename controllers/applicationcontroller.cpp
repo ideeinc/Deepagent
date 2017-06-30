@@ -1,5 +1,6 @@
 #include "applicationcontroller.h"
 #include "logics/cudatool.h"
+#include "services/managedfileservice.h"
 #include <glog/logging.h>
 #include <caffe/caffe.hpp>
 
@@ -37,6 +38,9 @@ void ApplicationController::staticInitialize()
         caffe::Caffe::set_mode(caffe::Caffe::GPU);
     }
 #endif
+
+    // load all file's hashes.
+    ManagedFileService::load();
 }
 
 void ApplicationController::staticRelease()

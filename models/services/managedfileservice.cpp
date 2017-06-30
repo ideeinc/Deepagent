@@ -3,6 +3,7 @@
 #include <TWebApplication>
 #include <THttpRequest>
 
+QSet<QString> ManagedFileService::hashes;
 
 namespace {
     typedef struct OriginalFile {
@@ -126,19 +127,11 @@ std::tuple<QStringList, FileErrorList> ManagedFileService::append(const QList<TM
         errors << extract(f, workPath);
     }
 
-    // cache the all hashes.
-    QStringList caches;
-    QDirIterator i(_sourceDir, {"*.jpg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
-    while (i.hasNext()) {
-        const QString path = i.next();
-        caches << QFileInfo(path).completeBaseName();
-    }
-
     QDirIterator search(workPath, {"*.jpg", "*.jpeg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
     while (search.hasNext()) {
         const OriginalFile original(search.next());
         // 移動先の sources ディレクトリ (オリジナル画像置き場) から重複を検索
-        const bool duplicated = caches.contains(original.hash);
+        const bool duplicated = ManagedFileService::hashes.contains(original.hash);
         // 適切な場所に配置
         FileError::Type errorKey = FileError::Type::NOERR;
         if (! duplicated) {
@@ -156,6 +149,8 @@ std::tuple<QStringList, FileErrorList> ManagedFileService::append(const QList<TM
         // エラーを記録
         if (errorKey != FileError::Type::NOERR) {
             errors << FileError(errorKey, QString(original.path).replace(workPath + QDir::separator(), ""));
+        } else {
+            ManagedFileService::hashes << original.hash;
         }
     }
 
@@ -220,6 +215,17 @@ QStringList ManagedFileService::filterInList(const QString& word, const QStringL
     }
 
     return images;
+}
+
+void ManagedFileService::load()
+{
+    tDebug() << "ManagedFileService::load";
+    // cache the all hashes.
+    QDirIterator i(ManagedFileService()._sourceDir, {"*.jpg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+    while (i.hasNext()) {
+        const QString path = i.next();
+        ManagedFileService::hashes << QFileInfo(path).completeBaseName();
+    }
 }
 
 QByteArray ManagedFileService::checksum(const QString& path, QCryptographicHash::Algorithm algorithm)
