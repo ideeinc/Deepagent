@@ -106,6 +106,5 @@ void TrainDatasetController::remove(const QString &id)
     redirect(urla("index"));
 }
 
-
 // Don't remove below this line
 T_DEFINE_CONTROLLER(TrainDatasetController)

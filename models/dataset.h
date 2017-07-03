@@ -30,8 +30,9 @@ public:
     void setMeanFile(const QString &meanFile);
     QString labelFile() const;
     QString labelFilePath() const { return dirPath() + labelFile(); }
-    QString labelData() const;
     void setLabelFile(const QString &labelFile);
+    QString labelData() const;
+    void setLabelData(const QString &label);
     QString trainDbPath() const;
     void setTrainDbPath(const QString &trainDbPath);
     QString valDbPath() const;

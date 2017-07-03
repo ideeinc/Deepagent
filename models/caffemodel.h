@@ -61,7 +61,6 @@ public:
     void setProperties(const QVariantMap &properties) override;
     QVariantMap toVariantMap() const override;
     void clear();
-
     static CaffeModel create(const QVariantMap &values);
     static CaffeModel get(const QString &id);
     //static int count();

@@ -220,7 +220,15 @@ Dataset CaffeModel::getDataset() const
 
 bool CaffeModel::create()
 {
-    setId(QString::number(QDateTime::currentDateTime().toMSecsSinceEpoch()));
+    for (;;) {
+        setId(QString::number(QDateTime::currentDateTime().toMSecsSinceEpoch()));
+        QDir dir(dirPath());
+        if (! dir.exists()) {
+            dir.mkpath(".");
+            break;
+        }
+        Tf::msleep(5);
+    }
     return update();
 }
 

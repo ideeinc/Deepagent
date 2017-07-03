@@ -393,3 +393,100 @@ QByteArray TrainService::getPrototxt(const QString &id, const QString &prototxt)
     auto caffeModel = CaffeModel::get(id).toVariantMap();
     return caffeModel.value(prototxt).toByteArray();
 }
+
+
+static bool moveFile(const QString &filePath, const QString &dstFilePath, bool overwrite = true)
+{
+    QFile dstFile(dstFilePath);
+    QDir dstDir(QFileInfo(dstFile).absolutePath());
+
+    if (! dstDir.exists()) {
+        dstDir.mkpath(".");
+    }
+
+    if (dstFile.exists()) {
+        if (overwrite) {
+            dstFile.remove();
+        } else {
+            return false;
+        }
+    }
+    return QFile::rename(filePath, dstFilePath);
+}
+
+
+static bool move(const QString &filePath, const QString &dstDirPath, bool overwrite = true)
+{
+    auto dstFilePath = QDir(dstDirPath).absoluteFilePath(QFileInfo(filePath).fileName());
+    return moveFile(filePath, dstFilePath, overwrite);
+}
+
+
+void TrainService::uploadTrainedModel(THttpRequest &request)
+{
+    auto entity = request.multipartFormData().entity("trainedModel");
+    auto uploadFile = entity.uploadedFilePath();
+    // auto basedir = Tf::app()->webRootPath() + "caffemodel/";
+    // auto dirPath = basedir + QString::number(QDateTime::currentDateTime().toMSecsSinceEpoch());
+    // QDir modelDir(dirPath);
+    // modelDir.mkpath(".");
+
+    if (uploadFile.isEmpty()) {
+        return;
+    }
+
+
+    QString tempPath = Tf::app()->tmpPath() + QString::number(Tf::rand64_r());
+    QDir tempDir(tempPath);
+    tempDir.mkpath(".");
+
+    QProcess tar;
+    QStringList args = { "xf", uploadFile, "-C", tempPath };
+    tar.start("tar", args);
+    tar.waitForFinished();
+    tDebug() << "tar exit code:" << tar.exitCode() << " status:" << tar.exitStatus();
+
+    QFile jsonFile(tempDir.absoluteFilePath("info.json"));
+    if (jsonFile.open(QIODevice::ReadOnly)) {
+        auto infoJson = QJsonDocument::fromJson(jsonFile.readAll()).object();
+
+        Dataset dataset;
+        dataset.create();
+        moveFile(tempDir.absoluteFilePath(infoJson["mean file"].toString()), dataset.meanFilePath());
+        // Labels
+        auto labels = Dataset::readFile(tempDir.absoluteFilePath(infoJson["labels file"].toString()));
+        QTextStream ts(&labels);
+        QJsonObject json;
+        int i = 0;
+        while (! ts.atEnd()) {
+            auto line = ts.readLine();
+            if (! line.isEmpty()) {
+                json[QString::number(i++)] = line;
+            }
+        }
+        dataset.setLabelData(QString::fromUtf8(QJsonDocument(json).toJson()));
+
+        auto name = infoJson["name"].toString();
+        dataset.setName(name + "_Dateset");
+        dataset.setState("done");
+        dataset.update();
+
+        CaffeModel caffeModel;
+        caffeModel.create();
+        moveFile(tempDir.absoluteFilePath(infoJson["solver file"].toString()), caffeModel.solverFilePath());
+        moveFile(tempDir.absoluteFilePath(infoJson["deploy file"].toString()), caffeModel.deployFilePath());
+        moveFile(tempDir.absoluteFilePath(infoJson["train_val file"].toString()), caffeModel.trainFilePath());
+        moveFile(tempDir.absoluteFilePath(infoJson["model file"].toString()), caffeModel.networkFilePath());
+
+        auto trainedModel = infoJson["snapshot file"].toString();
+        move(tempDir.absoluteFilePath(trainedModel), caffeModel.dirPath());
+        caffeModel.setTrainedModelFiles({trainedModel});
+        caffeModel.setCategory("Classification");
+        caffeModel.setName(name);
+        caffeModel.setState("done");
+        caffeModel.setDatasetId(dataset.id());
+        caffeModel.update();
+    }
+
+    tempDir.removeRecursively();
+}

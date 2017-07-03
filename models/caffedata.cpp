@@ -272,7 +272,6 @@ QVariantMap CaffeData::readJson(const QString &filePath)
     return (json.isEmpty()) ? QVariantMap() : QJsonDocument::fromJson(json).object().toVariantMap();
 }
 
-
 TModelObject *CaffeData::modelData()
 {
     return d.data();

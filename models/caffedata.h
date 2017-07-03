@@ -60,6 +60,8 @@ public:
     void setCompletedAt(const QString &completedAt);
     CaffeData &operator=(const CaffeData &other);
 
+    QString dirPath() const;
+
     virtual bool create() override = 0;
     virtual bool update() override { return false; }
     virtual bool save()   override { return false; }
@@ -69,12 +71,6 @@ public:
     virtual void clear();
     virtual bool isNull() const override;
 
-    //static CaffeData create(const QString &id, const QString &category, const QString &dataType, const QString &name, const QString &username, const QString &state, const QString &note, const QString &caffeVersion, const QString &completedAt);
-    //static CaffeData create(const QVariantMap &values);
-    //static CaffeData get(const QString &id);
-    //static int count();
-    //static QList<CaffeData> getAll();
-    //static QJsonArray getAllJson();
     static bool writeFile(const QString &filePath, const QByteArray &data, bool overwrite = false);
     static QByteArray readFile(const QString &filePath);
     static bool writeJson(const QString &filePath, const QVariantMap &values, bool overwrite = false);
@@ -84,7 +80,6 @@ public:
 
 protected:
     void setId(const QString &id);
-    QString dirPath() const;
     QString jsonFilePath() const;
     QVariantMap toBaseMap() const;
     void setBaseProperties(const QVariantMap &properties);
@@ -140,7 +135,7 @@ inline QList<T> CaffeData::getAll()
 {
     QList<T> modelList;
     QDir baseDir(Tf::app()->webRootPath() + "caffemodel/");
-    const auto dirs = baseDir.entryInfoList(QDir::AllDirs);
+    const auto dirs = baseDir.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot, QDir::Name | QDir::Reversed);
 
     for (auto &d : dirs) {
         auto model = T::get(d.fileName());
@@ -149,7 +144,6 @@ inline QList<T> CaffeData::getAll()
         }
     }
     return modelList;
-
 }
 
 #endif // CAFFEDATA_H

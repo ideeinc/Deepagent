@@ -142,5 +142,18 @@ void TrainController::getPrototxt(const QString &id, const QString &prototxt)
     }
 }
 
+void TrainController::uploadTrainedModel()
+{
+    switch (httpRequest().method()) {
+    case Tf::Post: {
+        service.uploadTrainedModel(httpRequest());
+        redirect(urla("index"));
+        break; }
+
+    default:
+        break;
+    }
+}
+
 // Don't remove below this line
 T_DEFINE_CONTROLLER(TrainController)

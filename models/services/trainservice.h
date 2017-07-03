@@ -23,6 +23,7 @@ public:
     bool remove(const QString &id);
     TrainCreateContainer clone(const QString &id);
     QByteArray getPrototxt(const QString &id, const QString &prototxt);
+    void uploadTrainedModel(THttpRequest &request);
 };
 
 #endif // TRAINSERVICE_H

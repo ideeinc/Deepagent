@@ -22,6 +22,7 @@ public slots:
     void clone(const QString &id);
     void remove(const QString &id);
     void getPrototxt(const QString &id, const QString &prototxt);
+    void uploadTrainedModel();
 
 private:
     TrainService service;

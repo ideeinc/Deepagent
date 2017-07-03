@@ -12,7 +12,15 @@
 
 <%== linkTo("New classification training", urla("create")) %><br />
 <%== linkTo("New object detection training", urla("createSsd")) %><br />
+<%== formTag(urla("uploadTrainedModel"), Tf::Post, true) %>
+  <p>
+    <label>Upload a trained model of DIGITS (tar.gz) :<br />
+    <input name="trainedModel" value="" type="file" /></label>
+  </p>
+  <input type="submit" value="Upload" />
+</form>
 <br />
+
 <table border="1" cellpadding="5" style="border: 1px #d0d0d0 solid; border-collapse: collapse;">
   <tr>
     <th>ID</th>

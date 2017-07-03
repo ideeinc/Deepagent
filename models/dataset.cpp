@@ -9,7 +9,7 @@ Dataset::Dataset()
     d->image_width = 0;
     d->image_height = 0;
     d->mean_file = "mean.binaryproto";
-    d->label_file = "label.txt";
+    d->label_file = "label.json";
     d->train_db_path = "train_db";
     d->val_db_path = "val_db";
     d->log_file = "create_db.log";
@@ -72,15 +72,29 @@ QString Dataset::labelFile() const
     return d->label_file;
 }
 
+void Dataset::setLabelFile(const QString &labelFile)
+{
+    d->label_file = labelFile;
+}
+
 QString Dataset::labelData() const
 {
     return QString::fromUtf8(readFile(labelFilePath()));
 }
 
-void Dataset::setLabelFile(const QString &labelFile)
+void Dataset::setLabelData(const QString &label)
 {
-    d->label_file = labelFile;
+    writeFile(labelFilePath(), label.toUtf8());
 }
+
+// void Dataset::setLabelList(const QStringList &labels)
+// {
+//     QJsonObject json;
+//     for (int i = 0; i < labels.count(); i++) {
+//         json[QString::number(i)] = labels[i];
+//     }
+//     writeFile(labelFilePath(), QJsonDocument(doc).toJson());
+// }
 
 QString Dataset::trainDbPath() const
 {
@@ -166,7 +180,15 @@ Dataset &Dataset::operator=(const Dataset &other)
 
 bool Dataset::create()
 {
-    setId(QString::number(QDateTime::currentDateTime().toMSecsSinceEpoch()));
+    for (;;) {
+        setId(QString::number(QDateTime::currentDateTime().toMSecsSinceEpoch()));
+        QDir dir(dirPath());
+        if (! dir.exists()) {
+            dir.mkpath(".");
+            break;
+        }
+        Tf::msleep(5);
+    }
     return update();
 }
 
