@@ -52,7 +52,9 @@ namespace {
                 case TrimmingMode::Square: {
                     const QRect frame = image.getValidRect();
                     const auto size = std::min(frame.width(), frame.height());
-                    if (! image.cropped(frame.x(), frame.y(), size, size).save(destination)) {
+                    const float xMargin = (static_cast<float>(frame.width()) - size) / 2.0;
+                    const float yMargin = (static_cast<float>(frame.height()) - size) / 2.0;
+                    if (! image.cropped(frame.x() + xMargin, frame.y() + yMargin, size, size).save(destination)) {
                         err = FileError::Type::IMAGECROP;
                     }
                 }

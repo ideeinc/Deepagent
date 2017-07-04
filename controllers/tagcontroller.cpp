@@ -114,9 +114,6 @@ void TagController::show(const QString& rowGroupName, const QString& rowTagName,
 
 void TagController::upload()
 {
-    const auto& allGroups = service.allGroups();
-    texport(allGroups);
-
     if (Tf::Post == httpRequest().method()) {
         UploadResultContainer uploadResult;
 
@@ -136,8 +133,16 @@ void TagController::upload()
         uploadResult.completed = true;
         uploadResult.backPageURL = httpRequest().formItemValue("page");
 
-        texport(uploadResult);
+        if ((uploadResult.errors.count() < 1) && (! uploadResult.backPageURL.isEmpty())) {
+            redirect(uploadResult.backPageURL);
+        } else {
+            texport(uploadResult);
+            render("uploadResult");
+        }
     }
+
+    const auto& allGroups = service.allGroups();
+    texport(allGroups);
 
     render();
 }

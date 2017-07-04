@@ -153,8 +153,8 @@ QMap<QString, QStringList> TagService::uploadImages(const QList<TMimeEntity>& fi
     const auto images = std::get<0>(results);
 
     if (images.count() > 0) {
-        // タグを更新
-        updateImages(images, {{groupName, tagName}});
+        // タグを更新: アップロードは新規ファイルのみなので「追加」のみ行う
+        appendImages(groupName, tagName, images);
     }
 
     QMap<QString, QStringList> errors;
