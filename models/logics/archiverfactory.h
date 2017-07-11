@@ -3,6 +3,7 @@
 
 #include <QtCore/QtCore>
 #include <functional>
+#include <memory>
 
 class Archiver;
 typedef std::function<Archiver*(void)> ArchiverCreator;

@@ -3,6 +3,7 @@
 
 #include <QtCore/QtCore>
 #include <functional>
+#include <memory>
 #include "caffedata.h"
 
 class DirLayoutDescriptor;
