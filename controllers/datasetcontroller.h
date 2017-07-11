@@ -17,6 +17,8 @@ public slots:
     void create();
     void save(const QString &id);
     void remove(const QString &id);
+
+    void sendText(const QString &id, const QString &fileName);
 };
 
 #endif // DATASETCONTROLLER_H

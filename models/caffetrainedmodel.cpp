@@ -1,7 +1,7 @@
 #include <TreeFrogModel>
 #include "caffetrainedmodel.h"
 #include "caffetrainedmodelobject.h"
-#include "traindataset.h"
+#include "dataset.h"
 #include "neuralnetwork.h"
 
 
@@ -65,12 +65,12 @@ void CaffeTrainedModel::setEpoch(int epoch)
     d->epoch = epoch;
 }
 
-int CaffeTrainedModel::datasetId() const
+qint64 CaffeTrainedModel::datasetId() const
 {
     return d->dataset_id;
 }
 
-void CaffeTrainedModel::setDatasetId(int datasetId)
+void CaffeTrainedModel::setDatasetId(qint64 datasetId)
 {
     d->dataset_id = datasetId;
 }
@@ -202,7 +202,7 @@ NeuralNetwork CaffeTrainedModel::getNeuralNetwork() const
 }
 
 
-TrainDataset CaffeTrainedModel::getDataset() const
+Dataset CaffeTrainedModel::getDataset() const
 {
-    return TrainDataset::get(datasetId());
+    return Dataset::get(QString::number(datasetId()));
 }

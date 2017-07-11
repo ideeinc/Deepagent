@@ -127,7 +127,9 @@ $(function(){
     <label>アップロード画像ファイル: <input name="imageFile[]" id="imageFile[]" value="" type="file" /></label>
   </p>
   <p>
-    <label>画像ディレクトリ: <input type="text" name="imageDir" id="imageDir" value=""/></label>
+    <label>画像ディレクトリ:<input type="text" name="imageDir" id="imageDir" value=""/></label>
+    &nbsp;
+    <label>AUC for indexes:<input type="text" name="aucIndexes" id="aucIndexes" value=""/></label>
   </p>
   <p>
     <label for="trainedModel">Select a trained model<br />
@@ -148,7 +150,7 @@ $(function(){
     <p>
       <% for (int j = 0; j < container.predictionsList[i].count(); j++) {
         auto &pred = container.predictionsList[i][j];
-        QString str = QString("#%1 score:%2 : %3").arg(j+1).arg(pred.second, 0, 'f', 2).arg(pred.first);
+        QString str = QString("#%1 score:%2 : %3").arg(j+1).arg(pred.second, 0, 'f', 3).arg(pred.first);
         eh(str);
         echo("<br>");
       }

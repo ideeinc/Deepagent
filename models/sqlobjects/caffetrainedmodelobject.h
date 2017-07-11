@@ -12,7 +12,7 @@ public:
     QString model_path;
     QString neural_network_name;
     int epoch {0};
-    int dataset_id {0};
+    qint64 dataset_id {0};
     int img_width {0};
     int img_height {0};
     QString note;
@@ -46,8 +46,8 @@ private:    /*** Don't modify below this line ***/
     T_DEFINE_PROPERTY(QString, neural_network_name)
     Q_PROPERTY(int epoch READ getepoch WRITE setepoch)
     T_DEFINE_PROPERTY(int, epoch)
-    Q_PROPERTY(int dataset_id READ getdataset_id WRITE setdataset_id)
-    T_DEFINE_PROPERTY(int, dataset_id)
+    Q_PROPERTY(qint64 dataset_id READ getdataset_id WRITE setdataset_id)
+    T_DEFINE_PROPERTY(qint64, dataset_id)
     Q_PROPERTY(int img_width READ getimg_width WRITE setimg_width)
     T_DEFINE_PROPERTY(int, img_width)
     Q_PROPERTY(int img_height READ getimg_height WRITE setimg_height)

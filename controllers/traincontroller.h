@@ -21,7 +21,8 @@ public slots:
     void show(const QString &id);
     void clone(const QString &id);
     void remove(const QString &id);
-    void getPrototxt(const QString &id, const QString &prototxt);
+    //void getPrototxt(const QString &id, const QString &prototxt);
+    void sendText(const QString &id, const QString &fileName);
     void uploadTrainedModel();
 
 private:

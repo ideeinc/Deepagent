@@ -11,6 +11,7 @@
 #include "prediction.h"
 #include "image.h"
 #include "dataset.h"
+#include "roccurve.h"
 
 
 TrainIndexContainer TrainService::index()
@@ -186,14 +187,48 @@ static QMap<int,QString> parseLabel(const QByteArray &data)
     if (jsonDoc.isEmpty()) {
         tWarn() << "JSON parse error : " << error.errorString();
     } else {
-        auto jsonMap = jsonDoc.toVariant().toMap();
+        auto jsonObj = jsonDoc.object();
+        auto version = jsonObj.value("formatVersion").toInt();
+        tDebug() << "labels.json format_version:" << version;
 
-        for (auto it = jsonMap.constBegin(); it != jsonMap.constEnd(); ++it) {
-            labels.insert(it.key().toInt(), it.value().toString());
-            tDebug() << "label " << it.key() << ": " << it.value();
+        switch (version) {
+        case 2: {
+            bool ok;
+            for (auto it = jsonObj.constBegin(); it != jsonObj.constEnd(); ++it) {
+                auto dispname = it.value().toObject()["displayName"].toString();
+                tDebug() << "label " << it.key() << ": " << dispname;
+                int num = it.key().toInt(&ok);
+                if (ok) {
+                    labels.insert(num, dispname);
+                }
+            }
+            break; }
+
+        default: {
+            bool ok;
+            auto jsonMap = jsonDoc.toVariant().toMap();
+            for (auto it = jsonMap.constBegin(); it != jsonMap.constEnd(); ++it) {
+                tDebug() << "label " << it.key() << ": " << it.value();
+                int num = it.key().toInt(&ok);
+                if (ok) {
+                    labels.insert(num, it.value().toString());
+                }
+            }
+            break; }
         }
     }
     return labels;
+}
+
+
+static float predictSum(const Prediction &predict, const QList<int> &sumIndex, const QString &filePath)
+{
+    float score = 0;
+    auto pred = predict.predict(filePath);
+    for (int i : sumIndex) {
+        score += pred[i];
+    }
+    return score;
 }
 
 
@@ -217,6 +252,16 @@ TrainClassifyContainer TrainService::classify(const QString &id, THttpRequest &r
         auto entities = formdata.entityList("imageFile[]");
         auto trainedModel = request.formItemValue("trainedModel");
         auto imageDir = formdata.formItemValue("imageDir");
+        auto aucIndexes = [](const QStringList &lst) {
+            // QStringList -> QList<int>
+            QList<int> ret;
+            bool ok;
+            for (auto &item : lst) {
+                int d = item.trimmed().toInt(&ok);
+                if (ok) ret << d;
+            }
+            return ret;
+        }(formdata.formItemValue("aucIndexes").split(","));
 
         if (trainedModel.isEmpty()) {
             tWarn() << "empty trained model!";
@@ -231,20 +276,59 @@ TrainClassifyContainer TrainService::classify(const QString &id, THttpRequest &r
         prediction.init(cm.trainedModelFilePath(trainedModel), dataset.meanFilePath());
 
         QMap<int, QString> labels = parseLabel(dataset.labelData().toUtf8());
+        QString imageDirPath = request.formItemValue("imageDir");
 
-        for (auto &ent : entities) {
-            auto jpg = ent.uploadedFilePath();
-            auto results = prediction.predictTop(jpg, 5);
-            QList<QPair<QString, float>> predictions;
+        if (imageDirPath.isEmpty()) {
+            for (auto &ent : entities) {
+                auto jpg = ent.uploadedFilePath();
+                auto results = prediction.predictTop(jpg, 5);
+                QList<QPair<QString, float>> predictions;
 
-            for (auto &p : results) {
-                auto name = labels.value(p.first, QString::number(p.first));
-                predictions << QPair<QString, float>(name, p.second);
-                tInfo() << name << " : " << p.second;
+                for (auto &p : results) {
+                    auto name = labels.value(p.first, QString::number(p.first));
+                    predictions << QPair<QString, float>(name, p.second);
+                    tInfo() << name << " : " << p.second;
+                }
+
+                container.predictionsList << predictions;
+                container.jpegBinList << Image(jpg).toEncoded("jpg");
             }
+        } else {
+            //const QList<int> ColitisIndex = {1};  // 5分類での大腸炎
+            //const QList<int> ColitisIndex = {3};  // 8分類での大腸炎
+            //const QList<int> ColitisIndex = {7,8,9,10,11,12,13};  // 16分類での大腸炎
 
-            container.predictionsList << predictions;
-            container.jpegBinList << Image(jpg).toEncoded("jpg");
+            // ディレクトリ指定
+            QDir imageDir(imageDirPath);
+            tDebug() << "imageDir: " << imageDirPath;
+
+            if (imageDir.exists()) {
+                auto dirPath = imageDir.absolutePath();
+                QDirIterator it(dirPath, {"*.jpg","*.jpeg"}, QDir::Files, QDirIterator::Subdirectories);
+                QList<QPair<float, int>> rocData;
+
+                while (it.hasNext()) {
+                    auto path = it.next();
+                    tDebug() << path.mid(dirPath.length() + 1);
+                    int cor = path.mid(dirPath.length() + 1).startsWith("1_") ? 1 : 0;  // correct
+
+                    auto score = predictSum(prediction, aucIndexes, path);
+                    tDebug() << "score:" << score << " [correct:" << cor << "]  name:" << QFileInfo(path).fileName().left(6);
+                    if (! aucIndexes.isEmpty()) {
+                        rocData << qMakePair(score, cor);
+                    }
+
+                    if (score < 0.5) {
+                        tWarn() << "## score:" << score << "]  name:" << QFileInfo(path).fileName();
+                    }
+                }
+
+                // AUC算出
+                if (! rocData.isEmpty()) {
+                    auto auc = RocCurve(rocData).getAuc();
+                    tDebug() << "AUC:" << auc << "  (sample count:" << rocData.count() << ")";
+                }
+            }
         }
         break; }
 
@@ -426,15 +510,10 @@ void TrainService::uploadTrainedModel(THttpRequest &request)
 {
     auto entity = request.multipartFormData().entity("trainedModel");
     auto uploadFile = entity.uploadedFilePath();
-    // auto basedir = Tf::app()->webRootPath() + "caffemodel/";
-    // auto dirPath = basedir + QString::number(QDateTime::currentDateTime().toMSecsSinceEpoch());
-    // QDir modelDir(dirPath);
-    // modelDir.mkpath(".");
 
     if (uploadFile.isEmpty()) {
         return;
     }
-
 
     QString tempPath = Tf::app()->tmpPath() + QString::number(Tf::rand64_r());
     QDir tempDir(tempPath);
@@ -457,11 +536,16 @@ void TrainService::uploadTrainedModel(THttpRequest &request)
         auto labels = Dataset::readFile(tempDir.absoluteFilePath(infoJson["labels file"].toString()));
         QTextStream ts(&labels);
         QJsonObject json;
+        json["formatVersion"] = 2;
+
         int i = 0;
         while (! ts.atEnd()) {
             auto line = ts.readLine();
             if (! line.isEmpty()) {
-                json[QString::number(i++)] = line;
+                QJsonObject name;
+                name["name"] = line;
+                name["displayName"] = line;
+                json[QString::number(i++)] = name;
             }
         }
         dataset.setLabelData(QString::fromUtf8(QJsonDocument(json).toJson()));

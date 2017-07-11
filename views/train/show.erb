@@ -13,9 +13,10 @@
 <h1>Showing Training Model</h1>
 <dt>ID</dt><dd><%= container.caffeModel.id() %></dd><br />
 <dt>Name</dt><dd><%= container.caffeModel.name() %></dd><br />
-<dt>Solver</dt><dd><%== linkTo("solver.prototxt", urla("getPrototxt", QStringList({container.caffeModel.id(), "solverPrototxt"}))) %></dd><br />
-<dt>Network for training</dt><dd><%== linkTo("train.prototxt", urla("getPrototxt", QStringList({container.caffeModel.id(), "trainPrototxt"}))) %></dd><br />
-<dt>Network for deployment</dt><dd><%== linkTo("deploy.prototxt", urla("getPrototxt", QStringList({container.caffeModel.id(), "deployPrototxt"}))) %></dd><br />
+<dt>Solver</dt><dd><%== linkTo("solver.prototxt", urla("sendText", QStringList({container.caffeModel.id(), container.caffeModel.solverFile()}))) %></dd><br />
+<dt>Network for training</dt><dd><%== linkTo("train.prototxt", urla("sendText", QStringList({container.caffeModel.id(), container.caffeModel.trainFile()}))) %></dd><br />
+<dt>Network for deployment</dt><dd><%== linkTo("deploy.prototxt", urla("sendText", QStringList({container.caffeModel.id(), container.caffeModel.deployFile()}))) %></dd><br />
+<dt>Dataset ID</dt><dd><%== linkTo(container.caffeModel.datasetId(), url("Dataset", "show", container.caffeModel.datasetId())) %></dd><br />
 <dt>Created at</dt><dd><%= container.caffeModel.createdAt() %></dd><br />
 
 <% for (auto &png : container.graphImages) { %>

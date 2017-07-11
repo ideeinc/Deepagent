@@ -123,7 +123,7 @@ CaffeTrainedModelPredictContainer CaffeTrainedModelService::predict(int modelId,
     }
 
     Prediction prediction(trainedModel.getNeuralNetwork().absFilePath());
-    prediction.init(trainedModel.modelPath(), trainedModel.getDataset().meanPath());
+    prediction.init(trainedModel.modelPath(), trainedModel.getDataset().meanFilePath());
 
     if (!jpg.isEmpty()) {
         // 1イメージ推論

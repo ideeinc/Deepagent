@@ -127,13 +127,33 @@ void TrainController::remove(const QString &id)
     }
 }
 
-void TrainController::getPrototxt(const QString &id, const QString &prototxt)
+// void TrainController::getPrototxt(const QString &id, const QString &prototxt)
+// {
+//     switch (httpRequest().method()) {
+//     case Tf::Get:
+//     case Tf::Post: {
+//         auto data = service.getPrototxt(id, prototxt);
+//         sendData(data, "text/plain");
+//         break; }
+
+//     default:
+//         renderErrorResponse(Tf::NotFound);
+//         break;
+//     }
+// }
+
+void TrainController::sendText(const QString &id, const QString &fileName)
 {
     switch (httpRequest().method()) {
     case Tf::Get:
     case Tf::Post: {
-        auto data = service.getPrototxt(id, prototxt);
-        sendData(data, "text/plain");
+       auto caffeModel = CaffeModel::get(id);
+       if (caffeModel.isNull()) {
+            renderErrorResponse(Tf::NotFound);
+        } else {
+            QString filePath = QUrl(".").resolved(QUrl(fileName)).toString();
+            sendFile(caffeModel.dirPath() + filePath, "text/plain");
+        }
         break; }
 
     default:

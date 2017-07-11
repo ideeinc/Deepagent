@@ -8,7 +8,7 @@
 #include <TGlobal>
 #include <TAbstractModel>
 #include "neuralnetwork.h"
-#include "traindataset.h"
+#include "dataset.h"
 
 class TModelObject;
 class CaffeTrainedModelObject;
@@ -30,8 +30,8 @@ public:
     void setNeuralNetworkName(const QString &neuralNetworkName);
     int epoch() const;
     void setEpoch(int epoch);
-    int datasetId() const;
-    void setDatasetId(int datasetId);
+    qint64 datasetId() const;
+    void setDatasetId(qint64 datasetId);
     int imgWidth() const;
     void setImgWidth(int imgWidth);
     int imgHeight() const;
@@ -43,7 +43,7 @@ public:
     CaffeTrainedModel &operator=(const CaffeTrainedModel &other);
 
     NeuralNetwork getNeuralNetwork() const;
-    TrainDataset getDataset() const;
+    Dataset getDataset() const;
 
     bool create() { return TAbstractModel::create(); }
     bool update() { return TAbstractModel::update(); }

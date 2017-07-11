@@ -14,7 +14,7 @@
 <dt>Image Width</dt><dd><%= dataset.imageWidth() %></dd><br />
 <dt>Image Height</dt><dd><%= dataset.imageHeight() %></dd><br />
 <dt>Mean File</dt><dd><%= dataset.meanFile() %></dd><br />
-<dt>Label File</dt><dd><%= dataset.labelFile() %></dd><br />
+<dt>Label File</dt><dd><%== linkTo(dataset.labelFile(), urla("sendText", QStringList({dataset.id(), dataset.labelFile()}))) %></dd><br />
 <dt>Train Db Path</dt><dd><%= dataset.trainDbPath() %></dd><br />
 <dt>Val Db Path</dt><dd><%= dataset.valDbPath() %></dd><br />
 <dt>Log File</dt><dd><%= dataset.logFile() %></dd><br />

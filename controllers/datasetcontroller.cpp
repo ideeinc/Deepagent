@@ -100,6 +100,16 @@ void DatasetController::remove(const QString &id)
     redirect(urla("index"));
 }
 
+void DatasetController::sendText(const QString &id, const QString &fileName)
+{
+     auto dataset = Dataset::get(id);
+    if (dataset.isNull()) {
+        renderErrorResponse(Tf::NotFound);
+    } else {
+        QString filePath = QUrl(".").resolved(QUrl(fileName)).toString();
+        sendFile(dataset.dirPath() + filePath, "text/plain");
+    }
+}
 
 // Don't remove below this line
 T_DEFINE_CONTROLLER(DatasetController)
