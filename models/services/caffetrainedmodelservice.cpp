@@ -1,7 +1,7 @@
 #include "caffetrainedmodelservice.h"
 #include "caffetrainedmodel.h"
 #include "neuralnetwork.h"
-#include "traindataset.h"
+#include "dataset.h"
 #include "classlabel.h"
 #include "prediction.h"
 #include "roccurve.h"
@@ -27,8 +27,8 @@ static int createTrainedModel(const QString &deployFilePath, const QString &mean
         return 0;
     }
 
-    TrainDataset dset;
-    dset.setMeanPath(meanPath);
+    Dataset dset;
+    // dset.setMeanPath(meanPath);
     if (!dset.create()) {
         tError() << "Create Error: TrainDataset.create";
         return 0;
@@ -41,14 +41,14 @@ static int createTrainedModel(const QString &deployFilePath, const QString &mean
         int idx = 0;
         while (!tsLabel.atEnd()) {
             auto line = tsLabel.readLine().trimmed();
-            ClassLabel::create(dset.id(), idx++, line, "");
+            ClassLabel::create(dset.id().toInt(), idx++, line, "");
         }
     }
 
     CaffeTrainedModel model;
     model.setNeuralNetworkName(name);
     model.setModelPath(trainedModelPath);
-    model.setDatasetId(dset.id());
+    model.setDatasetId(dset.id().toInt());
     model.create();
     return (model.isNull()) ? 0 : model.id();
 }
