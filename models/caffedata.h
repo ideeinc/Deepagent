@@ -116,12 +116,13 @@ inline T CaffeData::get(const QString &id)
     if (dir.exists()) {
         auto clsname = className<T>();
         auto values = readJson(model.jsonFilePath());
+
         if (! values.isEmpty() && values.value("dataType").toString().toLower() == clsname.toLower()) {
             model.setProperties(values);
             tDebug() << "caffe data loaded  ID:" << id;
             return model;
         } else {
-            tWarn() << "Mismatch data type: " << id;
+            tWarn() << "Mismatch data. ID: " << id << " dataType: " << values.value("dataType").toString().toLower();
         }
     } else {
         tError() << "Invalid caffe data ID:" << id;

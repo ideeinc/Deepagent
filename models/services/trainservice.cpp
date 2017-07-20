@@ -243,97 +243,88 @@ TrainClassifyContainer TrainService::classify(const QString &id, THttpRequest &r
     const auto &cm = container.caffeModel;
     const auto dataset = cm.getDataset();
 
-    switch (request.method()) {
-    case Tf::Get: {
-        break; }
+    auto &formdata = request.multipartFormData();
+    auto entities = formdata.entityList("imageFile[]");
+    auto trainedModel = request.formItemValue("trainedModel");
+    auto imageDir = formdata.formItemValue("imageDir");
+    auto aucIndexes = [](const QStringList &lst) {
+        // QStringList -> QList<int>
+        QList<int> ret;
+        bool ok;
+        for (auto &item : lst) {
+            int d = item.trimmed().toInt(&ok);
+            if (ok) ret << d;
+        }
+        return ret;
+    }(formdata.formItemValue("aucIndexes").split(","));
 
-    case Tf::Post: {
-        auto &formdata = request.multipartFormData();
-        auto entities = formdata.entityList("imageFile[]");
-        auto trainedModel = request.formItemValue("trainedModel");
-        auto imageDir = formdata.formItemValue("imageDir");
-        auto aucIndexes = [](const QStringList &lst) {
-            // QStringList -> QList<int>
-            QList<int> ret;
-            bool ok;
-            for (auto &item : lst) {
-                int d = item.trimmed().toInt(&ok);
-                if (ok) ret << d;
+    if (trainedModel.isEmpty()) {
+        tError() << "Empty trained model!";
+        return container;
+    }
+
+    if (dataset.isNull()) {
+        tError() << "Null dataset";
+        return container;
+    }
+
+    Prediction prediction(cm.deployFilePath());
+    prediction.init(cm.trainedModelFilePath(trainedModel), dataset.meanFilePath());
+
+    QMap<int, QString> labels = parseLabel(dataset.labelData().toUtf8());
+    QString imageDirPath = request.formItemValue("imageDir");
+
+    if (imageDirPath.isEmpty()) {
+        for (auto &ent : entities) {
+            auto jpg = ent.uploadedFilePath();
+            auto results = prediction.predictTop(jpg, 5);
+            QList<QPair<QString, float>> predictions;
+
+            for (auto &p : results) {
+                auto name = labels.value(p.first, QString::number(p.first));
+                predictions << QPair<QString, float>(name, p.second);
+                tInfo() << name << " : " << p.second;
             }
-            return ret;
-        }(formdata.formItemValue("aucIndexes").split(","));
 
-        if (trainedModel.isEmpty()) {
-            tWarn() << "empty trained model!";
-            break;
+            container.predictionsList << predictions;
+            container.jpegBinList << Image(jpg).toEncoded("jpg");
         }
+    } else {
+        //const QList<int> ColitisIndex = {1};  // 5分類での大腸炎
+        //const QList<int> ColitisIndex = {3};  // 8分類での大腸炎
+        //const QList<int> ColitisIndex = {7,8,9,10,11,12,13};  // 16分類での大腸炎
 
-        if (dataset.isNull()) {
-            tWarn() << "Null dataset";
-        }
+        // ディレクトリ指定
+        QDir imageDir(imageDirPath);
+        tDebug() << "imageDir: " << imageDirPath;
 
-        Prediction prediction(cm.deployFilePath());
-        prediction.init(cm.trainedModelFilePath(trainedModel), dataset.meanFilePath());
+        if (imageDir.exists()) {
+            auto dirPath = imageDir.absolutePath();
+            QDirIterator it(dirPath, {"*.jpg","*.jpeg"}, QDir::Files, QDirIterator::Subdirectories);
+            QList<QPair<float, int>> rocData;
 
-        QMap<int, QString> labels = parseLabel(dataset.labelData().toUtf8());
-        QString imageDirPath = request.formItemValue("imageDir");
+            while (it.hasNext()) {
+                auto path = it.next();
+                tDebug() << path.mid(dirPath.length() + 1);
+                int cor = path.mid(dirPath.length() + 1).startsWith("1_") ? 1 : 0;  // correct
 
-        if (imageDirPath.isEmpty()) {
-            for (auto &ent : entities) {
-                auto jpg = ent.uploadedFilePath();
-                auto results = prediction.predictTop(jpg, 5);
-                QList<QPair<QString, float>> predictions;
-
-                for (auto &p : results) {
-                    auto name = labels.value(p.first, QString::number(p.first));
-                    predictions << QPair<QString, float>(name, p.second);
-                    tInfo() << name << " : " << p.second;
+                auto score = predictSum(prediction, aucIndexes, path);
+                tDebug() << "score:" << score << " [correct:" << cor << "]  name:" << QFileInfo(path).fileName().left(6);
+                if (! aucIndexes.isEmpty()) {
+                    rocData << qMakePair(score, cor);
                 }
 
-                container.predictionsList << predictions;
-                container.jpegBinList << Image(jpg).toEncoded("jpg");
+                if (score < 0.5) {
+                    tWarn() << "## score:" << score << "]  name:" << QFileInfo(path).fileName();
+                }
             }
-        } else {
-            //const QList<int> ColitisIndex = {1};  // 5分類での大腸炎
-            //const QList<int> ColitisIndex = {3};  // 8分類での大腸炎
-            //const QList<int> ColitisIndex = {7,8,9,10,11,12,13};  // 16分類での大腸炎
 
-            // ディレクトリ指定
-            QDir imageDir(imageDirPath);
-            tDebug() << "imageDir: " << imageDirPath;
-
-            if (imageDir.exists()) {
-                auto dirPath = imageDir.absolutePath();
-                QDirIterator it(dirPath, {"*.jpg","*.jpeg"}, QDir::Files, QDirIterator::Subdirectories);
-                QList<QPair<float, int>> rocData;
-
-                while (it.hasNext()) {
-                    auto path = it.next();
-                    tDebug() << path.mid(dirPath.length() + 1);
-                    int cor = path.mid(dirPath.length() + 1).startsWith("1_") ? 1 : 0;  // correct
-
-                    auto score = predictSum(prediction, aucIndexes, path);
-                    tDebug() << "score:" << score << " [correct:" << cor << "]  name:" << QFileInfo(path).fileName().left(6);
-                    if (! aucIndexes.isEmpty()) {
-                        rocData << qMakePair(score, cor);
-                    }
-
-                    if (score < 0.5) {
-                        tWarn() << "## score:" << score << "]  name:" << QFileInfo(path).fileName();
-                    }
-                }
-
-                // AUC算出
-                if (! rocData.isEmpty()) {
-                    auto auc = RocCurve(rocData).getAuc();
-                    tDebug() << "AUC:" << auc << "  (sample count:" << rocData.count() << ")";
-                }
+            // AUC算出
+            if (! rocData.isEmpty()) {
+                auto auc = RocCurve(rocData).getAuc();
+                tDebug() << "AUC:" << auc << "  (sample count:" << rocData.count() << ")";
             }
         }
-        break; }
-
-    default:
-        break;
     }
     return container;
 }
@@ -351,64 +342,65 @@ TrainDetectContainer TrainService::detect(const QString &id, THttpRequest &reque
     }
     const auto &cm = container.caffeModel;
 
-    switch (request.method()) {
-    case Tf::Get: {
-        break; }
+    auto &formdata = request.multipartFormData();
+    auto entities = formdata.entityList("imageFile[]");
+    auto meanValue = request.formItemValue("meanValue", "104,117,123");
+    auto trainedModel = request.formItemValue("trainedModel");
+    auto imageDir = formdata.formItemValue("imageDir");
 
-    case Tf::Post: {
-        auto &formdata = request.multipartFormData();
-        auto entities = formdata.entityList("imageFile[]");
-        auto meanValue = request.formItemValue("meanValue", "104,117,123");
-        auto trainedModel = request.formItemValue("trainedModel");
-        auto imageDir = formdata.formItemValue("imageDir");
+    if (trainedModel.isEmpty()) {
+        tError() << "empty trained model!";
+        return container;
+    }
 
-        if (trainedModel.isEmpty()) {
-            tWarn() << "empty trained model!";
-            break;
+    SsdDetector detector(cm.deployFilePath(), cm.trainedModelFilePath(trainedModel),
+                         QString(), meanValue);
+
+    QMap<int, QString> labels = parseLabel(cm.getDataset().labelData().toUtf8());
+
+    if (! imageDir.isEmpty()) { // ディレクトリ指定
+        QDir(outDir).mkpath(".");
+        const QStringList nameFilters = {"*.jpg", "*.jpeg"};
+        auto images = searchRecursive(imageDir, nameFilters);
+
+        for (auto &img : images) {
+            Image jpg(img.absoluteFilePath());
+
+            if (jpg.width() < 50 || jpg.height() < 50) {
+                tWarn() << "too small size: " << img.fileName();
+                continue;
+            }
+            jpg.trim();
+
+            auto detections = ssdDetect(detector, 0.1, 0.5, jpg);
+            // Sort by score
+            std::sort(detections.begin(), detections.end(), [](const QVector<float> &v1, const QVector<float> &v2) -> bool {
+                return v1[2] > v2[2];
+            });
+
+            tDebug() << "image file name: " << img.fileName();
+            const QString outpath = outDir % img.dir().dirName() % "/" % img.fileName();
+            QDir(outDir % img.dir().dirName()).mkpath(".");
+            jpg.save(outpath);
+            QString logmsg;
+            const QString format = "\"class:%1, score:%2, x1:%3, y1:%4, x2:%5, y2:%6\", ";
+            for (auto &c : detections) {
+                auto name = labels[(int)c[1]];
+                logmsg += format.arg(name).arg(c[2],0,'g',3).arg((int)c[3]).arg((int)c[4]).arg((int)c[5]).arg((int)c[6]);
+            }
+            logmsg.chop(2);
+            tInfo() << "#" % img.dir().dirName() % ", " % img.fileName() % ", " % logmsg;
         }
 
-        SsdDetector detector(cm.deployFilePath().toStdString(), cm.trainedModelFilePath(trainedModel).toStdString(),
-                             string(), meanValue.toStdString());
+    } else if (! entities.isEmpty()) { // ファイル指定
+        for (auto &ent : entities) {
+            auto jpg = ent.uploadedFilePath();
+            auto ext = QFileInfo(ent.originalFileName()).suffix().toLower();
 
-        QMap<int, QString> labels = parseLabel(cm.getDataset().labelData().toUtf8());
+            if (ext == "mp4" || ext == "avi") {
+                // Movie
 
-        if (! imageDir.isEmpty()) { // ディレクトリ指定
-            QDir(outDir).mkpath(".");
-
-            const QStringList nameFilters = {"*.jpg", "*.jpeg"};
-            auto images = searchRecursive(imageDir, nameFilters);
-
-            for (auto &img : images) {
-                Image jpg(img.absoluteFilePath());
-                if (jpg.width() < 50 || jpg.height() < 50) {
-                    tWarn() << "too small size: " << img.fileName();
-                    continue;
-                }
-                jpg.trim();
-
-                auto detections = ssdDetect(detector, 0.1, 0.5, jpg);
-                // Sort by score
-                std::sort(detections.begin(), detections.end(), [](const QVector<float> &v1, const QVector<float> &v2) -> bool {
-                    return v1[2] > v2[2];
-                });
-
-                tDebug() << "image file name: " << img.fileName();
-                const QString outpath = outDir % img.dir().dirName() % "/" % img.fileName();
-                QDir(outDir % img.dir().dirName()).mkpath(".");
-                jpg.save(outpath);
-                QString logmsg;
-                const QString format = "\"class:%1, score:%2, x1:%3, y1:%4, x2:%5, y2:%6\", ";
-                for (auto &c : detections) {
-                    auto name = labels[(int)c[1]];
-                    logmsg += format.arg(name).arg(c[2],0,'g',3).arg((int)c[3]).arg((int)c[4]).arg((int)c[5]).arg((int)c[6]);
-                }
-                logmsg.chop(2);
-                tInfo() << "#" % img.dir().dirName() % ", " % img.fileName() % ", " % logmsg;
-            }
-
-        } else if (! entities.isEmpty()) { // 画像ファイル
-            for (auto &ent : entities) {
-                auto jpg = ent.uploadedFilePath();
+            } else {
                 tInfo() << jpg;
                 auto image = Image(jpg);
                 image.trim();
@@ -421,13 +413,9 @@ TrainDetectContainer TrainService::detect(const QString &id, THttpRequest &reque
                 container.detectionsList << detections;
                 container.jpegBinList << image.toEncoded("jpg");
             }
-        } else {
-            tWarn() << "empty image!";
         }
-        break; }
-
-    default:
-        break;
+    } else {
+        tWarn() << "empty image!";
     }
     return container;
 }
