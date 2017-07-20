@@ -411,6 +411,7 @@ TrainDetectContainer TrainService::detect(const QString &id, THttpRequest &reque
                 auto jpg = ent.uploadedFilePath();
                 tInfo() << jpg;
                 auto image = Image(jpg);
+                image.trim();
                 QList<QVector<float>> detections;
 
                 if (! cm.isNull() && ! image.isEmpty()) {
