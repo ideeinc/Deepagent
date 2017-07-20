@@ -2,7 +2,7 @@
 #define TAGGEDIMAGEINFOCONTAINER_H
 
 #include <QtCore/QtCore>
-#include "services/taggroup.h"
+#include "taggroup.h"
 
 
 class TaggedImageInfoContainer
@@ -10,13 +10,17 @@ class TaggedImageInfoContainer
 public:
     QString path;
     QString displayName;
-    long index;
-    long count;
+    long index { 0 };
+    long numberOfImages { 0 };
 
-    TagGroup primaryGroup;
-    Tag primaryTag;
+    QString primaryGroup;
+    QString primaryTag;
     QSet<QString> containedGroups;
     QList<Tag> containedTags;
+
+    QString listName;
+    QStringList listArgs;
+    QVariantMap listQuery;
 };
 
 Q_DECLARE_METATYPE(TaggedImageInfoContainer);

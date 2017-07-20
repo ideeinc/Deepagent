@@ -1,6 +1,6 @@
 #include "applicationcontroller.h"
 #include "logics/cudatool.h"
-#include "services/managedfileservice.h"
+#include "logics/managedfilecontext.h"
 #include <glog/logging.h>
 #include <caffe/caffe.hpp>
 
@@ -40,7 +40,7 @@ void ApplicationController::staticInitialize()
 #endif
 
     // load all file's hashes.
-    ManagedFileService::load();
+    ManagedFileContext::load();
 }
 
 void ApplicationController::staticRelease()

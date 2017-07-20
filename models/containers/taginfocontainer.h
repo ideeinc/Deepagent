@@ -8,16 +8,18 @@ class TagInfoContainer
 {
 public:
     bool available;
+    QStringList arguments;
+    QVariantMap query;
     QString filter;
     QString name;
     QString displayName;
     QString groupName;
     QStringList images;
-    long itemsPerPage { 200 };
-    long page { 0 };
-    long min { 0 };
-    long max { 0 };
-    long maxNumberOfPage { 0 };
+    int limit { 200 };
+    int page { 0 };
+    int min { 0 };
+    int max { 0 };
+    int maxNumberOfPage { 0 };
 };
 
 Q_DECLARE_METATYPE(TagInfoContainer)

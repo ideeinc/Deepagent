@@ -1,184 +1,247 @@
 #include "tagservice.h"
-#include "managedfileservice.h"
+#include "logics/managedfilecontext.h"
 #include <QtCore>
-#include <TWebApplication>
 #include <functional>
+
+const QString kTagImageListKey = "Tag_ImageListKey";
+const QString kTagImageTableInfo = "Tag_ImageTableInfo";
+const QString kTagImageFindKey = "Tag_ImageFindKey";
 
 
 TagService::TagService()
-    : _listDir(Tf::conf("settings").value("TagsDir").toString())
 {
 }
 
-QList<TagGroup> TagService::allGroups() const
+void
+TagService::create(const THttpRequest& request)
 {
-    QList<TagGroup> groups;
-
-    if (_listDir.exists()) {
-        for (const QString& name : _listDir.entryList(QDir::Dirs|QDir::NoDotAndDotDot, QDir::Name)) {
-            groups << TagGroup(name);
+    if (Tf::Post == request.method()) {
+        const QString target = request.formItemValue("target");
+        if (target == "group") {
+            _repository.createGroup(request.formItemValue("groupName"));
+        }
+        if (target == "tag") {
+            _repository.createTag(request.formItemValue("parentGroup"), request.formItemValue("tagId"), request.formItemValue("tagDisplayName"));
         }
     }
-
-    return groups;
 }
 
-QList<Tag> TagService::allTags() const
+void
+TagService::destroy(const THttpRequest& request)
 {
-    QList<Tag> tags;
-
-    if (_listDir.exists()) {
-        for (const TagGroup& group : allGroups()) {
-            tags << group.tags();
+    if (Tf::Post == request.method()) {
+        if (request.hasJson()) {
+            destroy(request.jsonData().object());
+        }
+        else {
+            const QString target = request.formItemValue("target");
+            if (target == "group") {
+                _repository.destroyGroup(request.formItemValue("name"));
+            }
+            if (target == "tag") {
+                _repository.destroyTag(request.formItemValue("group"), request.formItemValue("name"));
+            }
         }
     }
-
-    return tags;
 }
 
-QStringList TagService::imagesWithTag(const QString& tagName, const QString& inGroupName) const
+void
+TagService::destroy(const QJsonObject& request)
 {
-    QStringList images;
-
-    if (_listDir.exists(inGroupName)) {
-        images = TagGroup(inGroupName).tag(tagName).images();
+    const QString target = request.value("target").toString();
+    if (target == "group") {
+        _repository.destroyGroup(request.value("name").toString());
     }
-
-    return images;
-}
-
-bool TagService::createGroup(const QString& groupName) const
-{
-    bool created = false;
-    if (! groupName.isEmpty()) {
-        created = _listDir.mkpath(groupName);
+    if (target == "tag") {
+        _repository.destroyTag(request.value("group").toString(), request.value("name").toString());
     }
-    return created;
 }
 
-bool TagService::createTag(const QString& inGroupName, const QString& tagName, const QString& displayName) const
+bool
+TagService::update(const THttpRequest& request)
 {
-    bool created = false;
-    if ((! inGroupName.isEmpty()) && (! tagName.isEmpty())) {
-        created = QDir(_listDir.filePath(inGroupName)).mkpath(tagName);
-        if (! displayName.isEmpty()) {
-            TagGroup(inGroupName).tag(tagName).setDisplayName(displayName);
+    bool success = false;
+    if (Tf::Post == request.method()) {
+        if (request.hasJson()) {
+            const QJsonObject info = request.jsonData().object();
+            const QString inTargetGroupName = info.value("targetGroup").toString();
+            const QString targetTagName = info.value("target").toString();
+            const QVariantMap change = info.value("change").toObject().toVariantMap();
+            success = _repository.updateTag(inTargetGroupName, targetTagName, change);
+        }
+        else {
+            const QString inTargetGroupName = request.formItemValue("group");
+            const QString targetTagName = request.formItemValue("original");
+            const QVariantMap change({
+                {"name", request.formItemValue("name")},
+                {"displayName", request.formItemValue("displayName")},
+                {"groupName", request.formItemValue("group")}
+            });
+            success = _repository.updateTag(inTargetGroupName, targetTagName, change);
         }
     }
-    return created;
+    return success;
 }
 
-bool TagService::destroyGroup(const QString &groupName) const
+bool
+TagService::updateGroup(const THttpRequest& request)
 {
-    return QDir(_listDir.filePath(groupName)).removeRecursively();
+    bool succeed = false;
+    if (Tf::Post == request.method()) {
+        if (request.hasJson()) {
+            const QJsonObject info = request.jsonData().object();
+            const QString srcGroupName = info.value("sourceName").toString();
+            const QString dstGroupName = info.value("destinationName").toString();
+            TagGroup targetGroup = _repository.findGroup(srcGroupName);
+            if (targetGroup.exists()) {
+                succeed = targetGroup.setName(dstGroupName);
+            }
+        }
+        else {
+            const QString srcGroupName = request.formItemValue("sourceName");
+            const QString dstGroupName = request.formItemValue("destinationName");
+            TagGroup targetGroup = _repository.findGroup(srcGroupName);
+            if (targetGroup.exists()) {
+                succeed = targetGroup.setName(dstGroupName);
+            }
+        }
+    }
+    return succeed;
 }
 
-bool TagService::destroyTag(const QString& inGroupName, const QString& tagName) const
-{
-    return TagGroup(inGroupName).path(tagName).removeRecursively();
-}
-
-bool TagService::exists(const QString& tagName) const
-{
-    return _listDir.exists(tagName);
-}
-
-bool TagService::updateTag(const QString& inGroupName, const QString& srcName, const QVariantMap& changes) const
+bool
+TagService::append(const THttpRequest& request, TSession& session)
 {
     bool succeed = false;
 
-    if (exists(inGroupName)) {
-        const QString dstName = changes.value("name").toString();
-        succeed = ((srcName != dstName) ? QDir(_listDir.filePath(inGroupName)).rename(srcName, dstName) : true);
-        TagGroup(inGroupName).tag(dstName).setDisplayName(changes.value("displayName").toString());
+    if (Tf::Post == request.method()) {
+        const QJsonObject info = request.jsonData().object();
+        const bool refresh = info.value("refresh").toBool();
+        const QString group = info.value("group").toString();
+        const QString tag = info.value("tag").toString();
+        const QStringList images = info.value("images").toVariant().toStringList();
+        if (tag.isEmpty() || group.isEmpty() || (images.count() < 1)) {
+            return succeed;
+        }
+        else {
+            _repository.updateImages(images, {{group, tag}});
 
-        const QString dstGroupName = changes.value("groupName").toString();
-        if (inGroupName != dstGroupName) {
-            succeed = TagGroup(inGroupName).tag(dstName).changeGroup(dstGroupName);
+            if (refresh) {
+                QStringList images = session.value(kTagImageListKey).toStringList();
+                for (const QString& s : images) {
+                    const auto i = std::find_if(images.begin(), images.end(), [=](const QString& path) {
+                        return (QFileInfo(path).fileName() == QFileInfo(s).fileName());
+                    });
+                    if (i != images.end()) {
+                        images.erase(i);
+                    }
+                }
+                session.insert(kTagImageListKey, images);
+            }
+
+            succeed = true;
         }
     }
 
     return succeed;
 }
 
-void TagService::appendImages(const QString& groupName, const QString& tagName, const QStringList& imagePaths) const
+void
+TagService::remove(const THttpRequest& request, TSession& session)
 {
-    const TagGroup group = TagGroup(groupName);
-    if ((! group.exists()) || (! group.hasTag(tagName))) {
-        createTag(groupName, tagName, tagName);
-    }
+    if (Tf::Post == request.method()) {
+        const QJsonObject info = request.jsonData().object();
+        const bool refresh = info.value("refresh").toBool();
+        const QString group = info.value("group").toString();
+        const QString tag = info.value("tag").toString();
+        const QStringList images = info.value("images").toVariant().toStringList();
+        _repository.removeImages(images, group, tag);
 
-    const Tag tag = group.tag(tagName);
-    for (const QString& path : imagePaths) {
-        tag.appendImage(QFileInfo(path).isSymLink() ? QFile::symLinkTarget(path) : path);
-    }
-}
-
-void TagService::removeImages(const QString& groupName, const QString& tagName, const QStringList& imageNames) const
-{
-    const TagGroup group = TagGroup(groupName);
-    if ((! group.exists()) || (! group.hasTag(tagName))) {
-        return;
-    }
-
-    const Tag tag = group.tag(tagName);
-    for (const QString& name : imageNames) {
-        tag.removeImage(QFileInfo(name).fileName());
-    }
-}
-
-void TagService::updateImages(const QStringList& images, const QVariantMap& tags) const
-{
-    QStringList realPaths;
-    std::transform(images.begin(), images.end(), std::back_inserter(realPaths), [](const QString& s){
-        return (QFileInfo(s).isSymLink() ? QFile::symLinkTarget(s) : s);
-    });
-
-    for (const QString& specifiedGroup : tags.keys()) {
-        const QString specifiedTag = tags.value(specifiedGroup).toString();
-        if (! specifiedTag.isEmpty()) {
-            appendImages(specifiedGroup, specifiedTag, realPaths);
+        if (refresh) {
+            QStringList data = session.value(kTagImageListKey).toStringList();
+            for (const QString& s : images) {
+                const auto i = std::find_if(data.begin(), data.end(), [=](const QString& path) {
+                    return (QFileInfo(path).fileName() == QFileInfo(s).fileName());
+                });
+                if (i != data.end()) {
+                    data.erase(i);
+                }
+            }
+            session.insert(kTagImageListKey, data);
         }
-        for (const Tag& t : TagGroup(specifiedGroup).tags()) {
-            if (t.name() != specifiedTag) {
-                removeImages(specifiedGroup, t.name(), realPaths);
+    }
+}
+
+void
+TagService::batchUpdate(const THttpRequest& request)
+{
+    if (Tf::Post == request.method()) {
+        if (request.hasJson()) {
+            const QJsonObject node = request.jsonData().object();
+            const QStringList images = node.value("images").toVariant().toStringList();
+            const QVariantMap tags = node.value("tags").toObject().toVariantMap();
+
+            _repository.updateImages(images, tags);
+        }
+    }
+}
+
+UploadResultContainer TagService::uploadImages(THttpRequest& request)
+{
+    UploadResultContainer uploadResult;
+
+    if (Tf::Post == request.method()) {
+        uploadResult.backPageURL = request.formItemValue("page");
+
+        const QString groupName = request.formItemValue("group");
+        QString tagName = request.formItemValue("tag");
+        if (tagName.isEmpty()) {
+            tagName = request.formItemValue("newTagName");
+            if (! tagName.isEmpty()) {
+                const QString displayName = request.formItemValue("newTagDisplayName");
+                _repository.createTag(groupName, tagName, displayName);
             }
         }
+        if (tagName.isEmpty() || groupName.isEmpty()) {
+            return uploadResult;
+        }
+
+        const QList<TMimeEntity>& files = request.multipartFormData().entityList("files[]");
+        const TrimmingMode trimmingMode = (request.hasFormItem("trimmingMode") ? static_cast<TrimmingMode>(request.formItemValue("trimmingMode").toInt()) : TrimmingMode::Square);
+
+        const auto results = ManagedFileContext().append(files, trimmingMode);
+        const auto images = std::get<0>(results);
+
+        if (images.count() > 0) {
+            // タグを更新: アップロードは新規ファイルのみなので「追加」のみ行う
+            _repository.appendImages(images, groupName, tagName);
+        }
+
+        for (const auto& err : std::get<1>(results)) {
+            uploadResult.errors[ err.typeName() ] << err.file();
+        }
+
+        uploadResult.completed = true;
     }
+
+    return uploadResult;
 }
 
-QMap<QString, QStringList> TagService::uploadImages(const QList<TMimeEntity>& files, const QString& groupName, const QString& tagName, const int trimmingMode)
-{
-    const auto results = ManagedFileService().append(files, static_cast<TrimmingMode>(trimmingMode));
-    const auto images = std::get<0>(results);
-
-    if (images.count() > 0) {
-        // タグを更新: アップロードは新規ファイルのみなので「追加」のみ行う
-        appendImages(groupName, tagName, images);
-    }
-
-    QMap<QString, QStringList> errors;
-    for (const auto& err : std::get<1>(results)) {
-        errors[ err.typeName() ] << err.file();
-    }
-    return errors;
-}
-
-TagInfoContainer TagService::find(THttpRequest& request)
+TagInfoContainer TagService::find(const THttpRequest& request, TSession& session)
 {
     TagInfoContainer container;
 
     QString filter;
     TagGroup targetGroup;
     Tag targetTag;
-    long page = 0, limit = 200;
+    int page = 0, limit = 200;
 
     if (request.method() == Tf::Get) {
         filter = request.queryItemValue("filter");
         if ((! filter.isEmpty()) && request.hasQueryItem("group")) {
-            targetGroup = TagGroup(request.queryItemValue("group"));
+            targetGroup = _repository.findGroup(request.queryItemValue("group"));
             if (targetGroup.exists() && request.hasQueryItem("tag")) {
-                targetTag = Tag(request.queryItemValue("tag"), &targetGroup);
+                targetTag = targetGroup.findTag(request.queryItemValue("tag"));
             }
         }
         if (request.hasQueryItem("page")) {
@@ -193,9 +256,9 @@ TagInfoContainer TagService::find(THttpRequest& request)
             const QJsonObject json = request.jsonData().object();
             filter = json["filter"].toString();
             if ((! filter.isEmpty()) && (! json["group"].toString().isEmpty())) {
-                targetGroup = TagGroup(json["group"].toString());
+                targetGroup = _repository.findGroup(json["group"].toString());
                 if (targetGroup.exists() && (! json["tag"].toString().isEmpty())) {
-                    targetTag = Tag(json["tag"].toString(), &targetGroup);
+                    targetTag = targetGroup.findTag(json["tag"].toString());
                 }
             }
             if (! json["page"].toString().isEmpty()) {
@@ -208,9 +271,9 @@ TagInfoContainer TagService::find(THttpRequest& request)
         else {
             filter = request.formItemValue("filter");
             if ((! filter.isEmpty()) && request.hasFormItem("group")) {
-                targetGroup = TagGroup(request.formItemValue("group"));
+                targetGroup = _repository.findGroup(request.formItemValue("group"));
                 if (targetGroup.exists() && request.hasFormItem("tag")) {
-                    targetTag = Tag(request.formItemValue("tag"), &targetGroup);
+                    targetTag = targetGroup.findTag(request.formItemValue("tag"));
                 }
             }
             if (request.hasFormItem("page")) {
@@ -228,14 +291,14 @@ TagInfoContainer TagService::find(THttpRequest& request)
             container.name = targetTag.name();
             container.displayName = targetTag.displayName();
             container.groupName = targetTag.groupName();
-            list = ManagedFileService::findInDirectory(filter, targetTag.path());
+            list = ManagedFileContext::findInDirectory(filter, targetTag.path());
         }
         else if (targetGroup.exists()) {
             container.groupName = targetGroup.name();
-            list = ManagedFileService::findInDirectory(filter, targetGroup.path().absolutePath());
+            list = ManagedFileContext::findInDirectory(filter, targetGroup.path().absolutePath());
         }
         else {
-            list = ManagedFileService::find(filter);
+            list = ManagedFileContext::find(filter);
         }
 
         for (const auto& file : list) {
@@ -248,53 +311,71 @@ TagInfoContainer TagService::find(THttpRequest& request)
             container.available = true;
             container.filter = filter;
             if ((0 < limit) && (limit < 1000)) {
-                container.itemsPerPage = limit;
+                container.limit = limit;
             }
-            container.page = std::min(page, (container.images.count() / container.itemsPerPage));
+            container.page = std::min(page, (container.images.count() / container.limit));
             if (container.page < 0) container.page = 0;
-            container.min = (container.page * container.itemsPerPage);
-            container.max = std::min(static_cast<int>(container.min + container.itemsPerPage), container.images.count());
-            container.maxNumberOfPage = (container.images.count() / container.itemsPerPage) + ((container.images.count() % container.itemsPerPage) > 0 ? 1 : 0);
+            container.min = (container.page * container.limit);
+            container.max = std::min((container.min + container.limit), container.images.count());
+            container.maxNumberOfPage = (container.images.count() / container.limit) + ((container.images.count() % container.limit) > 0 ? 1 : 0);
+
+            container.query = {
+                { "filter", container.filter },
+                { "group", container.groupName },
+                { "tag", container.name }
+            };
+
+            session.remove(kTagImageTableInfo);
+            session.insert(kTagImageListKey, container.images);
+            session.insert(kTagImageFindKey, container.query);
         }
     }
 
     return container;
 }
 
-TagInfoContainer TagService::info(const QString& groupName, const QString& tagName, const long& page, const long& limit) const
+TagInfoContainer TagService::showTagInfo(const THttpRequest& request, TSession& session, const QString& groupName, const QString& tagName) const
 {
-    const TagGroup group(groupName);
-    const Tag tag(tagName, &group);
+    const TagGroup group = _repository.findGroup(groupName);
+    const Tag tag = group.findTag(tagName);
+
     TagInfoContainer container;
+    container.available = tag.exists();
+    if (container.available) {
+        container.arguments = QStringList{ groupName, tagName };
+        container.name = tag.name();
+        container.displayName = tag.displayName();
+        container.groupName = group.name();
+        container.images = tag.images();
 
-    container.available = group.hasTag(tagName);
-    container.name = tag.name();
-    container.displayName = tag.displayName();
-    container.groupName = group.name();
-    container.images = tag.images();
+        QCollator collator;
+        collator.setNumericMode(true);
+        qSort(container.images.begin(), container.images.end(), [&collator](const QString& p1, const QString& p2) {
+            return (collator.compare(ManagedFile::fromLink(p1).name(), ManagedFile::fromLink(p2).name()) < 0);
+        });
 
-    QCollator collator;
-    collator.setNumericMode(true);
-    qSort(container.images.begin(), container.images.end(), [&collator](const QString& p1, const QString& p2) {
-        return (collator.compare(ManagedFile::fromLink(p1).name(), ManagedFile::fromLink(p2).name()) < 0);
-    });
+        const int limit = (request.hasQueryItem("limit") ? request.parameter("limit").toInt() : 200);
+        if ((0 < limit) && (limit < 1000)) {
+            container.limit = limit;
+        }
+        const int page = (request.hasQueryItem("page") ? request.parameter("page").toInt() : 0);
+        container.page = std::min(page, (container.images.count() / container.limit));
+        if (container.page < 0) container.page = 0;
+        container.min = (container.page * container.limit);
+        container.max = std::min((container.min + container.limit), container.images.count());
+        container.maxNumberOfPage = (container.images.count() / container.limit) + ((container.images.count() % container.limit) > 0 ? 1 : 0);
 
-    if ((0 < limit) && (limit < 1000)) {
-        container.itemsPerPage = limit;
+        session.insert(kTagImageListKey, container.images);
     }
-    container.page = std::min(page, (container.images.count() / container.itemsPerPage));
-    if (container.page < 0) container.page = 0;
-    container.min = (container.page * container.itemsPerPage);
-    container.max = std::min(static_cast<int>(container.min + container.itemsPerPage), container.images.count());
-    container.maxNumberOfPage = (container.images.count() / container.itemsPerPage) + ((container.images.count() % container.itemsPerPage) > 0 ? 1 : 0);
 
     return container;
 }
 
-TaggedImageInfoContainer TagService::image(const QString& groupName, const QString& primaryTag, const QStringList& images, const long& index) const
+TaggedImageInfoContainer TagService::showTagImage(const THttpRequest& request, const TSession& session, const QString& groupName, const QString& tagName, const long& index) const
 {
     TaggedImageInfoContainer container;
 
+    const QStringList images = session.value(kTagImageListKey).toStringList();
     if (images.isEmpty() || (index < 0) || (index >= images.count())) {
         return container;
     }
@@ -302,14 +383,19 @@ TaggedImageInfoContainer TagService::image(const QString& groupName, const QStri
     container.path = images[index];
     container.displayName = ManagedFile::fromLink(container.path).name();
     container.index = index;
-    container.count = images.count();
+    container.numberOfImages = images.count();
 
-    const TagGroup primaryGroup(groupName);
-    container.primaryGroup = primaryGroup;
-    container.primaryTag = primaryGroup.tag(primaryTag);
+    const TagGroup primaryGroup = _repository.findGroup(groupName);
+    if (primaryGroup.exists()) {
+        container.primaryGroup = primaryGroup.name();
+        const Tag primaryTag = primaryGroup.findTag(tagName);
+        if (primaryTag.exists()) {
+            container.primaryTag = primaryTag.name();
+        }
+    }
 
     const QString filename = QFileInfo(container.path).fileName();
-    for (const TagGroup& g : allGroups()) {
+    for (const TagGroup& g : _repository.allGroups()) {
         for (const Tag& t : g.tags()) {
             if (t.hasImage(filename)) {
                 container.containedGroups << t.groupName();
@@ -318,20 +404,48 @@ TaggedImageInfoContainer TagService::image(const QString& groupName, const QStri
         }
     }
 
+    container.listName = "show";
+    container.listArgs = QStringList{ container.primaryGroup, container.primaryTag };
+
+    QVariantMap imageTableInfo = session.value(kTagImageTableInfo).toMap();
+    if (imageTableInfo.contains("rowGroupName") && imageTableInfo.contains("colGroupName")) {
+        container.listName = "table";
+        container.listArgs = QStringList();
+    }
+
+    const QVariantMap findInfo = session.value(kTagImageFindKey).toMap();
+    if (findInfo.contains("filter")) {
+        container.listName = "find";
+        container.listArgs = QStringList();
+        container.listQuery = findInfo;
+    }
+
     return container;
 }
 
-TagTableContainer TagService::table(const QString& rowGroupName, const QString& colGroupName) const
+TagTableContainer TagService::table(const THttpRequest& request, TSession& session) const
 {
     TagTableContainer container;
-    container.rowGroupName = rowGroupName;
-    container.colGroupName = colGroupName;
 
-    if (rowGroupName.isEmpty() || colGroupName.isEmpty()) {
+    if (Tf::Get == request.method()) {
+        if (session.contains(kTagImageTableInfo)) {
+            QVariantMap imageTableInfo = session.value(kTagImageTableInfo).toMap();
+            container.rowGroupName = imageTableInfo["rowGroupName"].toString();
+            container.colGroupName = imageTableInfo["colGroupName"].toString();
+            session.remove(kTagImageTableInfo);
+        } else {
+            return container;
+        }
+    } else if (Tf::Post == request.method()) {
+        container.rowGroupName = request.formItemValue("rowGroupName");
+        container.colGroupName = request.formItemValue("colGroupName");
+    }
+
+    if (container.rowGroupName.isEmpty() || container.colGroupName.isEmpty()) {
         return container;
     }
 
-    const TagGroup colGroup(colGroupName);
+    const TagGroup colGroup = _repository.findGroup(container.colGroupName);
     QList<QSet<QString>> columns;
 
     // create data for table header
@@ -345,7 +459,7 @@ TagTableContainer TagService::table(const QString& rowGroupName, const QString& 
     container.headers << " 総数 ";
     container.colTagNames << "総数";
 
-    const TagGroup rowGroup(rowGroupName);
+    const TagGroup rowGroup = _repository.findGroup(container.rowGroupName);
     if (rowGroup.exists() && colGroup.exists()) {
         // create data for table body
         for (const Tag& rowTag : rowGroup.tags()) {
@@ -381,20 +495,21 @@ TagTableContainer TagService::table(const QString& rowGroupName, const QString& 
     return container;
 }
 
-QPair<QStringList, TaggedImageInfoContainer> TagService::showTableImage(const QString& rowGroupName, const QString& rowTagName, const QString& colGroupName, const QString colTagName) const
+TaggedImageInfoContainer TagService::showTableImage(const THttpRequest&, TSession& session, const QString& rowGroupName, const QString& rowTagName, const QString& colGroupName, const QString colTagName) const
 {
-    QPair<QStringList, TaggedImageInfoContainer> data;
     TaggedImageInfoContainer container;
 
-    const TagGroup rowGroup(rowGroupName);
-    container.primaryGroup = rowGroup;
-    container.primaryTag = rowGroup.tag(rowTagName);
-
-    const TagGroup colGroup(colGroupName);
-    const Tag colTag(colTagName, &colGroup);
+    const TagGroup rowGroup = _repository.findGroup(rowGroupName);
+    const TagGroup colGroup = _repository.findGroup(colGroupName);
 
     if (rowGroup.exists() && colGroup.exists()) {
-        QStringList images, primaryFolder = container.primaryTag.images();
+        const Tag rowTag = rowGroup.findTag(rowTagName);
+        const Tag colTag = colGroup.findTag(colTagName);
+
+        container.primaryGroup = rowGroup.name();
+        container.primaryTag = rowTag.name();
+
+        QStringList images, primaryFolder = rowTag.images();
 
         if (colTag.exists()) {
             QStringList taggedImages;
@@ -416,17 +531,16 @@ QPair<QStringList, TaggedImageInfoContainer> TagService::showTableImage(const QS
                 }
                 images = (primaryFolder.toSet() - taggedImagesAll.toSet()).toList();
             } else { // colTagName == "総数"
-                images = container.primaryTag.images();
+                images = rowTag.images();
             }
         }
 
-        data.first = images;
         container.path = images[0];
         container.index = 0;
-        container.count = images.count();
+        container.numberOfImages = images.count();
 
         const QString filename = QFileInfo(container.path).fileName();
-        for (const TagGroup& g : allGroups()) {
+        for (const TagGroup& g : _repository.allGroups()) {
             for (const Tag& t : g.tags()) {
                 if (t.hasImage(filename)) {
                     container.containedGroups << t.groupName();
@@ -434,8 +548,18 @@ QPair<QStringList, TaggedImageInfoContainer> TagService::showTableImage(const QS
                 }
             }
         }
+
+        if (images.size()) {
+            session.insert(kTagImageTableInfo, QVariantMap{
+                { "rowGroupName", rowGroupName },
+                { "colGroupName", colGroupName }
+            });
+            session.insert(kTagImageListKey, images);
+        }
+
+        container.listName = "table";
+        container.listArgs = QStringList();
     }
 
-    data.second = container;
-    return data;
+    return container;
 }

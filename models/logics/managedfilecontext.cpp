@@ -1,9 +1,9 @@
-#include "managedfileservice.h"
+#include "managedfilecontext.h"
 #include "image.h"
 #include <TWebApplication>
 #include <THttpRequest>
 
-QSet<QString> ManagedFileService::hashes;
+QSet<QString> ManagedFileContext::hashes;
 
 namespace {
     typedef struct OriginalFile {
@@ -15,7 +15,7 @@ namespace {
         Image image;
 
         OriginalFile(const QFileInfo& file)
-         : path(file.absoluteFilePath()), name(file.fileName()), hash(QString(ManagedFileService::checksum(path).toHex())), image(path) {
+         : path(file.absoluteFilePath()), name(file.fileName()), hash(QString(ManagedFileContext::checksum(path).toHex())), image(path) {
              size = QSize(image.width(), image.height());
         }
         void saveTo(const QString& dir, const QString& destination) const
@@ -106,14 +106,14 @@ QString FileError::reason() const
 }
 
 
-ManagedFileService::ManagedFileService()
+ManagedFileContext::ManagedFileContext()
     : _sourceDir(Tf::conf("settings").value("OriginalImagesDir").toString()), _originalDir(Tf::conf("settings").value("OriginalInformationDir").toString())
 {
     QDir().mkpath(_sourceDir);
     QDir().mkpath(_originalDir);
 }
 
-std::tuple<QStringList, FileErrorList> ManagedFileService::append(const QList<TMimeEntity>& files, const TrimmingMode& trimmingMode)
+std::tuple<QStringList, FileErrorList> ManagedFileContext::append(const QList<TMimeEntity>& files, const TrimmingMode& trimmingMode)
 {
     const auto basePath = QDir(_sourceDir).filePath( QDir::toNativeSeparators(QDateTime::currentDateTime().toString("yyyy/MMdd/")) + QString::number(QDateTime::currentDateTime().toMSecsSinceEpoch()) );
     if (! QDir(basePath).exists()) {
@@ -133,7 +133,7 @@ std::tuple<QStringList, FileErrorList> ManagedFileService::append(const QList<TM
     while (search.hasNext()) {
         const OriginalFile original(search.next());
         // 移動先の sources ディレクトリ (オリジナル画像置き場) から重複を検索
-        const bool duplicated = ManagedFileService::hashes.contains(original.hash);
+        const bool duplicated = ManagedFileContext::hashes.contains(original.hash);
         // 適切な場所に配置
         FileError::Type errorKey = FileError::Type::NOERR;
         if (! duplicated) {
@@ -152,18 +152,18 @@ std::tuple<QStringList, FileErrorList> ManagedFileService::append(const QList<TM
         if (errorKey != FileError::Type::NOERR) {
             errors << FileError(errorKey, QString(original.path).replace(workPath + QDir::separator(), ""));
         } else {
-            ManagedFileService::hashes << original.hash;
+            ManagedFileContext::hashes << original.hash;
         }
     }
 
     return std::make_tuple(success, errors);
 }
 
-QList<ManagedFile> ManagedFileService::find(const QString& word)
+QList<ManagedFile> ManagedFileContext::find(const QString& word)
 {
     QList<ManagedFile> images;
 
-    QDirIterator search(ManagedFileService()._sourceDir, {"*.jpg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+    QDirIterator search(ManagedFileContext()._sourceDir, {"*.jpg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
     while (search.hasNext()) {
         const ManagedFile file = ManagedFile::fromLink(search.next());
         if (file.name().contains(word, Qt::CaseInsensitive)) {
@@ -174,7 +174,7 @@ QList<ManagedFile> ManagedFileService::find(const QString& word)
     return images;
 }
 
-QList<ManagedFile> ManagedFileService::findInDirectory(const QString& word, const QString& path)
+QList<ManagedFile> ManagedFileContext::findInDirectory(const QString& word, const QString& path)
 {
     QList<ManagedFile> images;
 
@@ -189,7 +189,7 @@ QList<ManagedFile> ManagedFileService::findInDirectory(const QString& word, cons
     return images;
 }
 
-QList<ManagedFile> ManagedFileService::findInList(const QString& word, const QStringList& list)
+QList<ManagedFile> ManagedFileContext::findInList(const QString& word, const QStringList& list)
 {
     QList<ManagedFile> images;
 
@@ -204,7 +204,7 @@ QList<ManagedFile> ManagedFileService::findInList(const QString& word, const QSt
     return images;
 }
 
-QStringList ManagedFileService::filterInList(const QString& word, const QStringList& list)
+QStringList ManagedFileContext::filterInList(const QString& word, const QStringList& list)
 {
     QStringList images;
 
@@ -219,18 +219,18 @@ QStringList ManagedFileService::filterInList(const QString& word, const QStringL
     return images;
 }
 
-void ManagedFileService::load()
+void ManagedFileContext::load()
 {
-    tDebug() << "ManagedFileService::load";
+    tDebug() << "ManagedFileContext::load";
     // cache the all hashes.
-    QDirIterator i(ManagedFileService()._sourceDir, {"*.jpg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+    QDirIterator i(ManagedFileContext()._sourceDir, {"*.jpg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
     while (i.hasNext()) {
         const QString path = i.next();
-        ManagedFileService::hashes << QFileInfo(path).completeBaseName();
+        ManagedFileContext::hashes << QFileInfo(path).completeBaseName();
     }
 }
 
-QByteArray ManagedFileService::checksum(const QString& path, QCryptographicHash::Algorithm algorithm)
+QByteArray ManagedFileContext::checksum(const QString& path, QCryptographicHash::Algorithm algorithm)
 {
     QFile file(path);
     if (file.open(QFile::ReadOnly)) {
@@ -242,7 +242,7 @@ QByteArray ManagedFileService::checksum(const QString& path, QCryptographicHash:
     return QByteArray();
 }
 
-FileErrorList ManagedFileService::extract(const TMimeEntity& entity, const QString& workPath)
+FileErrorList ManagedFileContext::extract(const TMimeEntity& entity, const QString& workPath)
 {
     FileErrorList errors;
 

@@ -1,5 +1,5 @@
 #include "services/datasetmakerservice.h"
-#include "services/taggroup.h"
+#include "logics/tagrepository.h"
 #include "logics/dirlayoutdescriptor.h"
 #include "logics/archiver.h"
 #include <TWebApplication>
@@ -42,11 +42,12 @@ DatasetMakerIndexContainer DatasetMakerService::index()
     const QString dirPath(QDir(Tf::app()->configPath()).filePath("datasetmaker"));
     QFile file( QDir(dirPath).absoluteFilePath("default.json") );
     if (file.open(QFile::ReadOnly)) {
+        const TagRepository repository;
         QJsonObject setting = QJsonDocument::fromJson(file.readAll()).object();
         for (const auto& v : setting.value("excludes").toArray()) {
             QJsonObject entry = v.toObject();
             for (const auto& k : entry.keys()) {
-                container.excludes << TagGroup(k).tag(entry.value(k).toString());
+                container.excludes << repository.findGroup(k).findTag(entry.value(k).toString());
             }
         }
         file.close();
@@ -63,11 +64,12 @@ DatasetMakerIndexContainer DatasetMakerService::index()
 DatasetMakerPreviewContainer DatasetMakerService::preview(THttpRequest& request)
 {
     DatasetMakerPreviewContainer container;
+    const TagRepository repository;
 
     QMap<QString, QSet<QString>> cache;
     QList<TagGroup> required;
     for (const auto& group : request.formItemList("groups")) {
-        const TagGroup g(group);
+        const TagGroup g = repository.findGroup(group);
         required << g;
         for (const Tag& t : g.tags()) {
             cache[ g.name() + "_" + t.name() ] = t.imagePaths().toSet();
@@ -78,7 +80,7 @@ DatasetMakerPreviewContainer DatasetMakerService::preview(THttpRequest& request)
     for (const auto& info : request.formItemList("excludes")) {
         const QVariantMap m = QJsonDocument::fromJson(info.toUtf8()).object().toVariantMap();
         for (const auto& k : m.keys()) {
-            excludes += TagGroup(k).tag(m.value(k).toString()).imagePaths().toSet();
+            excludes += repository.findGroup(k).findTag(m.value(k).toString()).imagePaths().toSet();
         }
     }
 

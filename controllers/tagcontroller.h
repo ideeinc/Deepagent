@@ -32,10 +32,6 @@ public slots:
 
 private:
     TagService service {};
-
-    void setThumbnailImages(const QStringList&, const QString& = "");
-    void updateThumbnailImages(const QStringList&);
-    QStringList thumbnailImages() const;
 };
 
 #endif // TAGCONTROLLER_H

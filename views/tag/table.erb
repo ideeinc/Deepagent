@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<%#include "services/tagservice.h"%>
-<% const QList<TagGroup> allGroups = TagService().allGroups(); %>
+<%#include "logics/tagrepository.h"%>
+<% const QList<TagGroup> allGroups = TagRepository().allGroups(); %>
 <%#include "containers/tagtablecontainer.h" %>
 <% tfetch(TagTableContainer, container) %>
 <html>

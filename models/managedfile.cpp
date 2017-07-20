@@ -1,5 +1,5 @@
 #include "managedfile.h"
-#include "services/managedfileservice.h"
+#include "logics/managedfilecontext.h"
 #include <TWebApplication>
 
 
@@ -27,7 +27,7 @@ ManagedFile ManagedFile::fromHash(const QString& hash)
                 file._name = QFileInfo(file._path).fileName();
             }
             if (file._hash.isEmpty()) {
-                file._hash = ManagedFileService::checksum(file._path);
+                file._hash = ManagedFileContext::checksum(file._path);
             }
         }
         return file;
@@ -47,7 +47,7 @@ ManagedFile ManagedFile::fromLink(const QString& link)
             file._name = QFileInfo(file._path).fileName();
         }
         if (file._hash.isEmpty()) {
-            file._hash = ManagedFileService::checksum(file._path);
+            file._hash = ManagedFileContext::checksum(file._path);
         }
         return file;
     }

@@ -1,7 +1,7 @@
 #ifndef DATASETMAKERINDEXCONTAINER_H
 #define DATASETMAKERINDEXCONTAINER_H
 
-#include "services/taggroup.h"
+#include "taggroup.h"
 #include <QtCore/QtCore>
 
 

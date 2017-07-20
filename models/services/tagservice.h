@@ -5,8 +5,10 @@
 #include "containers/taginfocontainer.h"
 #include "containers/taggedimageinfocontainer.h"
 #include "containers/tagtablecontainer.h"
-#include "services/taggroup.h"
+#include "containers/uploadresultcontainer.h"
+#include "logics/tagrepository.h"
 #include <THttpRequest>
+#include <TSession>
 
 class TMimeEntity;
 
@@ -16,28 +18,24 @@ class TagService
 public:
     TagService();
 
-    QList<TagGroup> allGroups() const;
-    QList<Tag> allTags() const;
-    QStringList imagesWithTag(const QString& tagName, const QString& inGroupName) const;
-    bool createGroup(const QString& groupName) const;
-    bool createTag(const QString& inGroupName, const QString& tagName, const QString& displayName) const;
-    bool destroyGroup(const QString& groupName) const;
-    bool destroyTag(const QString& inGroupName, const QString& tagName) const;
-    bool exists(const QString& tagName) const;
-    bool updateTag(const QString& inGroupName, const QString& srcName, const QVariantMap& changes) const;
-    void appendImages(const QString& groupName, const QString& tagName, const QStringList& imagePaths) const;
-    void removeImages(const QString& groupName, const QString& tagName, const QStringList& imageNames) const;
-    void updateImages(const QStringList& images, const QVariantMap& tags) const;
-    QMap<QString, QStringList> uploadImages(const QList<TMimeEntity>& files, const QString& groupName, const QString& tagName, const int trimmngMode = 2);
+    void create(const THttpRequest&);
+    void destroy(const THttpRequest&);
+    void destroy(const QJsonObject&);
+    bool update(const THttpRequest&);
+    bool updateGroup(const THttpRequest&);
+    bool append(const THttpRequest&, TSession&);
+    void remove(const THttpRequest&, TSession&);
+    void batchUpdate(const THttpRequest&);
 
-    TagInfoContainer find(THttpRequest&);
-    TagInfoContainer info(const QString& groupName, const QString& tagName, const long& page = 0, const long& limit = 200) const;
-    QPair<QStringList, TaggedImageInfoContainer> showTableImage(const QString& rowGroupName, const QString& rowTagName, const QString& colGroupName, const QString colTagName) const;
-    TaggedImageInfoContainer image(const QString& groupName, const QString& primaryTag, const QStringList& images, const long& index) const;
-    TagTableContainer table(const QString& rowGroupname, const QString& colGroupName) const;
+    UploadResultContainer uploadImages(THttpRequest&);
+    TagInfoContainer find(const THttpRequest&, TSession&);
+    TagInfoContainer showTagInfo(const THttpRequest&, TSession&, const QString& groupName, const QString& tagName) const;
+    TaggedImageInfoContainer showTagImage(const THttpRequest&, const TSession&, const QString& groupName, const QString& primaryTag, const long& index) const;
+    TaggedImageInfoContainer showTableImage(const THttpRequest&, TSession&, const QString& rowGroupName, const QString& rowTagName, const QString& colGroupName, const QString colTagName) const;
+    TagTableContainer table(const THttpRequest&, TSession&) const;
 
 private:
-    const QDir _listDir;
+    TagRepository _repository;
 };
 
 #endif // TAGSERVICE_H

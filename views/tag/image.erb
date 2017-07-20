@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<%#include "services/taggroup.h" %>
-<% tfetch(QList<TagGroup>, allGroups) %>
 <%#include "containers/taggedimageinfocontainer.h" %>
 <% tfetch(TaggedImageInfoContainer, container) %>
-<% tfetch(QUrl, listUrl) %>
+<% const QUrl listUrl = controller()->urla(container.listName, container.listArgs, container.listQuery); %>
+<%#include "logics/tagrepository.h" %>
+<% const QList<TagGroup> allGroups = TagRepository().allGroups(); %>
 <html>
 <head>
   <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
@@ -16,7 +16,7 @@
             e.preventDefault();
             var selected = $('select[name="excluded"] option:selected');
             var data = { group: selected.closest('optgroup').attr('label'), tag: selected.val(), images: [ '<%= container.path %>' ] };
-            if ((data.group == '<%= container.primaryGroup.name() %>') && (data.tag != '<%= container.primaryTag.name() %>')) {
+            if ((data.group == '<%= container.primaryGroup %>') && (data.tag != '<%= container.primaryTag %>')) {
                 data['refresh'] = true;
             }
             $.ajax({ type: 'post', url: '<%= urla("append") %>', data: JSON.stringify(data), contentType: 'application/json', scriptCharset: 'utf-8', success: function(response) {
@@ -30,7 +30,7 @@
             e.preventDefault();
             var selected = $('select[name="included"] option:selected');
             var data = { group: selected.closest('optgroup').attr('label'), tag: selected.val(), images: [ '<%= QFileInfo(container.path).fileName() %>' ] };
-            if ((data.group == '<%= container.primaryGroup.name() %>') && (data.tag == '<%= container.primaryTag.name() %>')) {
+            if ((data.group == '<%= container.primaryGroup %>') && (data.tag == '<%= container.primaryTag %>')) {
                 data['refresh'] = true;
             }
             $.ajax({ type: 'post', url: '<%= urla("remove") %>', data: JSON.stringify(data), contentType: 'application/json', scriptCharset: 'utf-8', success: function(response) {
@@ -111,11 +111,11 @@
 
 <p>
 <%
-    echo((container.index > 0) ? linkTo("<< 前へ", urla("show", QStringList({ container.primaryGroup.name(), container.primaryTag.name(), QString::number(container.index - 1) })), Tf::Get, THtmlAttribute("class", "prev")) : "<< 前へ");
+    echo((container.index > 0) ? linkTo("<< 前へ", urla("show", QStringList({ container.primaryGroup, container.primaryTag, QString::number(container.index - 1) })), Tf::Get, THtmlAttribute("class", "prev")) : "<< 前へ");
     echo(" &nbsp; | &nbsp; ");
     echo(linkTo("一覧", listUrl));
     echo(" &nbsp; | &nbsp; ");
-    echo((container.index < (container.count - 1)) ? linkTo("次へ >>", urla("show", QStringList({ container.primaryGroup.name(), container.primaryTag.name(), QString::number(container.index + 1) })), Tf::Get, THtmlAttribute("class", "next")) : "次へ >>");
+    echo((container.index < (container.numberOfImages - 1)) ? linkTo("次へ >>", urla("show", QStringList({ container.primaryGroup, container.primaryTag, QString::number(container.index + 1) })), Tf::Get, THtmlAttribute("class", "next")) : "次へ >>");
 %>
 </p>
 

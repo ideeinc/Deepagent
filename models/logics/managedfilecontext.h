@@ -1,5 +1,5 @@
-#ifndef MANAGEDFILESERVICE_H
-#define MANAGEDFILESERVICE_H
+#ifndef MANAGEDFILECONTEXT_H
+#define MANAGEDFILECONTEXT_H
 
 #include <QtCore/QtCore>
 #include "managedfile.h"
@@ -53,9 +53,9 @@ typedef QList<FileError> FileErrorList;
 
 /*
  */
-class ManagedFileService {
+class ManagedFileContext {
 public:
-    ManagedFileService();
+    ManagedFileContext();
 
     std::tuple<QStringList, FileErrorList> append(const QList<TMimeEntity>&, const TrimmingMode& = TrimmingMode::Square);
 
@@ -77,4 +77,4 @@ private:
     static FileErrorList extract(const TMimeEntity&, const QString&);
 };
 
-#endif // MANAGEDFILESERVICE_H
+#endif // MANAGEDFILECONTEXT_H

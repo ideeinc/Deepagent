@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<%#include "services/taggroup.h" %>
-<% tfetch(QList<TagGroup>, allGroups) %>
+<%#include "logics/tagrepository.h" %>
+<% const QList<TagGroup> allGroups = TagRepository().allGroups(); %>
 <html>
 <head>
   <meta http-equiv="content-type" content="text/html;charset=UTF-8" />

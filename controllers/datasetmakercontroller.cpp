@@ -1,11 +1,11 @@
 #include "datasetmakercontroller.h"
-#include "services/tagservice.h"
+#include "logics/tagrepository.h"
 #include <QtCore>
 
 
 void DatasetMakerController::index()
 {
-    const QList<TagGroup> allGroups = TagService().allGroups();
+    const QList<TagGroup> allGroups = TagRepository().allGroups();
     texport(allGroups);
 
     const auto container = service.index();
