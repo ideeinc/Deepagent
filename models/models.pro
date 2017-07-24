@@ -140,3 +140,5 @@ HEADERS += taggroup.h
 SOURCES += taggroup.cpp
 HEADERS += tag.h
 SOURCES += tag.cpp
+HEADERS += color.h
+SOURCES += color.cpp

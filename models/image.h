@@ -51,10 +51,11 @@ public:
     void drawRectangle(int x1, int y1, int x2, int y2, const cv::Scalar &color, int thickness=1, int lineType=8);
 
     // 文字列描画
-    void putText(const QString &text, int x, int y, int fontFace=cv::FONT_HERSHEY_SIMPLEX, double fontScale=1.0, const cv::Scalar &color=CV_RGB(0,0,0),
-                 int thickness=1);
-    void drawLabel(const QString &text, int x, int y, int fontFace=cv::FONT_HERSHEY_SIMPLEX, double fontScale=1.0, const cv::Scalar &color=CV_RGB(0,0,0),
-                  int thickness=1, const cv::Scalar &bgColor=CV_RGB(255,255,255), double alpha=1.0);
+    void putText(const QString &text, int x, int y, int fontFace=cv::FONT_HERSHEY_SIMPLEX, double fontScale=1.0,
+                 const cv::Scalar &color=CV_RGB(0,0,0), int thickness=1);
+    void drawLabel(const QString &text, int x, int y, int fontFace=cv::FONT_HERSHEY_SIMPLEX, double fontScale=1.0,
+                   const cv::Scalar &color=CV_RGB(0,0,0), int thickness=1, const cv::Scalar &bgColor=CV_RGB(255,255,255),
+                   double alpha=1.0);
 
     // 保存
     bool save(const QString &path) const;

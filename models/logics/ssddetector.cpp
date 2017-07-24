@@ -1,4 +1,5 @@
 #include "ssddetector.h"
+#include "image.h"
 #include <caffe/caffe.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -18,6 +19,7 @@ struct SsdDetector::SsdDetectorPrivate {
     cv::Size inputGeometry;
     int numChannels {0};
     cv::Mat mean;
+    int borderWidth {1};
 };
 
 
@@ -97,8 +99,85 @@ QList<QVector<float>> SsdDetector::detect(const cv::Mat& img, float threshold) c
     return detections;
 }
 
-bool SsdDetector::detect(const QString& movieFile, float threshold, const QString& outputFile) const
+
+static QRect getTrimSize(const QString& movieFilePath)
 {
+    cv::VideoCapture cap;
+
+    if (! cap.open(movieFilePath.toStdString())) {
+        tWarn() << "can not open movie file, " << movieFilePath;
+        return QRect();
+    }
+
+    int totalFrames = cap.get(CV_CAP_PROP_FRAME_COUNT);
+    int inc = qMax(qMin(60, totalFrames/60), 1);
+    int pos = (totalFrames >= 60 * 5) ? inc : 0;
+
+    QList<QRect> rects;
+    cv::Mat img;
+    for (int i = 0; i < 5; i++) {
+        cap.set(CV_CAP_PROP_POS_FRAMES, pos);
+        if (! cap.grab()) {
+            break;
+        }
+        cap.retrieve(img);
+        QRect r = Image(img).getValidRect();
+        rects << r;
+        tDebug() << "rect candidate: x:" << r.x() << " y:" << r.y()
+                 << " w:" << r.width() << " h:" << r.height();
+        pos += inc;
+    }
+    cap.release();
+
+    std::sort(rects.begin(), rects.end(), [](const QRect &a, const QRect &b) {
+        return (a.width()*a.height()) > (b.width()*b.height()); // 矩形面積でソート
+    });
+    return rects.value(rects.length()/2);  // 真ん中のもの
+}
+
+/*!
+  Detects objects
+  labels: idx:0 -> background(unused), 1..n -> text & color
+ */
+bool SsdDetector::detect(const QString& movieFilePath, float threshold, const QList<QPair<QString, Color>> &labels,
+                         const QString& outputFile) const
+{
+    cv::VideoCapture cap;
+    auto rect = getTrimSize(movieFilePath);
+    tDebug() << "movie trim: x:" << rect.x() << " y:" << rect.y() << " w:" << rect.width() << " h:" << rect.height();
+
+    if (! cap.open(movieFilePath.toStdString())) {
+        tWarn() << "can not open movie file, " << movieFilePath;
+        return false;
+    }
+
+    cv::Size size(300, 300);
+    cv::VideoWriter vw(outputFile.toStdString(), CV_FOURCC('D', 'I', 'V', 'X'), 30, size, true);
+    cv::Mat cvimg;
+    const Color defaultColor(255,255,255);
+
+    while (cap.grab()) {
+        cap.retrieve(cvimg);
+        Image img(cvimg);
+        img.crop(rect.x(), rect.y(), rect.width(), rect.height());
+        img.resize(300, 300);
+        auto dets = detect(img.mat(), threshold);
+
+        for (const auto &c : dets) {
+            int id = c[1];
+            auto score = c[2];
+            auto val = labels.value(id, qMakePair(QString::number(id), defaultColor));
+            auto color = (CvScalar)val.second;
+
+            img.drawRectangle(c[3], c[4], c[5], c[6], color, d->borderWidth);
+            auto text = QString("%1 : %2").arg(val.first).arg(score, 0, 'g', 2);
+            img.drawLabel(text, c[3], c[4], cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0), 1, color, 0.5); // label
+            tInfo() << "class:" << id << " score:"  << score << " w:" << (int)(c[3]) << " h:"  << (int)c[4]
+                    << " w:" << (int)c[5] << " h:"  << (int)c[6];
+        }
+        vw.write(img.mat());
+    }
+    cap.release();
     return true;
 }
 

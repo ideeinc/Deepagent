@@ -12,6 +12,7 @@
 #include "image.h"
 #include "dataset.h"
 #include "roccurve.h"
+#include "color.h"
 
 
 TrainIndexContainer TrainService::index()
@@ -46,6 +47,9 @@ public:
 protected:
     void handleFinished(int exitCode, QProcess::ExitStatus exitStatus)
     {
+        Q_UNUSED(exitCode);
+        Q_UNUSED(exitStatus);
+
         auto id = QFileInfo(_dirPath).fileName();
         auto model = CaffeModel::get(id);
         if (! model.isNull()) {
@@ -62,7 +66,7 @@ private:
 };
 
 
-static void caffeTrain(const QString &solverPath, const QString &pretrainedModel)
+static void caffeTrain(const QString &solverPath, const QString &)
 {
     static const auto CaffeCommandPath = Tf::app()->getConfig("settings").value("CaffeCommand").toString();
     auto *caffeCmd = new TBackgroundProcess();
@@ -144,22 +148,20 @@ static void plotResultPng(const QString &caffeLogPath, const QString &keyword, i
 }
 
 
-static QList<QVector<float>> ssdDetect(const SsdDetector &detector, float threshold, float drawThreshold, Image &image)
+static QList<QVector<float>> ssdDetect(const SsdDetector &detector, float threshold, float drawThreshold, Image &image,
+                                       const QList<QPair<QString, Color>> &labelColors)
 {
-    const QMap<int, cv::Scalar> colorMap = {{1,CV_RGB(255,255,0)}, {2,CV_RGB(255,255,0)}, {5,CV_RGB(255,255,0)}, {8,CV_RGB(255,255,0)},
-                                            {9,CV_RGB(255,255,0)}, {13,CV_RGB(0,0,200)}};
-
     auto detects = detector.detect(image.mat(), threshold);
 
     for (const auto &c : detects) {
+        int id = c[1];
         auto score = c[2];
         if (score > drawThreshold) {
-            auto color = colorMap.value(c[1], CV_RGB(0,200,0));
-
-            image.drawRectangle(c[3], c[4], c[5], c[6], color, 1);
-            auto text = QString("C%1 : %2").arg(c[1]).arg(score, 0, 'g', 3);
-            image.drawLabel(text, c[3], c[4], cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0), 1, color, 0.5); // label
-            tInfo() << "class:" << c[1] << " score:"  << score << " w:" << (int)(c[3]) << " h:"  << (int)c[4]
+            auto label = labelColors.value(id, qMakePair(QString::number(id), Color("#FFFFFF")));
+            image.drawRectangle(c[3], c[4], c[5], c[6], label.second, 1);
+            auto text = QString("%1 : %2").arg(label.first).arg(score, 0, 'g', 2);
+            image.drawLabel(text, c[3], c[4], cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0), 1, label.second, 0.5); // label
+            tInfo() << "class:" << id << " score:"  << score << " w:" << (int)(c[3]) << " h:"  << (int)c[4]
                     << " w:" << (int)c[5] << " h:"  << (int)c[6];
         }
     }
@@ -173,14 +175,14 @@ static QFileInfoList searchRecursive(const QDir &dir, const QStringList &nameFil
     auto subdirs = dir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
     for (auto &d : subdirs) {
        files << searchRecursive(QDir(d.absoluteFilePath()), nameFilters, sort);
-   }
-   return files;
+    }
+    return files;
 }
 
 
-static QMap<int,QString> parseLabel(const QByteArray &data)
+static QList<QPair<QString, Color>> parseLabel(const QByteArray &data)
 {
-    QMap<int, QString> labels;
+    QVector<QPair<QString, Color>> labels;
     QJsonParseError error;
     auto jsonDoc = QJsonDocument::fromJson(data, &error);
 
@@ -190,16 +192,21 @@ static QMap<int,QString> parseLabel(const QByteArray &data)
         auto jsonObj = jsonDoc.object();
         auto version = jsonObj.value("formatVersion").toInt();
         tDebug() << "labels.json format_version:" << version;
+        labels.reserve(jsonObj.size() + 1);
 
         switch (version) {
         case 2: {
             bool ok;
             for (auto it = jsonObj.constBegin(); it != jsonObj.constEnd(); ++it) {
                 auto dispname = it.value().toObject()["displayName"].toString();
-                tDebug() << "label " << it.key() << ": " << dispname;
-                int num = it.key().toInt(&ok);
-                if (ok) {
-                    labels.insert(num, dispname);
+                auto color = it.value().toObject()["color"].toString();
+                tDebug() << "label " << it.key() << ": " << dispname << " color:" << color;
+                int idx = it.key().toInt(&ok);
+                if (ok && it.key() == QString::number(idx)) {
+                    if (idx >= labels.size()) {
+                        labels.resize(idx + 1);
+                    }
+                    labels[idx] = qMakePair(dispname, Color(color));
                 }
             }
             break; }
@@ -209,15 +216,18 @@ static QMap<int,QString> parseLabel(const QByteArray &data)
             auto jsonMap = jsonDoc.toVariant().toMap();
             for (auto it = jsonMap.constBegin(); it != jsonMap.constEnd(); ++it) {
                 tDebug() << "label " << it.key() << ": " << it.value();
-                int num = it.key().toInt(&ok);
-                if (ok) {
-                    labels.insert(num, it.value().toString());
+                int idx = it.key().toInt(&ok);
+                if (ok && it.key() == QString::number(idx)) {
+                    if (idx >= labels.size()) {
+                        labels.resize(idx + 1);
+                    }
+                    labels[idx] = qMakePair(it.value().toString(), Color("#FFFFFF"));
                 }
             }
             break; }
         }
     }
-    return labels;
+    return labels.toList();
 }
 
 
@@ -271,7 +281,7 @@ TrainClassifyContainer TrainService::classify(const QString &id, THttpRequest &r
     Prediction prediction(cm.deployFilePath());
     prediction.init(cm.trainedModelFilePath(trainedModel), dataset.meanFilePath());
 
-    QMap<int, QString> labels = parseLabel(dataset.labelData().toUtf8());
+    auto labelColors = parseLabel(dataset.labelData().toUtf8());
     QString imageDirPath = request.formItemValue("imageDir");
 
     if (imageDirPath.isEmpty()) {
@@ -281,7 +291,10 @@ TrainClassifyContainer TrainService::classify(const QString &id, THttpRequest &r
             QList<QPair<QString, float>> predictions;
 
             for (auto &p : results) {
-                auto name = labels.value(p.first, QString::number(p.first));
+                auto name = labelColors.value(p.first).first;
+                if (name.isEmpty()) {
+                    name = QString::number(p.first);
+                }
                 predictions << QPair<QString, float>(name, p.second);
                 tInfo() << name << " : " << p.second;
             }
@@ -356,7 +369,7 @@ TrainDetectContainer TrainService::detect(const QString &id, THttpRequest &reque
     SsdDetector detector(cm.deployFilePath(), cm.trainedModelFilePath(trainedModel),
                          QString(), meanValue);
 
-    QMap<int, QString> labels = parseLabel(cm.getDataset().labelData().toUtf8());
+    auto labelColors = parseLabel(cm.getDataset().labelData().toUtf8());
 
     if (! imageDir.isEmpty()) { // ディレクトリ指定
         QDir(outDir).mkpath(".");
@@ -372,7 +385,7 @@ TrainDetectContainer TrainService::detect(const QString &id, THttpRequest &reque
             }
             jpg.trim();
 
-            auto detections = ssdDetect(detector, 0.1, 0.5, jpg);
+            auto detections = ssdDetect(detector, 0.1, 0.5, jpg, labelColors);
             // Sort by score
             std::sort(detections.begin(), detections.end(), [](const QVector<float> &v1, const QVector<float> &v2) -> bool {
                 return v1[2] > v2[2];
@@ -385,7 +398,7 @@ TrainDetectContainer TrainService::detect(const QString &id, THttpRequest &reque
             QString logmsg;
             const QString format = "\"class:%1, score:%2, x1:%3, y1:%4, x2:%5, y2:%6\", ";
             for (auto &c : detections) {
-                auto name = labels[(int)c[1]];
+                auto name = labelColors[(int)c[1]].first;
                 logmsg += format.arg(name).arg(c[2],0,'g',3).arg((int)c[3]).arg((int)c[4]).arg((int)c[5]).arg((int)c[6]);
             }
             logmsg.chop(2);
@@ -393,21 +406,23 @@ TrainDetectContainer TrainService::detect(const QString &id, THttpRequest &reque
         }
 
     } else if (! entities.isEmpty()) { // ファイル指定
+
         for (auto &ent : entities) {
-            auto jpg = ent.uploadedFilePath();
+            auto upf = ent.uploadedFilePath();
             auto ext = QFileInfo(ent.originalFileName()).suffix().toLower();
 
             if (ext == "mp4" || ext == "avi") {
                 // Movie
+                detector.detect(upf, 0.6, labelColors, "/home/aoyama/hoge.avi");
 
             } else {
-                tInfo() << jpg;
-                auto image = Image(jpg);
+                tInfo() << upf;
+                auto image = Image(upf);
                 image.trim();
                 QList<QVector<float>> detections;
 
                 if (! cm.isNull() && ! image.isEmpty()) {
-                    detections << ssdDetect(detector, 0.1, 0.5, image);
+                    detections << ssdDetect(detector, 0.1, 0.5, image, labelColors);
                 }
 
                 container.detectionsList << detections;

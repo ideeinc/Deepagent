@@ -4,6 +4,7 @@
 #include <vector>
 #include <QtCore>
 #include <TGlobal>
+#include "color.h"
 using namespace std;
 
 namespace caffe {
@@ -22,13 +23,13 @@ public:
     ~SsdDetector();
 
     QList<QVector<float>> detect(const cv::Mat& img, float threshold) const;
-    bool detect(const QString& movieFile, float threshold, const QString& outputFile) const;
+    bool detect(const QString& movieFile, float threshold, const QList<QPair<QString, Color>> &labels, const QString& outputFile) const;
     void reset(const QString &modelFile, const QString &weightsFile, const QString &meanFile, const QString &meanValue);
 
     static QList<QVector<float>> detect(const QString &imgFile, float threshold, const QString& modelFile, const QString &weightsFile, const QString &meanValue);
 
 private:
-    void setMean(const QString &meanFile, const QString &meanValue);
+    void setMean(const QString &meanFilePath, const QString &meanValue);
     std::vector<cv::Mat> wrapInputLayer() const;
     void preprocess(const cv::Mat& img, const std::vector<cv::Mat>& inputChannels) const;
 
