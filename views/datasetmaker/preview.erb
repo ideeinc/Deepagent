@@ -1,11 +1,6 @@
-<!DOCTYPE html>
 <%#include "containers/datasetmakerpreviewcontainer.h" %>
 <% tfetch(DatasetMakerPreviewContainer, container) %>
-<html>
-<head>
-  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+
   <script src="/js/jquery-1.11.3.min.js" type="text/javascript"></script>
   <script type="text/javascript">
     $(function() {
@@ -14,8 +9,6 @@
         });
     });
   </script>
-</head>
-<body>
 
 <% if (container.list.count() > 0) { %>
 <%== formTag(urla("make"), Tf::Post) %>
@@ -56,7 +49,3 @@
 <% } %>
 
 <p><%== linkTo("<< 戻る", urla("index")) %></p>
-
-</body>
-</html>
-

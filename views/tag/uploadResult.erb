@@ -1,13 +1,5 @@
-<!DOCTYPE html>
 <%#include "containers/uploadresultcontainer.h" %>
 <% tfetch(UploadResultContainer, uploadResult) %>
-<html>
-<head>
-  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
-</head>
-<body>
 
 <% if (uploadResult.completed) { %>
 <p class="message">アップロード完了</p>
@@ -32,7 +24,3 @@
 <% } %>
 
 <p><%== linkTo("<< 戻る", uploadResult.backPageURL.isEmpty() ? urla("index") : uploadResult.backPageURL) %></p>
-
-</body>
-</html>
-

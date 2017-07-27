@@ -1,0 +1,14 @@
+<%#include "containers/retagsearchcontainer.h" %>
+<%#include "managedfile.h" %>
+<% tfetch(RetagSearchContainer, container) %>
+
+<div style="display: inline;">
+<% for (int i = 0; i < container.images.count(); ++i) {
+    const auto manage = ManagedFile::fromFileName(container.images[i]); 
+    const auto path = manage.path(); %>
+    <div class="thumb">
+    <%== imageLinkTo(urla("show", QFileInfo(path).fileName()), ApplicationHelper::convertToPublic(path), true, manage.name(), a("width", "128") | a("title", manage.name()) | a("class", "scale25")) %><br />
+    <label><%== checkBoxTag("images[]", QFileInfo(path).fileName(), false) %></label>
+    </div>
+<% } %>
+</div>

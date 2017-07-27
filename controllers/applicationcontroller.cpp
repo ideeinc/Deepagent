@@ -69,6 +69,9 @@ void ApplicationController::staticRelease()
 
 bool ApplicationController::preFilter()
 {
+    // キャッシュオフヘッダ
+    httpResponse().header().addRawHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0");
+    httpResponse().header().addRawHeader("Pragma", "no-cache");
     return true;
 }
 

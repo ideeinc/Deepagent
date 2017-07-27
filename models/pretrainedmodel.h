@@ -18,11 +18,8 @@ class T_MODEL_EXPORT PretrainedModel : public CaffeData
 public:
     PretrainedModel();
     PretrainedModel(const PretrainedModel &other);
-    //PretrainedModel(const PretrainedModelObject &object);
     ~PretrainedModel();
 
-    // QString id() const;
-    // void setId(const QString &id);
     QString caffeModelId() const;
     void setCaffeModelId(const QString &caffeModelId);
     QString pretrainedModelFile() const;
@@ -34,14 +31,12 @@ public:
     bool save()   override;
     void setProperties(const QVariantMap &properties) override;
     QVariantMap toVariantMap() const override;
-    void clear();
+    void clear() override;
 
-    //static PretrainedModel create(const QString &id, const QString &caffeModelId, const QString &pretrainedModelFile);
     static PretrainedModel create(const QVariantMap &values);
     static PretrainedModel get(const QString &id);
     static int count();
     static QList<PretrainedModel> getAll();
-    //static QJsonArray getAllJson();
 
 private:
     QSharedDataPointer<PretrainedModelObject> d;

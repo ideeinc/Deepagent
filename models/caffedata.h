@@ -66,8 +66,8 @@ public:
     virtual bool update() override { return false; }
     virtual bool save()   override { return false; }
     virtual bool remove() override;
-    virtual void setProperties(const QVariantMap &properties);
-    virtual QVariantMap toVariantMap() const;
+    virtual void setProperties(const QVariantMap &properties) override;
+    virtual QVariantMap toVariantMap() const override;
     virtual void clear();
     virtual bool isNull() const override;
 

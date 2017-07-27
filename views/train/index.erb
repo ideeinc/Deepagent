@@ -1,12 +1,5 @@
-<!DOCTYPE html>
 <%#include "containers/trainindexcontainer.h" %>
 <% tfetch(TrainIndexContainer, container) %>
-<html>
-<head>
-  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
-  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
-</head>
-<body>
 
 <h1>Listing Train Models</h1>
 
@@ -52,6 +45,3 @@
   </tr>
 <% } %>
 </table>
-
-</body>
-</html>

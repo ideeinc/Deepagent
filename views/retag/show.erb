@@ -1,0 +1,21 @@
+
+<%#include "containers/retagshowcontainer.h" %>
+<%#include "tag.h" %>
+<% tfetch(RetagShowContainer, container) %>
+<div style="font-size: small;"><%= container.originalName %></div>
+
+<%== imageTag(container.imagePath, true, QSize(), container.originalName); %>
+
+<h3>タグ</h3>
+<table>
+<% for (const auto& tag : container.tags) { %>
+<tr>
+  <td><%= tag.groupName() %></td>
+  <td><%== linkTo(tag.displayName(), url("tag", "show", QStringList({tag.groupName(), tag.name()}))) %></td>
+</tr>
+<% } %>
+</table>
+
+<p>
+<a href="javascript:history.back();">[ 戻る ]</a>
+</p>

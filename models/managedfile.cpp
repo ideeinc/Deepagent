@@ -15,11 +15,12 @@ ManagedFile ManagedFile::fromConfig(const QString& configPath)
     if (config.open(QFile::ReadOnly)) {
         return ManagedFile::fromJson(config.readAll());
     }
+    return ManagedFile();
 }
 
 ManagedFile ManagedFile::fromHash(const QString& hash)
 {
-    const QDir dir(Tf::conf("settings").value("OriginalInformationDir").toString());
+    static const QDir dir(Tf::conf("settings").value("OriginalInformationDir").toString());
     if (dir.exists(hash + ".txt")) {
         ManagedFile file = ManagedFile::fromConfig(dir.filePath(hash + ".txt"));
         if (! file._path.isEmpty()) {
@@ -52,6 +53,18 @@ ManagedFile ManagedFile::fromLink(const QString& link)
         return file;
     }
     return ManagedFile();
+}
+
+ManagedFile ManagedFile::fromFileName(const QString& image)
+{
+    return fromHash(QFileInfo(image).completeBaseName());
+}
+
+#include "applicationhelper.h"
+QString ManagedFile::fileNameToPublicPath(const QString& image)
+{
+    // TODO
+    return ApplicationHelper::convertToPublic(fromFileName(image).path());
 }
 
 ManagedFile::ManagedFile()

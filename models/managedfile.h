@@ -10,6 +10,9 @@ public:
     static ManagedFile fromConfig(const QString&);
     static ManagedFile fromHash(const QString&);
     static ManagedFile fromLink(const QString&);
+    static ManagedFile fromFileName(const QString&);
+    static QString fileNameToPublicPath(const QString&);
+
     ManagedFile();
     ManagedFile(const ManagedFile&);
     ManagedFile(const QJsonObject&);

@@ -1,34 +1,8 @@
-<!DOCTYPE html>
 <%#include "containers/traindetectcontainer.h" %>
 <% tfetch(TrainDetectContainer, container); %>
 <% const auto &caffeModel = container.caffeModel; %>
-<html>
-<head>
-<meta http-equiv="content-type" content="text/html;charset=UTF-8" />
-<title><%= controller()->name() + ": " + controller()->activeAction() %></title>
-<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
 <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
-<style>
-#drop_zone {
-    width: 50%;
-    border: 2px dashed #bbb;
-    /*  -moz-border-radius: 5px; */
-    -webkit-border-radius: 5px;
-    border-radius: 5px;
-    padding: 15px 5px;
-    text-align: center;
-    font: bold 1.0em/1.8em 'Vollkorn';
-    color: #999;
-    min-height: 90px;
-}
-.zoom {
-    -webkit-transform: scale(2.0);
-    -moz-transform: scale(2.0);
-    -o-transform: scale(2.0);
-    -ms-transform: scale(2.0);
-    transform: scale(2.0);
-}
-</style>
 <script>
 var dsup = {};
 
@@ -116,8 +90,7 @@ $(function(){
     dsup.zoomImage();
 });
 </script>
-</head>
-<body style="width: 1000px; margin-right: auto; margin-left: auto;">
+
 <p style="color: red"><%=$ error %></p>
 <p style="color: green"><%=$ notice %></p>
 
@@ -168,6 +141,3 @@ $(function(){
 <h3>モデル情報</h3>
 <dt>ID</dt><dd><%= caffeModel.id()  %></dd><br />
 <dt>Deploy prototxt</dt><dd><%= caffeModel.deployFile() %></dd><br />
-
-</body>
-</html>
