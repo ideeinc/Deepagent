@@ -15,7 +15,6 @@ public:
 
     QString primaryGroup;
     QString primaryTag;
-    QSet<QString> containedGroups;
     QList<Tag> containedTags;
 
     QString listName;

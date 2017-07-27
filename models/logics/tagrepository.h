@@ -34,6 +34,10 @@ public:
     void updateImages(const QStringList&, const QString&, const QString&);
     void updateImages(const QStringList&, const QVariantMap&);
 
+    QList<Tag> getTags(const QString& image) const;
+    bool generateTagResolution(const QString& image) const;
+    void regenerateTagResolution() const;
+
     // Miscs
     QDir baseDir() const;
 private:

@@ -1,8 +1,10 @@
 #include "applicationcontroller.h"
 #include "logics/cudatool.h"
 #include "logics/managedfilecontext.h"
+#include "logics/tagrepository.h"
 #include <glog/logging.h>
 #include <caffe/caffe.hpp>
+#include <TApplicationScheduler>
 
 
 ApplicationController::ApplicationController()
@@ -41,6 +43,25 @@ void ApplicationController::staticInitialize()
 
     // load all file's hashes.
     ManagedFileContext::load();
+
+    // Tag Resolution
+    class TagResolutionGeneration : public TApplicationScheduler {
+    public:
+        TagResolutionGeneration() : TApplicationScheduler(nullptr) {}
+        void job()
+        {
+            tInfo() << "TagResolutionGeneration ... started";
+            TagRepository().regenerateTagResolution();
+            tInfo() << "TagResolutionGeneration ... done";
+        }
+    };
+
+    bool gen = Tf::conf("settings").value("EnableTagResolutionGeneration").toBool();
+    if (gen) {
+        static TagResolutionGeneration tr;
+        tr.setSingleShot(true);
+        tr.start(1);
+    }
 }
 
 void ApplicationController::staticRelease()

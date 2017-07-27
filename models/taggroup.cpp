@@ -1,8 +1,7 @@
 #include "taggroup.h"
 
 
-TagGroup::TagGroup(const QString& name)
-    : _dir(nullptr), _name(name)
+TagGroup::TagGroup()
 {
 }
 
@@ -136,10 +135,12 @@ Tag
 TagGroup::findTag(const QString& tagName) const
 {
     Tag found;
-    for (const Tag& tag : tags()) {
-        if (tag.name() == tagName) {
-            found = tag;
-            break;
+    if (! tagName.isEmpty()) {
+        for (const Tag& tag : tags()) {
+            if (tag.name() == tagName) {
+                found = tag;
+                break;
+            }
         }
     }
     return found;

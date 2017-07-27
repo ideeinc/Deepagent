@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <%#include "taggroup.h" %>
 <% tfetch(TagGroup, group) %>
+<%#include "logics/tagrepository.h" %>
+<% const QList<TagGroup> allGroups = TagRepository().allGroups(); %>
 <html>
 <head>
   <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
@@ -9,6 +11,16 @@
   <script src="/js/jquery-1.11.3.min.js" type="text/javascript"></script>
   <script type="text/javascript">
     $(window).load(function() {
+        var allGroups = {
+            <% for (const TagGroup& g : allGroups) {
+                echo("\"" + g.name() + "\": [");
+                for (const Tag& t : g.tags()) {
+                    echo("\"" + t.name() + "\", ");
+                }
+                echo("], ");
+            } %>
+        };
+
         $('input:submit[name="updateGroup"]').click(function(e){
             e.preventDefault();
             var error = '';
@@ -54,17 +66,20 @@
 
       $('input:submit[name=create]').on('click', function(e){
             var error = '';
-            var usedTags = [ <% for (const Tag& t : group.tags()) {
-                echo("'" + t.name() + "', ");
-            } %> ];
             var tagId = $('input:text[name=tagId]').val();
             if (tagId.length < 1) {
                 error = 'タグIDは必須です';
-            } else if ($.inArray(tagId, usedTags) >= 0) {
-                error = 'タグID "' + tagId + '" は "<%= group.name() %>" グループですでに使われています';
             } else if (! tagId.match(/^[a-z0-9_\-]+$/)) {
                 error = 'タグIDには半角英数小文字のみ使えます';
+            } else {
+                for (var groupName in allGroups) {
+                    if ($.inArray(tagId, allGroups[groupName]) > -1) {
+                        error = 'タグID "' + tagId + '" は "' + groupName + '" グループですでに使われています';
+                        break;
+                    }
+                }
             }
+
             if (error.length > 0) {
                 e.preventDefault();
                 window.alert(error);

@@ -1,5 +1,7 @@
 #include "logics/tagrepository.h"
 #include <TWebApplication>
+#include <QJsonObject>
+#include <QJsonDocument>
 
 
 TagRepository::TagRepository()
@@ -94,11 +96,20 @@ TagRepository::createTag(const QString& groupName, const QString& tagName, const
         group = createGroup(groupName);
     }
 
-    Tag created = group.findTag(tagName);
-    if (! created.exists()) {
-        created = group.createTag(tagName);
+    Tag created = group.createTag(tagName);
+    if (created.exists()) {
+        created.setDisplayName(tagDisplayName);
+
+        QStringList alltags;
+        for (auto& tag : TagRepository().allTags()) {
+            alltags << tag.name();
+        }
+
+        // Tag name is system unique.
+        if (alltags.filter(tagName).count() > 1) {
+            created.destroy();
+        }
     }
-    created.setDisplayName(tagDisplayName);
 
     return created;
 }
@@ -156,6 +167,10 @@ TagRepository::updateTag(Tag& sourceTag, const QVariantMap& changes)
     if (sourceTag.exists()) {
         const QString name = changes.value("name").toString();
         if ((! name.isEmpty()) && (name != sourceTag.name())) {
+            // tag name is system unique
+            if (findTag(name).exists()) {
+                return false;
+            }
             succeed = sourceTag.setName(name);
         }
 
@@ -188,6 +203,7 @@ TagRepository::appendImages(const QStringList& images, const QString& groupName,
     const Tag tag = group.findTag(tagName);
     for (const QString& path : images) {
         tag.appendImage(path);
+        generateTagResolution(path);
     }
 }
 
@@ -202,20 +218,26 @@ TagRepository::removeImages(const QStringList& images, const QString& groupName,
     const Tag tag = group.findTag(tagName);
     for (const QString& path : images) {
         tag.removeImage(QFileInfo(path).fileName());
+        generateTagResolution(path);
     }
 }
 
 void
 TagRepository::updateImages(const QStringList& images, const QString& groupName, const QString& tagName)
 {
-    if (! tagName.isEmpty()) {
-        appendImages(images, groupName, tagName);
-    }
+    TagGroup group = findGroup(groupName);
+    Tag tag = group.findTag(tagName);
 
-    for (const Tag& tag : findGroup(groupName).tags()) {
-        if (tag.name() != tagName) {
-            removeImages(images, groupName, tag.name());
+    for (const QString& path : images) {
+        if (! tagName.isEmpty()) {
+            tag.appendImage(path);
         }
+        for (const Tag& otherTag : group.tags()) {
+            if (otherTag.name() != tagName) {
+                otherTag.removeImage(QFileInfo(path).fileName());
+            }
+        }
+        generateTagResolution(path);
     }
 }
 
@@ -233,3 +255,120 @@ TagRepository::baseDir() const
 {
     return _baseDir;
 }
+
+QList<Tag>
+TagRepository::getTags(const QString& image) const
+{
+    static const auto TagResolutionDir = QDir(Tf::conf("settings").value("TagResolutionDir").toString());
+    QList<Tag> tags;
+    QFileInfo fi(image);
+    QFile resolveJson(TagResolutionDir.absoluteFilePath(fi.completeBaseName() + ".json"));
+
+    if (! resolveJson.exists()) {
+        generateTagResolution(image);
+    }
+
+    if (resolveJson.open(QIODevice::ReadOnly)) {
+        // Read from JSON
+        auto json = resolveJson.readAll();
+        resolveJson.close();
+
+        auto tagobj = QJsonDocument::fromJson(json).object().value("tags").toObject();
+        if (! json.isEmpty()) {
+            bool regen = false;
+
+            for (auto it = tagobj.constBegin(); it != tagobj.constEnd(); ++it) {
+                Tag t = findGroup(it.key()).findTag(it.value().toString());
+                if (t.exists()) {
+                    tags << t;
+                } else {
+                    regen = true;
+                }
+            }
+
+            if (regen) {
+                // Regenerates
+                generateTagResolution(image);
+            }
+            return tags;
+        }
+    }
+
+    tError() << "Tag resolution error : " << fi.fileName();
+    return tags;
+}
+
+static bool
+generateTagResolutionFile(const QString& image, const QList<TagGroup>& allGroups)
+{
+    static const auto TagResolutionDir = QDir(Tf::conf("settings").value("TagResolutionDir").toString());
+    const QFileInfo fi(image);
+    const QString filename = fi.fileName();
+
+    QJsonObject tagObj;
+    for (const TagGroup& g : allGroups) {
+        for (const Tag& t : g.tags()) {
+            if (t.hasImage(filename)) {
+                tagObj.insert(g.name(), t.name());
+            }
+        }
+    }
+
+    QJsonObject json;
+    json.insert("tags", tagObj);
+    auto jsondata = QJsonDocument(json).toJson(QJsonDocument::Compact);
+
+    if (! TagResolutionDir.exists()) {
+        TagResolutionDir.mkpath(".");
+    }
+
+    QFile resolveJson(TagResolutionDir.absoluteFilePath(fi.completeBaseName() + ".json"));
+    if (resolveJson.exists() && resolveJson.open(QIODevice::ReadOnly)) {
+        auto currentJson = resolveJson.readAll();
+        resolveJson.close();
+
+        if (currentJson == jsondata) {
+            // not write
+            return true;
+        }
+    }
+
+    if (resolveJson.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        resolveJson.write(jsondata);
+        resolveJson.close();
+        tInfo() << "tag resolution json created: " << resolveJson.fileName();
+    } else {
+        tError() << "write error tag resolution json: " << resolveJson.fileName();
+        return false;
+    }
+    return true;
+}
+
+bool
+TagRepository::generateTagResolution(const QString& image) const
+{
+    return generateTagResolutionFile(image, allGroups());
+}
+
+void
+TagRepository::regenerateTagResolution() const
+{
+    static const auto OriginalImagesDir = Tf::conf("settings").value("OriginalImagesDir").toString();
+    const auto allgroups = allGroups();
+
+    QDirIterator it(OriginalImagesDir, {"*.jpg", "*.jpeg"}, QDir::Files | QDir::Readable, QDirIterator::Subdirectories);
+    while (it.hasNext()) {
+        generateTagResolutionFile(it.next(), allgroups);
+    }
+}
+
+/* JSON sample
+{
+    "tags": {
+        "フォルダ（大腸炎）": "ulcerativecolitis_0630_001-420_mayo2_r",
+        "全体病変": "ulcerativecolitis_mayo2",
+        "照明": "normal",
+        "部位": "e07daichorectum"
+    }
+}
+*/

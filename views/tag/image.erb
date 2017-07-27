@@ -3,6 +3,7 @@
 <% tfetch(TaggedImageInfoContainer, container) %>
 <% const QUrl listUrl = controller()->urla(container.listName, container.listArgs, container.listQuery); %>
 <%#include "logics/tagrepository.h" %>
+<%#include "applicationhelper.h" %>
 <% const QList<TagGroup> allGroups = TagRepository().allGroups(); %>
 <html>
 <head>
@@ -60,7 +61,7 @@
 <body>
 
 <div style="font-size: small"><%= container.displayName %></div>
-<%== inlineImageTag(container.path, "image/jpeg", THtmlAttribute("height", "500px")) %>
+<%== imageTag(ApplicationHelper::convertToPublic(container.path), true, QSize(), container.displayName, a("height", "500")) %>
 
 <p>
 <h3>この画像についているタグ</h3>
@@ -92,17 +93,19 @@
 <p>
 <h3>タグの削除</h3>
 <%== formTag(urla("remove")) %>
+<%
+    QMap<QString, QList<Tag>> relatedGroups;
+    for (const Tag& tag : container.containedTags) {
+        relatedGroups[tag.groupName()] << tag;
+    }
+%>
 <select name="included">
-<% for (const auto& group : allGroups) { %>
-<% if (container.containedGroups.contains(group.name())) { %>
-<optgroup label="<%= group.name() %>">
-<% for (const auto& tag : group.tags()) { %>
-    <% if (tag.hasImage(QFileInfo(container.path).fileName())) { %>
+<% for (const auto& groupName : relatedGroups.keys()) { %>
+<optgroup label="<%= groupName %>">
+<% for (const auto& tag : relatedGroups.value(groupName)) { %>
     <%== optionTag(tag.displayName(), tag.name()) %>
-    <% } %>
 <% } %>
 </optgroup>
-<% } %>
 <% } %>
 </select>
 <%== inputTag("submit", "remove", "削除") %>

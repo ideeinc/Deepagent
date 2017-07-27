@@ -1,8 +1,8 @@
 #include "tag.h"
+#include "taggroup.h"
 
 
-Tag::Tag(const QString& name)
-    : _dir(nullptr), _name(name), _displayName(""), _descriptionPath("")
+Tag::Tag()
 {
 }
 
@@ -175,6 +175,11 @@ bool Tag::hasImage(const QString& filename) const
     return QDir(_dir->filePath(_name)).exists(filename);
 }
 
+TagGroup Tag::tagGroup() const
+{
+    return exists() ? TagGroup(QDir(_dir->path() + QLatin1String("/..")), _dir->dirName()) : TagGroup();
+}
+
 void Tag::appendImage(const QString& path) const
 {
     const QFileInfo file( QFileInfo(path).isSymLink() ? QFile::symLinkTarget(path) : path );
@@ -197,6 +202,14 @@ Tag::destroy()
     bool destroyed = false;
     if (exists()) {
         destroyed = QDir(_dir->filePath(_name)).removeRecursively();
+
+        // clear params on success.
+        if (destroyed) {
+            _dir.reset();
+            _name = "";
+            _displayName = "";
+            _descriptionPath = "";
+        }
     }
     return destroyed;
 }

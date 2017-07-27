@@ -4,14 +4,14 @@
 #include <QtCore/QtCore>
 #include <memory>
 
+class TagGroup;
+
 
 class Tag {
+    friend class TagGroup;
 public:
-    Tag() {}; // for Q_DECLARE_METATYPE
-
-    Tag(const QString& name);
+    Tag();
     Tag(const Tag&);
-    Tag(const QDir&, const QString&);
     virtual ~Tag();
 
     QString path() const;
@@ -28,17 +28,20 @@ public:
     QStringList imageNames() const;
     QStringList imagePaths() const;
     bool hasImage(const QString&) const;
+    TagGroup tagGroup() const;
 
     void appendImage(const QString& path) const;
     void removeImage(const QString& name) const;
     bool destroy();
 
+    Tag& operator=(const Tag&);
+private:
+    Tag(const QDir&, const QString&);
+
     const QDir* directory() const;
     void setDirectory(const QDir*);
     void setDirectory(const QDir&);
 
-    Tag& operator=(const Tag&);
-private:
     std::unique_ptr<QDir> _dir;
     QString _name;
     mutable QString _displayName;

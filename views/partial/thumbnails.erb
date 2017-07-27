@@ -3,6 +3,7 @@
 <%#include "logics/tagrepository.h" %>
 <% const QList<TagGroup> allGroups = TagRepository().allGroups(); %>
 <%#include "managedfile.h" %>
+<%#include "applicationhelper.h" %>
 <% 
     const QUrl baseUrl = controller()->urla(controller()->activeAction(), container.arguments, container.query);
     QUrlQuery prevQuery(baseUrl); prevQuery.addQueryItem("page", QString::number(container.page - 1)); prevQuery.addQueryItem("limit", QString::number(container.limit));
@@ -93,16 +94,18 @@ $(function() {
 
 <% if (container.images.count() > container.limit) { %>
 <div style="width: 100%; text-align: center; font-size: small; margin-bottom: 10px;">
-    <span><% if (container.min > 0) { echo(linkTo("<< Prev", prevUrl)); } else { echo("<< Prev"); } %></span>
+    <span><% if (container.min > 0) { echo(linkTo("&lt&lt; Prev", prevUrl)); } else { echo("&lt&lt; Prev"); } %></span>
     <span>[Page <%= container.page + 1 %> / <%= container.maxNumberOfPage %>]</span>
-    <span><% if (container.max < container.images.count()) { echo(linkTo("Next >>", nextUrl)); } else { echo("Next >>"); } %></span>
+    <span><% if (container.max < container.images.count()) { echo(linkTo("Next &gt;&gt;", nextUrl)); } else { eh("Next &gt;&gt;"); } %></span>
 </div>
 <% } %>
 
 <div style="display: inline;">
-<% for (long i = container.min; i < container.max; ++i) { const auto& path = container.images[i]; const auto original = ManagedFile::fromLink(path); %>
+<% for (long i = container.min; i < container.max; ++i) {
+    const auto& path = container.images[i];
+    const auto original = ManagedFile::fromLink(path); %>
     <div style="display: inline-block; width: 130px;">
-    <%== linkTo(inlineImageTag(path, "image/jpeg", THtmlAttribute("width", "128px") | THtmlAttribute("alt", original.name()) | THtmlAttribute("title", original.name())), urla("show", QStringList({ container.groupName, container.name, QString::number(i) })), Tf::Get, "", THtmlAttribute("title", original.name())) %><br />
+    <%== imageLinkTo(urla("show", QStringList({ container.groupName, container.name, QString::number(i) })), ApplicationHelper::convertToPublic(path), true, original.name(), a("width", "128px") | a("title", original.name())) %><br />
     <label><%== checkBoxTag("images[]", QFileInfo(path).absoluteFilePath(), false) %></label>
     </div>
 <% } %>
@@ -110,15 +113,15 @@ $(function() {
 
 <% if (container.images.count() > container.limit) { %>
 <div style="width: 100%; text-align: center; font-size: small; margin-top: 5px;">
-    <span><% if (container.min > 0) { echo(linkTo("<< Prev", prevUrl)); } else { echo("<< Prev"); } %></span>
+    <span><% if (container.min > 0) { echo(linkTo("&lt;&lt; Prev", prevUrl)); } else { echo("&lt;&lt; Prev"); } %></span>
     <span>[Page <%= container.page + 1 %> / <%= container.maxNumberOfPage %>]</span>
-    <span><% if (container.max < container.images.count()) { echo(linkTo("Next >>", nextUrl)); } else { echo("Next >>"); } %></span>
+    <span><% if (container.max < container.images.count()) { echo(linkTo("Next &gt;&gt;", nextUrl)); } else { echo("Next &gt;&gt;"); } %></span>
 </div>
 <% } %>
 
 <hr />
 
-<label for"checkAll"><%== checkBoxTag("checkAll", "", false, THtmlAttribute("id", "checkAll")) %> すべてをチェック</label>
+<label for"checkAll"><%== checkBoxTag("checkAll", "", false, a("id", "checkAll")) %> すべてをチェック</label>
 <fieldset>
 <legend>画像のタグ一括更新</legend>
 <div style="display: table;">

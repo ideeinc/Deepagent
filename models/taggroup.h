@@ -7,11 +7,11 @@
 
 
 class TagGroup {
+    friend class TagRepository;
+    friend class Tag;
 public:
-    TagGroup() {}; // for Q_DECLARE_METATYPE
-    TagGroup(const QString& name);
+    TagGroup();
     TagGroup(const TagGroup& other);
-    TagGroup(const QDir&, const QString&);
 
     bool exists() const;
     bool hasTag(const QString& name) const;
@@ -28,12 +28,14 @@ public:
     Tag findTag(const QString&) const;
     bool saveTag(Tag&);
 
+    TagGroup& operator=(const TagGroup&);
+private:
+    TagGroup(const QDir&, const QString&);
+
     const QDir* directory() const;
     void setDirectory(const QDir*);
     void setDirectory(const QDir&);
 
-    TagGroup& operator=(const TagGroup&);
-private:
     std::unique_ptr<QDir> _dir;
     QString _name;
     mutable QList<Tag> _tags;

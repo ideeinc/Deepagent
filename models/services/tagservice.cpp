@@ -394,15 +394,7 @@ TaggedImageInfoContainer TagService::showTagImage(const THttpRequest& request, c
         }
     }
 
-    const QString filename = QFileInfo(container.path).fileName();
-    for (const TagGroup& g : _repository.allGroups()) {
-        for (const Tag& t : g.tags()) {
-            if (t.hasImage(filename)) {
-                container.containedGroups << t.groupName();
-                container.containedTags << t;
-            }
-        }
-    }
+    container.containedTags = _repository.getTags(container.path);
 
     container.listName = "show";
     container.listArgs = QStringList{ container.primaryGroup, container.primaryTag };
@@ -538,16 +530,7 @@ TaggedImageInfoContainer TagService::showTableImage(const THttpRequest&, TSessio
         container.path = images[0];
         container.index = 0;
         container.numberOfImages = images.count();
-
-        const QString filename = QFileInfo(container.path).fileName();
-        for (const TagGroup& g : _repository.allGroups()) {
-            for (const Tag& t : g.tags()) {
-                if (t.hasImage(filename)) {
-                    container.containedGroups << t.groupName();
-                    container.containedTags << t;
-                }
-            }
-        }
+        container.containedTags = _repository.getTags(container.path);
 
         if (images.size()) {
             session.insert(kTagImageTableInfo, QVariantMap{
