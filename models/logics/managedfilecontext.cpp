@@ -5,6 +5,17 @@
 
 QSet<QString> ManagedFileContext::hashes;
 
+// make symlink for `sources` to public
+namespace {
+    struct SourceDirMakePublicLink {
+        SourceDirMakePublicLink() {
+            const QString sourcePath = ManagedFileContext().sourceDir().absolutePath();
+            const QString linkPath = QDir(Tf::app()->publicPath()).absoluteFilePath(QFileInfo(sourcePath).fileName());
+            QFile::link(sourcePath, linkPath);
+        };
+    } SourceDirMakePublicLink;
+};
+
 namespace {
     typedef struct OriginalFile {
     public:
@@ -271,4 +282,14 @@ FileErrorList ManagedFileContext::extract(const TMimeEntity& entity, const QStri
     }
 
     return errors;
+}
+
+QDir ManagedFileContext::sourceDir() const
+{
+    return QDir(_sourceDir);
+}
+
+QDir ManagedFileContext::originalDir() const
+{
+    return QDir(_originalDir);
 }

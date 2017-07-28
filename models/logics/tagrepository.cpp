@@ -3,6 +3,16 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 
+// make symlink for `tags` to public
+namespace {
+    struct TagDirMakePublicLink {
+        TagDirMakePublicLink() {
+            const QString sourcePath = TagRepository().baseDir().absolutePath();
+            const QString linkPath = QDir(Tf::app()->publicPath()).absoluteFilePath(QFileInfo(sourcePath).fileName());
+            QFile::link(sourcePath, linkPath);
+        };
+    } TagDirMakePublicLink;
+};
 
 TagRepository::TagRepository()
     : _baseDir(Tf::conf("settings").value("TagsDir").toString())

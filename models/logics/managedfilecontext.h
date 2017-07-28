@@ -67,6 +67,9 @@ public:
 
     static QByteArray checksum(const QString& path, QCryptographicHash::Algorithm algorithm = QCryptographicHash::Md5);
     static void load();
+
+    QDir sourceDir() const;
+    QDir originalDir() const;
 protected:
 
 private:
