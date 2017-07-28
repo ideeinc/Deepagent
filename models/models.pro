@@ -77,6 +77,8 @@ HEADERS += logics/managedfilecontext.h
 SOURCES += logics/managedfilecontext.cpp
 HEADERS += logics/tagrepository.h
 SOURCES += logics/tagrepository.cpp
+HEADERS += logics/sourcereference.h
+SOURCES += logics/sourcereference.cpp
 
 HEADERS += containers/caffetrainedmodelpredictcontainer.h
 HEADERS += containers/boundingboxdrawcontainer.h

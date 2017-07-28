@@ -1,5 +1,6 @@
 #include "managedfilecontext.h"
 #include "image.h"
+#include "logics/sourcereference.h"
 #include <TWebApplication>
 #include <THttpRequest>
 
@@ -151,7 +152,9 @@ std::tuple<QStringList, FileErrorList> ManagedFileContext::append(const QList<TM
             const QString destination = QDir(basePath).filePath(original.hash + ".jpg");
             errorKey = original.saveTrimmingImage(trimmingMode, destination);
             if (errorKey == FileError::Type::NOERR) {
-                success << QFileInfo(destination).absoluteFilePath();
+                const QString absoluteSourcePath = QFileInfo(destination).absoluteFilePath();
+                success << absoluteSourcePath;
+                MakeReferenceFromSourcePath(absoluteSourcePath);
                 original.saveTo(_originalDir, destination);
             }
         }
