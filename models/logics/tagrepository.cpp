@@ -2,6 +2,7 @@
 #include <TWebApplication>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QtConcurrent>
 
 // make symlink for `tags` to public
 namespace {
@@ -213,7 +214,9 @@ TagRepository::appendImages(const QStringList& images, const QString& groupName,
     const Tag tag = group.findTag(tagName);
     for (const QString& path : images) {
         tag.appendImage(path);
-        generateTagResolution(path);
+        QtConcurrent::run([=]{
+            generateTagResolution(path);
+        });
     }
 }
 
@@ -228,7 +231,9 @@ TagRepository::removeImages(const QStringList& images, const QString& groupName,
     const Tag tag = group.findTag(tagName);
     for (const QString& path : images) {
         tag.removeImage(QFileInfo(path).fileName());
-        generateTagResolution(path);
+        QtConcurrent::run([=]{
+            generateTagResolution(path);
+        });
     }
 }
 
@@ -247,7 +252,9 @@ TagRepository::updateImages(const QStringList& images, const QString& groupName,
                 otherTag.removeImage(QFileInfo(path).fileName());
             }
         }
-        generateTagResolution(path);
+        QtConcurrent::run([=]{
+            generateTagResolution(path);
+        });
     }
 }
 
