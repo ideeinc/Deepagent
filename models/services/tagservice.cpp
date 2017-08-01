@@ -207,9 +207,12 @@ UploadResultContainer TagService::uploadImages(THttpRequest& request)
         }
 
         const QList<TMimeEntity>& files = request.multipartFormData().entityList("files[]");
-        const TrimmingMode trimmingMode = (request.hasFormItem("trimmingMode") ? static_cast<TrimmingMode>(request.formItemValue("trimmingMode").toInt()) : TrimmingMode::Square);
+        const AppendingOption option {
+            request.hasFormItem("trimmingMode") ? static_cast<TrimmingMode>(request.formItemValue("trimmingMode").toInt()) : TrimmingMode::Square,
+            request.hasFormItem("duplicationMode") ? static_cast<DuplicationMode>(request.formItemValue("duplicationMode").toInt()) : DuplicationMode::ExcludeFiles
+        };
 
-        const auto results = ManagedFileContext().append(files, trimmingMode);
+        const auto results = ManagedFileContext().append(files, option);
         const auto images = std::get<0>(results);
 
         if (images.count() > 0) {

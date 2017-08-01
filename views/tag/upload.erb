@@ -84,9 +84,14 @@
 <p><label>ファイル: <%== inputFileTag("files[]", THtmlAttribute("multiple", "multiple") | THtmlAttribute("accept", ".zip,.tar,.gz,image/jpeg")) %></label> <span>（JPEG ファイルまたは zip, tar, tar.gz アーカイブファイル）</span></p>
 <p><label>画像のトリミング: <select name="trimmingMode">
 <option value="0">なし</option>
-<option value="1">デフォルト</option>
-<option value="2" selected>正方形</option>
+<option value="1">デフォルト（検証用）</option>
+<option value="2" selected>正方形（学習用）</option>
 </select></label></p>
+<p><label>重複項目の扱い: <select name="duplicationMode">
+<option value="0">除外（アップロード先に取り込まない）</option>
+<option value="1" selected>アップロード先にも取り込む</option>
+</select></label></p>
+
 <label>グループ:
 <select name="group">
   <% for (const auto& group : allGroups) { %>

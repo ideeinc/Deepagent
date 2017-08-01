@@ -18,6 +18,20 @@ enum class TrimmingMode : int {
 
 /*
  */
+enum class DuplicationMode : int {
+    ExcludeFiles = 0,
+    IncludeFiles = 1,
+};
+
+/*
+ */
+typedef struct {
+    TrimmingMode trimmingMode;
+    DuplicationMode duplicationMode;
+} AppendingOption;
+
+/*
+ */
 class FileError {
     Q_GADGET
 public:
@@ -57,7 +71,7 @@ class ManagedFileContext {
 public:
     ManagedFileContext();
 
-    std::tuple<QStringList, FileErrorList> append(const QList<TMimeEntity>&, const TrimmingMode& = TrimmingMode::Square);
+    std::tuple<QStringList, FileErrorList> append(const QList<TMimeEntity>&, const AppendingOption&);
 
     static QList<ManagedFile> find(const QString&);
     static QList<ManagedFile> findInDirectory(const QString&, const QString&);

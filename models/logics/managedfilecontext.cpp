@@ -125,7 +125,7 @@ ManagedFileContext::ManagedFileContext()
     QDir().mkpath(_originalDir);
 }
 
-std::tuple<QStringList, FileErrorList> ManagedFileContext::append(const QList<TMimeEntity>& files, const TrimmingMode& trimmingMode)
+std::tuple<QStringList, FileErrorList> ManagedFileContext::append(const QList<TMimeEntity>& files, const AppendingOption& option)
 {
     const auto basePath = QDir(_sourceDir).filePath( QDir::toNativeSeparators(QDateTime::currentDateTime().toString("yyyy/MMdd/")) + QString::number(QDateTime::currentDateTime().toMSecsSinceEpoch()) );
     if (! QDir(basePath).exists()) {
@@ -150,7 +150,7 @@ std::tuple<QStringList, FileErrorList> ManagedFileContext::append(const QList<TM
         FileError::Type errorKey = FileError::Type::NOERR;
         if (! duplicated) {
             const QString destination = QDir(basePath).filePath(original.hash + ".jpg");
-            errorKey = original.saveTrimmingImage(trimmingMode, destination);
+            errorKey = original.saveTrimmingImage(option.trimmingMode, destination);
             if (errorKey == FileError::Type::NOERR) {
                 const QString absoluteSourcePath = QFileInfo(destination).absoluteFilePath();
                 success << absoluteSourcePath;
@@ -160,7 +160,11 @@ std::tuple<QStringList, FileErrorList> ManagedFileContext::append(const QList<TM
         }
         // 重複ファイルは警告
         else {
-            errorKey = FileError::Type::DUPLICATED;
+            if (option.duplicationMode == DuplicationMode::IncludeFiles) {
+                success << GetAbsolutePathFromSourceName(original.hash + ".jpg");
+            } else {
+                errorKey = FileError::Type::DUPLICATED;
+            }
         }
         // エラーを記録
         if (errorKey != FileError::Type::NOERR) {
