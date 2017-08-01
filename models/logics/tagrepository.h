@@ -37,6 +37,7 @@ public:
     QList<Tag> getTags(const QString& image) const;
     bool generateTagResolution(const QString& image) const;
     void regenerateTagResolution() const;
+    static void asyncGenerateTagResolution(const QString& image);
 
     // Miscs
     QDir baseDir() const;

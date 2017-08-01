@@ -1,8 +1,10 @@
 #include "logics/tagrepository.h"
 #include <TWebApplication>
+#include <TScheduler>
 #include <QJsonObject>
 #include <QJsonDocument>
-#include <QtConcurrent>
+#include <QMutex>
+#include <QMutexLocker>
 
 // make symlink for `tags` to public
 namespace {
@@ -214,9 +216,7 @@ TagRepository::appendImages(const QStringList& images, const QString& groupName,
     const Tag tag = group.findTag(tagName);
     for (const QString& path : images) {
         tag.appendImage(path);
-        QtConcurrent::run([=]{
-            generateTagResolution(path);
-        });
+        asyncGenerateTagResolution(path);
     }
 }
 
@@ -231,9 +231,7 @@ TagRepository::removeImages(const QStringList& images, const QString& groupName,
     const Tag tag = group.findTag(tagName);
     for (const QString& path : images) {
         tag.removeImage(QFileInfo(path).fileName());
-        QtConcurrent::run([=]{
-            generateTagResolution(path);
-        });
+        asyncGenerateTagResolution(path);
     }
 }
 
@@ -252,9 +250,7 @@ TagRepository::updateImages(const QStringList& images, const QString& groupName,
                 otherTag.removeImage(QFileInfo(path).fileName());
             }
         }
-        QtConcurrent::run([=]{
-            generateTagResolution(path);
-        });
+        asyncGenerateTagResolution(path);
     }
 }
 
@@ -365,6 +361,48 @@ bool
 TagRepository::generateTagResolution(const QString& image) const
 {
     return generateTagResolutionFile(image, allGroups());
+}
+
+void
+TagRepository::asyncGenerateTagResolution(const QString& image)
+{
+    //
+    // TagUpdater class declaration
+    //
+    class TagUpdater : public TScheduler {
+    public:
+        TagUpdater() : TScheduler() { setSingleShot(true); }
+        void generate(const QString& image) { generate(QStringList(image)); }
+        void generate(const QStringList& images)
+        {
+            QMutexLocker locker(&_mutex);
+            _images << images;
+            start(0);
+        }
+
+    private:
+        void job() override
+        {
+            TagRepository repo;
+            for (;;) {
+                QMutexLocker locker(&_mutex);
+                if (_images.isEmpty()) {
+                    break;
+                }
+                auto img = _images.takeFirst();
+                locker.unlock();
+                if (! img.isEmpty()) {
+                    repo.generateTagResolution(img);
+                }
+            }
+        }
+
+        QStringList _images;
+        QMutex _mutex;
+    };
+
+    static TagUpdater* tagUpdater = new TagUpdater;
+    tagUpdater->generate(image);
 }
 
 void
