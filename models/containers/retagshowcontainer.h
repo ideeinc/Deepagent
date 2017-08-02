@@ -10,6 +10,7 @@ class RetagShowContainer
 public:
     QString imagePath;
     QString originalName;
+    QSize imageSize;
     QList<Tag> tags;
 
     // friend QDataStream &operator<<(QDataStream &stream, const RetagShowContainer &container);

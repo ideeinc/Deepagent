@@ -2,9 +2,20 @@
 <%#include "containers/retagshowcontainer.h" %>
 <%#include "tag.h" %>
 <% tfetch(RetagShowContainer, container) %>
+
+<script src="/js/jquery-1.11.3.min.js" type="text/javascript"></script>
+<script src="/js/jquery.selectareas.js" type="text/javascript"></script>
+<script src="/js/boundingbox.js" type="text/javascript"></script>
+<script type="text/javascript">
+$(function() {
+  bbox = new BoundingBox('editor', 1.098, false)
+  bbox.getAreas('<%= url("BoundingBox", "loadAreas", QFileInfo(container.imagePath).fileName()).toString(QUrl::FullyEncoded) %>');
+});
+</script>
+
 <div style="font-size: small;"><%= container.originalName %></div>
 
-<%== imageTag(container.imagePath, true, QSize(), container.originalName); %>
+<%== imageTag(container.imagePath, true, QSize(), container.originalName, a("height", QString::number(500) + "px") | a("id", "editor")) %>
 
 <h3>タグ</h3>
 <table>

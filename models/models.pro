@@ -81,9 +81,6 @@ HEADERS += logics/sourcereference.h
 SOURCES += logics/sourcereference.cpp
 
 HEADERS += containers/caffetrainedmodelpredictcontainer.h
-HEADERS += containers/boundingboxdrawcontainer.h
-HEADERS += containers/boundingboxselecttypecontainer.h
-HEADERS += containers/boundingboxsettingcontainer.h
 HEADERS += containers/trainindexcontainer.h
 HEADERS += containers/traincreatecontainer.h
 SOURCES += containers/traincreatecontainer.cpp
@@ -104,6 +101,8 @@ HEADERS += containers/datasetmakerresultcontainer.h
 
 HEADERS += image.h
 SOURCES += image.cpp
+HEADERS += jpeginfo.h
+SOURCES += jpeginfo.cpp
 HEADERS += sqlobjects/solverprotoobject.h
 HEADERS += solverproto.h
 SOURCES += solverproto.cpp
