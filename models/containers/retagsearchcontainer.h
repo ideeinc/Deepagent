@@ -2,15 +2,14 @@
 #define REWTAGSEARCHCONTAINER_H
 
 #include <QtCore>
+#include "taggroup.h"
 
 
 class RetagSearchContainer
 {
 public:
     QStringList images;
-
-    friend QDataStream &operator<<(QDataStream &stream, const RetagSearchContainer &container);
-    friend QDataStream &operator>>(QDataStream &stream, RetagSearchContainer &container);
+    QList<TagGroup> groups;
 };
 
 Q_DECLARE_METATYPE(RetagSearchContainer)

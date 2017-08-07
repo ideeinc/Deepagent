@@ -270,7 +270,7 @@ TagRepository::baseDir() const
 }
 
 QList<Tag>
-TagRepository::getTags(const QString& image) const
+TagRepository::getTags(const QString& image, const QList<TagGroup> excludes) const
 {
     static const auto TagResolutionDir = QDir(Tf::conf("settings").value("TagResolutionDir").toString());
     QList<Tag> tags;
@@ -289,11 +289,17 @@ TagRepository::getTags(const QString& image) const
         auto tagobj = QJsonDocument::fromJson(json).object().value("tags").toObject();
         if (! json.isEmpty()) {
             bool regen = false;
+            QList<Tag> excludeTags;
+            for (auto &tg : excludes) {
+                excludeTags << tg.tags();
+            }
 
             for (auto it = tagobj.constBegin(); it != tagobj.constEnd(); ++it) {
                 Tag t = findGroup(it.key()).findTag(it.value().toString());
                 if (t.exists()) {
-                    tags << t;
+                    if (! excludeTags.contains(t)) {
+                        tags << t;
+                    }
                 } else {
                     regen = true;
                 }

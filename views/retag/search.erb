@@ -2,13 +2,65 @@
 <%#include "managedfile.h" %>
 <% tfetch(RetagSearchContainer, container) %>
 
-<div style="display: inline;">
+<h2>画像再仕分け</h2>
+<h3>タグ選択</h3>
+<script src="/js/jquery-1.11.3.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+$(function() {
+    $(window).keydown(function(e){
+        if (e.keyCode == 16) { // shift key
+            $('img.scale').addClass('scale30');
+        }
+    });
+    $(window).keyup(function(e){
+        if (e.keyCode == 16) { // shift key
+            $('img.scale').removeClass('scale30');
+        }
+    });
+
+    $('img.scale').bind('contextmenu', function() {
+        location.href = $(this).attr("data-href");
+        return false;
+    });
+});
+</script>
+
+<form action="<%== urla("search") %>" method="get" name="frm" id="frm">
+<% for (int i=0; i<3; i++) { %>
+<select name="tag<%=i %>" id="tag<%=i %>">
+<option value=""></option>
+  <% for (auto &tg : container.groups) { %>
+<optgroup label="<%= tg.name() %>">
+    <% for (auto &tag : tg.tags()) { %>
+<option value="<%= tag.name() %>"><%= tag.displayName() %></option>
+    <% } %>
+</optgroup>
+  <% } %>
+</select>
+&nbsp;
+<% } %>
+<br>
+<br>
+<button type="submit">Search</button>
+</form>
+
+<hr>
+<% if (container.images.count() > 0) {%>
+※ SHIFTキーを押しながら、マウスカーソルを画像に合わせると拡大表示されます。<br>
+<% } %>
+<p>
+チェックされた画像を一括で修正します <button>修正する</button>
+</p>
+<div style="display: inline-block;">
 <% for (int i = 0; i < container.images.count(); ++i) {
     const auto manage = ManagedFile::fromFileName(container.images[i]); 
     const auto path = manage.path(); %>
-    <div class="thumb">
-    <%== imageLinkTo(urla("show", QFileInfo(path).fileName()), ApplicationHelper::convertToPublic(path), true, manage.name(), a("width", "128") | a("title", manage.name()) | a("class", "scale25")) %><br />
-    <label><%== checkBoxTag("images[]", QFileInfo(path).fileName(), false) %></label>
+    
+    <label for="<%= QFileInfo(path).baseName() %>">
+    <div class="thumb">  
+    <%== imageTag(ApplicationHelper::convertToPublic(path), true, QSize(), manage.name(), a("width", "128") | a("title", manage.name()) | a("class", "scale") | a("data-href", urla("show", QFileInfo(path).fileName()).toString())) %><br />
+    <%== checkBoxTag("images[]", QFileInfo(path).fileName(), false, a("id", QFileInfo(path).baseName())) %>
     </div>
+    </label>
 <% } %>
 </div>

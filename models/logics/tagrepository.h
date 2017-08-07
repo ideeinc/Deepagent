@@ -34,7 +34,7 @@ public:
     void updateImages(const QStringList&, const QString&, const QString&);
     void updateImages(const QStringList&, const QVariantMap&);
 
-    QList<Tag> getTags(const QString& image) const;
+    QList<Tag> getTags(const QString& image, const QList<TagGroup> excludes = QList<TagGroup>()) const;
     bool generateTagResolution(const QString& image) const;
     void regenerateTagResolution() const;
     static void asyncGenerateTagResolution(const QString& image);

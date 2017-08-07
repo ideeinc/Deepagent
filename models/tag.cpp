@@ -250,3 +250,16 @@ Tag::operator=(const Tag& other)
     }
     return *this;
 }
+
+bool
+Tag::operator==(const Tag& tag) const
+{
+    return _name == tag._name && _displayName == tag._displayName && _descriptionPath == tag._descriptionPath
+           && _dir.get()->absolutePath() == tag._dir.get()->absolutePath();
+}
+
+bool
+Tag::operator!=(const Tag& tag) const
+{
+    return !operator==(tag);
+}

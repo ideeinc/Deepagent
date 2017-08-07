@@ -35,6 +35,9 @@ public:
     bool destroy();
 
     Tag& operator=(const Tag&);
+    bool operator==(const Tag& tag) const;
+    bool operator!=(const Tag& tag) const;
+
 private:
     Tag(const QDir&, const QString&);
 

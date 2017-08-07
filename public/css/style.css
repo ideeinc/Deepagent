@@ -8,19 +8,26 @@
     margin: 14px 3px 0;
     width: 130px;
 }
-img.scale25 {
+img.scale {
     -moz-transition: -moz-transform 0.05s linear;
     -webkit-transition: -webkit-transform 0.05s linear;
     -o-transition: -o-transform 0.05s linear;
     -ms-transition: -ms-transform 0.05s linear;
     transition: transform 0.05s linear;
 }
-img.scale25:hover {
-    -webkit-transform: scale(2.5);
-    -moz-transform: scale(2.5);
-    -o-transform: scale(2.5);
-    -ms-transform: scale(2.5);
-    transform: scale(2.5);
+img.scale20:hover {
+    -webkit-transform: scale(2.0);
+    -moz-transform: scale(2.0);
+    -o-transform: scale(2.0);
+    -ms-transform: scale(2.0);
+    transform: scale(2.0);
+}
+img.scale30:hover {
+    -webkit-transform: scale(3.0);
+    -moz-transform: scale(3.0);
+    -o-transform: scale(3.0);
+    -ms-transform: scale(3.0);
+    transform: scale(3.0);
 }
 td.number {
     text-align: center;
