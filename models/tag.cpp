@@ -127,13 +127,13 @@ long Tag::countOfImages() const
     return 0L;
 }
 
-QStringList Tag::images() const
+QStringList Tag::images(QDir::SortFlags sort) const
 {
     QStringList images;
 
     if (exists()) {
         const QDir dir = QDir(_dir->filePath(_name)).absolutePath();
-        for (const QString& s : dir.entryList({"*.jpg", "*.jpeg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot)) {
+        for (const QString& s : dir.entryList({"*.jpg", "*.jpeg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot, sort)) {
             images << dir.filePath(s);
         }
     }
@@ -141,13 +141,13 @@ QStringList Tag::images() const
     return images;
 }
 
-QStringList Tag::imageNames() const
+QStringList Tag::imageNames(QDir::SortFlags sort) const
 {
     QStringList names;
 
     if (exists()) {
         const QDir dir = QDir(_dir->filePath(_name)).absolutePath();
-        for (const QString& s : dir.entryList({"*.jpg", "*.jpeg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot)) {
+        for (const QString& s : dir.entryList({"*.jpg", "*.jpeg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot, sort)) {
             names << s;
         }
     }
@@ -155,13 +155,13 @@ QStringList Tag::imageNames() const
     return names;
 }
 
-QStringList Tag::imagePaths() const
+QStringList Tag::imagePaths(QDir::SortFlags sort) const
 {
     QStringList paths;
 
     if (exists()) {
         const QDir dir = QDir(_dir->filePath(_name)).absolutePath();
-        for (const QString& s : dir.entryList({"*.jpg", "*.jpeg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot)) {
+        for (const QString& s : dir.entryList({"*.jpg", "*.jpeg"}, QDir::Files|QDir::Readable|QDir::NoDotAndDotDot, sort)) {
             const QString path(dir.filePath(s));
             paths << (QFileInfo(path).isSymLink() ? QFile::symLinkTarget(path) : path);
         }

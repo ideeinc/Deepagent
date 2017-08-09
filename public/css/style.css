@@ -44,3 +44,36 @@ td.number {
     color: #999;
     min-height: 90px;
 }
+div.pagination {
+    text-align: center;
+    width: 100%;
+    font-size: 0.9em;
+}
+div.pagination a {
+    text-decoration: none;
+}
+div.pagination span {
+    display: inline-block;
+    width: 24px;
+}
+div.pagination .current-page {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+.table {
+     display: table;
+     table-layout: fixed;
+     width: 100%;
+}
+.cell {
+    display: table-cell;
+}
+.ib {
+    display: inline-block;
+}
+.right {
+    margin-left: auto;
+}
+.text-right {
+    text-align: right;
+}

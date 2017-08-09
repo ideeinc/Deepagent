@@ -12,7 +12,7 @@ void RetagController::search()
         QStringList args = { req.queryItemValue("tag0"), req.queryItemValue("tag1"), req.queryItemValue("tag2") };
 
         if (args.filter(QRegExp("\\S+")).isEmpty()) {
-            auto container = service.search("", "", "", session());
+            auto container = service.search("", "", "", httpRequest(), session());
             texport(container);
             render();
         } else {
@@ -27,27 +27,56 @@ void RetagController::search()
     }
 }
 
-void RetagController::search(const QString &tag1)
+void RetagController::search(const QString &tag0)
 {
-    search(tag1, "", "");
+    search(tag0, "", "");
 }
 
-void RetagController::search(const QString &tag1, const QString &tag2)
+void RetagController::search(const QString &tag0, const QString &tag1)
 {
-    search(tag1, tag2, "");
+    search(tag0, tag1, "");
 }
 
-void RetagController::search(const QString &tag1, const QString &tag2, const QString &tag3)
+void RetagController::search(const QString &tag0, const QString &tag1, const QString &tag2)
 {
     switch (httpRequest().method()) {
     case Tf::Get: {
         // serach, store session, show list
-        auto container = service.search(tag1, tag2, tag3, session());
+        auto container = service.search(tag0, tag1, tag2, httpRequest(), session());
         texport(container);
         render();
         break; }
 
     case Tf::Post:
+    default:
+        renderErrorResponse(Tf::NotFound);
+        break;
+    }
+}
+
+void RetagController::sequential(const QString &index)
+{
+    switch (httpRequest().method()) {
+    case Tf::Get: {
+        auto container = service.sequential(index, httpRequest(), session());
+        if (container.imagePath.isEmpty()) {
+            redirect(QUrl(recentAccessPath()));
+        } else {
+            texport(container);
+            render("show");
+        }
+        break; }
+
+    case Tf::Post: {
+        auto container = service.startSequential(recentAccessPath(), httpRequest(), session());
+        if (container.imagePath.isEmpty()) {
+            redirect(QUrl(recentAccessPath()));
+        } else {
+            texport(container);
+            render("show");
+        }
+        break; }
+
     default:
         renderErrorResponse(Tf::NotFound);
         break;

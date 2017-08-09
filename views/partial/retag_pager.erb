@@ -1,0 +1,21 @@
+<%#include <TPaginator> %>
+<%#include "containers/retagsearchcontainer.h" %>
+<% tfetch(RetagSearchContainer, container) %>
+
+<% TPaginator &pager = container.pager; %>
+<% if (pager.itemTotalCount() > 0) { %>
+<div class="pagination">
+  <%== linkToIf(pager.hasPrevious(), QString::fromUtf8(u8"最初"), urlq("p=" + QString::number( pager.firstPage() ))) %> &nbsp;
+  <%== linkToIf(pager.hasPrevious(), QString::fromUtf8(u8"前へ"), urlq("p=" + QString::number( pager.previousPage() ))) %>
+  <% for (QListIterator<int> i(pager.range()); i.hasNext(); ) {
+      int page = i.next();
+      if (page != pager.currentPage()) { %>
+        <span><%== linkTo(QString::number(page), urlq("p=" + QString::number(page))); %></span>
+    <% } else { 
+           echo("<span class=\"current-page\">" + QString::number(page) + "</span>\n");
+       } %>
+  <% } %>
+  <%== linkToIf(pager.hasNext(), QString::fromUtf8(u8"次へ"), urlq("p=" + QString::number( pager.nextPage() ))) %> &nbsp;
+  <%== linkToIf(pager.hasNext(), QString::fromUtf8(u8"最後"), urlq("p=" + QString::number( pager.lastPage() ))) %>
+</div>
+<% } %>

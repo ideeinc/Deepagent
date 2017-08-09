@@ -24,9 +24,9 @@ public:
     bool saveDisplayName() const;
     QString groupName() const;
     long countOfImages() const;
-    QStringList images() const;
-    QStringList imageNames() const;
-    QStringList imagePaths() const;
+    QStringList images(QDir::SortFlags sort = QDir::NoSort) const;
+    QStringList imageNames(QDir::SortFlags sort = QDir::NoSort) const;
+    QStringList imagePaths(QDir::SortFlags sort = QDir::NoSort) const;
     bool hasImage(const QString&) const;
     TagGroup tagGroup() const;
 

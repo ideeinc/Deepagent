@@ -18,7 +18,10 @@ public slots:
     void staticRelease();
 
 protected:
-    virtual bool preFilter();
+    virtual bool preFilter() override;
+    virtual void postFilter() override;
+
+    QString recentAccessPath() const;
 };
 
 #endif // APPLICATIONCONTROLLER_H

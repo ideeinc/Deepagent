@@ -13,6 +13,8 @@ $(function() {
 });
 </script>
 
+<h2>再仕分け</h2>
+
 <div style="font-size: small;"><%= container.originalName %></div>
 
 <%== imageTag(container.imagePath, true, QSize(), container.originalName, a("height", QString::number(500) + "px") | a("id", "editor")) %>
@@ -21,16 +23,29 @@ $(function() {
 <table>
 <% for (const auto& tag : container.tags) { %>
 <tr>
-  <td><%= tag.groupName() %></td>
-  <td><%== linkTo(tag.displayName(), url("tag", "show", QStringList({tag.groupName(), tag.name()}))) %></td>
+  <td><%= tag.groupName() %> : </td>
+  <td><%= tag.displayName() %></td>
 </tr>
 <% } %>
 </table>
 
 <p>
-<a href="javascript:history.back();">[ 戻る ]</a>
-&nbsp;
 <a href="#">[ タグ修正 ]</a>
 &nbsp;
 <a href="#">[ マーキング修正 ]</a>
+</p>
+<p>
+番号 <%= container.index+1 %> / <%= container.queueCount %>
+</p>
+<p>
+<% if (container.index > 0 && container.queueCount > 0) { %>
+<%== linkTo(u8"≪前へ", urla("sequential", container.index - 1)) %>
+&nbsp; | &nbsp;
+<% } %>
+<a href="<%== container.backPath %|% "javascript:history.back();" %>">一覧に戻る</a>
+<% if (container.index < container.queueCount - 1 && container.queueCount > 0) { %>
+&nbsp; | &nbsp;
+<%== linkTo(u8"次へ≫", urla("sequential", container.index + 1)) %>
+&nbsp;
+<% } %>
 </p>

@@ -3,7 +3,7 @@
 <% tfetch(RetagSearchContainer, container) %>
 
 <h2>画像再仕分け</h2>
-<h3>タグ選択</h3>
+<h3>タグ検索</h3>
 <script src="/js/jquery-1.11.3.min.js" type="text/javascript"></script>
 <script type="text/javascript">
 $(function() {
@@ -23,6 +23,16 @@ $(function() {
         return false;
     });
 });
+
+function allcheck(on) {
+   var count = document.frm2.elements.length;
+   for (var i=0 ; i<count ; i++) {
+        if (document.frm2.elements[i].checked != null) {
+            document.frm2.elements[i].checked = on;
+        }
+   }
+   return false;
+}
 </script>
 
 <form action="<%== urla("search") %>" method="get" name="frm" id="frm">
@@ -31,9 +41,9 @@ $(function() {
 <option value=""></option>
   <% for (auto &tg : container.groups) { %>
 <optgroup label="<%= tg.name() %>">
-    <% for (auto &tag : tg.tags()) { %>
-<option value="<%= tag.name() %>"><%= tag.displayName() %></option>
-    <% } %>
+    <% for (auto &tag : tg.tags()) {
+           echo(optionTag(tag.displayName(), tag.name(), (tag.name() == container.selectedTag[i].name())));
+       } %>
 </optgroup>
   <% } %>
 </select>
@@ -41,17 +51,31 @@ $(function() {
 <% } %>
 <br>
 <br>
-<button type="submit">Search</button>
+<button type="submit">検索</button>
 </form>
 
 <hr>
-<% if (container.images.count() > 0) {%>
+<% if (container.images.count() > 0) { %>
 ※ SHIFTキーを押しながら、マウスカーソルを画像に合わせると拡大表示されます。<br>
 <% } %>
+<form action="<%== urla("sequential", QStringList("0")) %>" method="post" name="frm2" id="frm2">
 <p>
-チェックされた画像を一括で修正します <button>修正する</button>
+▼チェックされた画像を一括で修正します <button type="submit">修正する</button>
 </p>
-<div style="display: inline-block;">
+
+<% if (container.selectedTag[0].exists() || container.selectedTag[1].exists() || container.selectedTag[2].exists()) { %>
+<div class="table">
+    <div class="cell">結果 <%= container.imageCount %> 件</div>
+    <div class="cell text-right">
+        <button type="button" onclick="allcheck(true);">全選択</button>
+        <button type="button" onclick="allcheck(false);">全解除</button>
+    </div>
+</div>
+<% } %>
+
+<%== renderPartial("retag_pager"); %>
+
+<div class="ib">
 <% for (int i = 0; i < container.images.count(); ++i) {
     const auto manage = ManagedFile::fromFileName(container.images[i]); 
     const auto path = manage.path(); %>
@@ -64,3 +88,6 @@ $(function() {
     </label>
 <% } %>
 </div>
+</form>
+<br>
+<%== renderPartial("retag_pager"); %>

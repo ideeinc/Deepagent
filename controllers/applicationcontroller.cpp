@@ -6,6 +6,8 @@
 #include <caffe/caffe.hpp>
 #include <TApplicationScheduler>
 
+#define ActionHistories "ActionHistories"
+
 
 ApplicationController::ApplicationController()
     : TActionController()
@@ -73,6 +75,22 @@ bool ApplicationController::preFilter()
     httpResponse().header().addRawHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0");
     httpResponse().header().addRawHeader("Pragma", "no-cache");
     return true;
+}
+
+void ApplicationController::postFilter()
+{
+    // 履歴
+    auto actionHistories = session().value(ActionHistories).toStringList();
+    actionHistories.prepend(httpRequest().header().path());
+    if (actionHistories.count() > 5) {
+        actionHistories.takeLast();
+    }
+    session().insert(ActionHistories, actionHistories);
+}
+
+QString ApplicationController::recentAccessPath() const
+{
+    return session().value(ActionHistories).toStringList().first();
 }
 
 // Don't remove below this line
