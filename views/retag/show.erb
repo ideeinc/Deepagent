@@ -8,7 +8,8 @@
 <script src="/js/boundingbox.js" type="text/javascript"></script>
 <script type="text/javascript">
 $(function() {
-  bbox = new BoundingBox('editor', 1.098, false)
+  var zoom = 500.0 / <%= container.imageSize.width() %>;
+  bbox = new BoundingBox('editor', zoom, false)
   bbox.getAreas('<%= url("BoundingBox", "loadAreas", QFileInfo(container.imagePath).fileName()).toString(QUrl::FullyEncoded) %>');
 });
 </script>
@@ -30,9 +31,20 @@ $(function() {
 </table>
 
 <p>
-<a href="#">[ タグ修正 ]</a>
+<div class="table">
+  <div class="cell">
+    <a href="#">[ タグ修正 ]</a>
 &nbsp;
-<a href="#">[ マーキング修正 ]</a>
+<% if (controller()->activeAction() == "show") { %>
+    <a href="<%== url("BoundingBox", "edit", { "r", QFileInfo(container.imagePath).fileName() }).toString(QUrl::FullyEncoded) %>">[ マーキング修正 ]</a>
+<% } else { %>
+    <a href="<%== url("BoundingBox", "edit", { "s", QString::number(container.index) }).toString(QUrl::FullyEncoded) %>">[ マーキング修正 ]</a>
+<% } %>
+  </div>
+  <div class="cell">
+    <a href="">[ ゴミ箱へ捨てる ]</a>
+  </div>
+</div>
 </p>
 <p>
 番号 <%= container.index+1 %> / <%= container.queueCount %>

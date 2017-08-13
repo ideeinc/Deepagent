@@ -49,23 +49,22 @@ function allcheck(on) {
 </select>
 &nbsp;
 <% } %>
-<br>
-<br>
 <button type="submit">検索</button>
 </form>
+<br>
 
-<hr>
-<% if (container.images.count() > 0) { %>
-※ SHIFTキーを押しながら、マウスカーソルを画像に合わせると拡大表示されます。<br>
-<% } %>
 <form action="<%== urla("sequential", QStringList("0")) %>" method="post" name="frm2" id="frm2">
+<% if (container.images.count() > 0) { %>
+<hr>
+<span class="weak-color">※ SHIFTキーを押しながら、マウスカーソルを画像に合わせると拡大表示されます。</span><br>
 <p>
-▼チェックされた画像を一括で修正します <button type="submit">修正する</button>
+▼チェックされた画像を一括で仕分ける <button type="submit">仕分ける</button>
 </p>
+<% } %>
 
 <% if (container.selectedTag[0].exists() || container.selectedTag[1].exists() || container.selectedTag[2].exists()) { %>
 <div class="table">
-    <div class="cell">結果 <%= container.imageCount %> 件</div>
+    <div class="cell">結果 <%= container.imageCount %> 件中 <%= container.images.count() %> 件表示</div>
     <div class="cell text-right">
         <button type="button" onclick="allcheck(true);">全選択</button>
         <button type="button" onclick="allcheck(false);">全解除</button>
@@ -82,7 +81,7 @@ function allcheck(on) {
     
     <label for="<%= QFileInfo(path).baseName() %>">
     <div class="thumb">  
-    <%== imageTag(ApplicationHelper::convertToPublic(path), true, QSize(), manage.name(), a("width", "128") | a("title", manage.name()) | a("class", "scale") | a("data-href", urla("show", QFileInfo(path).fileName()).toString())) %><br />
+    <%== imageTag(ManagedFile::fileNameToPublicPath(path), true, QSize(), manage.name(), a("width", "128") | a("title", manage.name()) | a("class", "scale") | a("data-href", urla("show", QFileInfo(path).fileName()).toString())) %><br />
     <%== checkBoxTag("images[]", QFileInfo(path).fileName(), false, a("id", QFileInfo(path).baseName())) %>
     </div>
     </label>
@@ -91,3 +90,4 @@ function allcheck(on) {
 </form>
 <br>
 <%== renderPartial("retag_pager"); %>
+<br>

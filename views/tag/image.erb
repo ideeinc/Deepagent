@@ -2,7 +2,7 @@
 <% tfetch(TaggedImageInfoContainer, container) %>
 <% const QUrl listUrl = controller()->urla(container.listName, container.listArgs, container.listQuery); %>
 <%#include "logics/tagrepository.h" %>
-<%#include "applicationhelper.h" %>
+<%#include "managedfile.h" %>
 <% const QList<TagGroup> allGroups = TagRepository().allGroups(); %>
   <script src="/js/jquery-1.11.3.min.js" type="text/javascript"></script>
   <script type="text/javascript">
@@ -53,7 +53,7 @@
   </script>
 
 <div style="font-size: small"><%= container.displayName %></div>
-<%== imageTag(ApplicationHelper::convertToPublic(container.path), true, QSize(), container.displayName, a("height", "500")) %>
+<%== imageTag(ManagedFile::fileNameToPublicPath(container.path), true, QSize(), container.displayName, a("height", "500")) %>
 
 <p>
 <h3>この画像についているタグ</h3>

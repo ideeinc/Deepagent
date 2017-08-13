@@ -1,7 +1,7 @@
 #include "applicationcontroller.h"
 #include "logics/cudatool.h"
 #include "logics/managedfilecontext.h"
-#include "logics/tagrepository.h"
+#include "managedfile.h"
 #include <glog/logging.h>
 #include <caffe/caffe.hpp>
 #include <TApplicationScheduler>
@@ -53,7 +53,7 @@ void ApplicationController::staticInitialize()
         void job()
         {
             tInfo() << "TagResolutionGeneration ... started";
-            TagRepository().regenerateTagResolution();
+            ManagedFile::regenerateAllTagResolution();
             tInfo() << "TagResolutionGeneration ... done";
         }
     };

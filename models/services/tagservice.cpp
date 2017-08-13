@@ -1,4 +1,5 @@
 #include "tagservice.h"
+#include "managedfile.h"
 #include "logics/managedfilecontext.h"
 #include <QtCore>
 #include <functional>
@@ -124,7 +125,9 @@ TagService::append(const THttpRequest& request, TSession& session)
             return succeed;
         }
         else {
-            _repository.updateImages(images, {{group, tag}});
+            for (auto &img : images) {
+                ManagedFile::updateTag(img, group, tag);
+            }
 
             if (refresh) {
                 QStringList images = session.value(kTagImageListKey).toStringList();
@@ -155,7 +158,12 @@ TagService::remove(const THttpRequest& request, TSession& session)
         const QString group = info.value("group").toString();
         const QString tag = info.value("tag").toString();
         const QStringList images = info.value("images").toVariant().toStringList();
-        _repository.removeImages(images, group, tag);
+
+        const auto rmtag = TagRepository().findTag(tag);
+        for (auto &img : images) {
+           auto mngf = ManagedFile::fromFileName(img);
+           mngf.removeTag(rmtag);
+        }
 
         if (refresh) {
             QStringList data = session.value(kTagImageListKey).toStringList();
@@ -181,7 +189,25 @@ TagService::batchUpdate(const THttpRequest& request)
             const QStringList images = node.value("images").toVariant().toStringList();
             const QVariantMap tags = node.value("tags").toObject().toVariantMap();
 
-            _repository.updateImages(images, tags);
+            //_repository.updateImages(images, tags);
+            QList<Tag> addtags;
+            QList<TagGroup> rmgroups;
+            TagRepository repo;
+
+            for (const QString& groupName : tags.keys()) {
+                const QString tagName = tags.value(groupName).toString();
+                if (tagName.isEmpty()) {
+                    // 削除
+                    rmgroups << repo.findGroup(groupName);
+                } else {
+                    // 追加タグ
+                    addtags << repo.findTag(tagName);
+                }
+            }
+
+            for (auto& img : images) {
+                ManagedFile::fromFileName(img).updateTag(addtags, rmgroups);
+            }
         }
     }
 }
@@ -217,7 +243,11 @@ UploadResultContainer TagService::uploadImages(THttpRequest& request)
 
         if (images.count() > 0) {
             // タグを更新: アップロードは新規ファイルのみなので「追加」のみ行う
-            _repository.appendImages(images, groupName, tagName);
+            const auto tag = TagRepository().findTag(tagName);
+            for (auto& img : images) {
+                auto mngf = ManagedFile::fromFileName(img);
+                mngf.addTag(tag, true);
+            }
         }
 
         for (const auto& err : std::get<1>(results)) {
@@ -374,7 +404,7 @@ TagInfoContainer TagService::showTagInfo(const THttpRequest& request, TSession& 
     return container;
 }
 
-TaggedImageInfoContainer TagService::showTagImage(const THttpRequest& request, const TSession& session, const QString& groupName, const QString& tagName, const long& index) const
+TaggedImageInfoContainer TagService::showTagImage(const THttpRequest&, const TSession& session, const QString& groupName, const QString& tagName, const long& index) const
 {
     TaggedImageInfoContainer container;
 
@@ -397,7 +427,7 @@ TaggedImageInfoContainer TagService::showTagImage(const THttpRequest& request, c
         }
     }
 
-    container.containedTags = _repository.getTags(container.path);
+    container.containedTags = ManagedFile::fromFileName(container.path).getTags();
 
     container.listName = "show";
     container.listArgs = QStringList{ container.primaryGroup, container.primaryTag };
@@ -533,7 +563,7 @@ TaggedImageInfoContainer TagService::showTableImage(const THttpRequest&, TSessio
         container.path = images[0];
         container.index = 0;
         container.numberOfImages = images.count();
-        container.containedTags = _repository.getTags(container.path);
+        container.containedTags = ManagedFile::fromFileName(container.path).getTags();
 
         if (images.size()) {
             session.insert(kTagImageTableInfo, QVariantMap{

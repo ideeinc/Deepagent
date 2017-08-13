@@ -77,3 +77,6 @@ div.pagination .current-page {
 .text-right {
     text-align: right;
 }
+.weak-color {
+    color: #555;
+}

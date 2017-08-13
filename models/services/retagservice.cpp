@@ -105,11 +105,11 @@ static RetagShowContainer createShowContainer(const QString &image)
         }
     }
 
-    auto meta = ManagedFile::fromFileName(image);
+    auto mngf = ManagedFile::fromFileName(image);
     container.imagePath = ManagedFile::fileNameToPublicPath(image);
-    container.originalName = meta.name();
-    container.imageSize = JpegInfo(meta.path()).size();
-    container.tags = repo.getTags(image, excludes);
+    container.originalName = mngf.name();
+    container.imageSize = JpegInfo(mngf.path()).size();
+    container.tags = mngf.getTags(excludes);
     return container;
 }
 

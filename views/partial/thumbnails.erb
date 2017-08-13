@@ -3,7 +3,6 @@
 <%#include "logics/tagrepository.h" %>
 <% const QList<TagGroup> allGroups = TagRepository().allGroups(); %>
 <%#include "managedfile.h" %>
-<%#include "applicationhelper.h" %>
 <% 
     const QUrl baseUrl = controller()->urla(controller()->activeAction(), container.arguments, container.query);
     QUrlQuery prevQuery(baseUrl); prevQuery.addQueryItem("page", QString::number(container.page - 1)); prevQuery.addQueryItem("limit", QString::number(container.limit));
@@ -81,8 +80,11 @@ $(function() {
         } });
         return false;
     });
-    $('input:checkbox#checkAll').on('click', function(e){
-        $('input:checkbox[name^=images]').prop('checked', $(this).prop('checked'));
+    $('button#checkAll').on('click', function(e){
+        $('input:checkbox[name^=images]').prop('checked', true);
+    });
+    $('button#uncheckAll').on('click', function(e){
+        $('input:checkbox[name^=images]').prop('checked', false);
     });
     $('select[name^="groups"]').on('change', function(e){
         var groupName = $(this).attr('name').replace(/^groups\[(.+)\]$/, '$1');
@@ -91,12 +93,19 @@ $(function() {
 });
 </script>
 <hr />
+<div class="table">
+    <div class="cell"><%= container.images.count() %> 件中 <%= container.max - container.min %> 件表示</div>
+    <div class="cell text-right">
+        <button type="button" id="checkAll">全選択</button>
+        <button type="button" id="uncheckAll">全解除</button>
+    </div>
+</div>
 
 <% if (container.images.count() > container.limit) { %>
 <div style="width: 100%; text-align: center; font-size: small; margin-bottom: 10px;">
     <span><% if (container.min > 0) { echo(linkTo("&lt&lt; Prev", prevUrl)); } else { echo("&lt&lt; Prev"); } %></span>
     <span>[Page <%= container.page + 1 %> / <%= container.maxNumberOfPage %>]</span>
-    <span><% if (container.max < container.images.count()) { echo(linkTo("Next &gt;&gt;", nextUrl)); } else { eh("Next &gt;&gt;"); } %></span>
+    <span><% if (container.max < container.images.count()) { echo(linkTo("Next &gt;&gt;", nextUrl)); } else { echo("Next &gt;&gt;"); } %></span>
 </div>
 <% } %>
 
@@ -105,7 +114,7 @@ $(function() {
     const auto& path = container.images[i];
     const auto original = ManagedFile::fromLink(path); %>
     <div style="display: inline-block; width: 130px;">
-    <%== imageLinkTo(urla("show", QStringList({ container.groupName, container.name, QString::number(i) })), ApplicationHelper::convertToPublic(path), true, original.name(), a("width", "128px") | a("title", original.name())) %><br />
+    <%== imageLinkTo(urla("show", QStringList({ container.groupName, container.name, QString::number(i) })), ManagedFile::fileNameToPublicPath(path), true, original.name(), a("width", "128px") | a("title", original.name())) %><br />
     <label><%== checkBoxTag("images[]", QFileInfo(path).absoluteFilePath(), false) %></label>
     </div>
 <% } %>
@@ -119,9 +128,6 @@ $(function() {
 </div>
 <% } %>
 
-<hr />
-
-<label for"checkAll"><%== checkBoxTag("checkAll", "", false, a("id", "checkAll")) %> すべてをチェック</label>
 <fieldset>
 <legend>画像のタグ一括更新</legend>
 <div style="display: table;">
