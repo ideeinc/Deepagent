@@ -12,31 +12,26 @@
 %>
 
 <% if (container.images.count() > 0) { %>
-<style type="text/css">
-.zoom {
-    -webkit-transform: scale(2.0);
-    -moz-transform: scale(2.0);
-    -o-transform: scale(2.0);
-    -ms-transform: scale(2.0);
-    transform: scale(2.0);
-}
-</style>
 <script type="text/javascript">
 $(function() {
-    $('img').hover(function(e) {
-        if (e.shiftKey) { $(this).addClass('zoom'); } else { $(this).removeClass('zoom'); }
-    }, function(e) {
-        $(this).removeClass('zoom');
+    $('img.scale').bind('contextmenu', function() {
+        location.href = $(this).attr("data-href");
+        return false;
     });
-    $('img').mousemove(function(e) {
-        if (e.shiftKey) { $(this).addClass('zoom'); } else { $(this).removeClass('zoom'); }
+    $('img.scale').hover(function(e) {
+        if (e.shiftKey) { $(this).addClass('scale20'); } else { $(this).removeClass('scale20'); }
+    }, function(e) {
+        $(this).removeClass('scale20');
+    });
+    $('img.scale').mousemove(function(e) {
+        if (e.shiftKey) { $(this).addClass('scale20'); } else { $(this).removeClass('scale20'); }
     });
     $(window).keydown(function(e){
-        var hovered = $('img').parent().find(':hover');
-        if ((hovered.length > 0) && e.shiftKey) { hovered.addClass('zoom'); } else { hovered.removeClass('zoom'); }
+        var hovered = $('img.scale').parent().find(':hover');
+        if ((hovered.length > 0) && e.shiftKey) { hovered.addClass('scale20'); } else { hovered.removeClass('scale20'); }
     });
     $(window).keyup(function(e){
-        $('img').parent().find(':hover').removeClass('zoom');
+        $('img.scale').parent().find(':hover').removeClass('scale20');
     });
 });
 $(function() {
@@ -109,14 +104,16 @@ $(function() {
 </div>
 <% } %>
 
-<div style="display: inline;">
+<div class="ib">
 <% for (long i = container.min; i < container.max; ++i) {
     const auto& path = container.images[i];
     const auto original = ManagedFile::fromLink(path); %>
-    <div style="display: inline-block; width: 130px;">
-    <%== imageLinkTo(urla("show", QStringList({ container.groupName, container.name, QString::number(i) })), ManagedFile::fileNameToPublicPath(path), true, original.name(), a("width", "128px") | a("title", original.name())) %><br />
-    <label><%== checkBoxTag("images[]", QFileInfo(path).absoluteFilePath(), false) %></label>
+    <label for="<%= QFileInfo(path).baseName() %>">
+    <div class="thumb">
+    <%== imageTag(ManagedFile::fileNameToPublicPath(path), true, QSize(), original.name(), a("width", "128px") | a("title", original.name()) | a("class", "scale") | a("data-href", urla("show", QStringList({ container.groupName, container.name, QString::number(i) })).toString())) %><br />
+    <%== checkBoxTag("images[]", QFileInfo(path).absoluteFilePath(), false, a("id", QFileInfo(path).baseName())) %>
     </div>
+    </label>
 <% } %>
 </div>
 

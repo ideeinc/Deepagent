@@ -447,7 +447,7 @@ void ManagedFile::asyncGenerateTagResolution()
         void generate(const QStringList& images)
         {
             QMutexLocker locker(&_mutex);
-            _images << images;
+            _images = _images.toSet().unite(images.toSet()).toList();
             start(0);
         }
 
