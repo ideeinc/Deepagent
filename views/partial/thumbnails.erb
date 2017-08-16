@@ -125,6 +125,14 @@ $(function() {
 </div>
 <% } %>
 
+<div class="table">
+    <div class="cell"><%= container.images.count() %> 件中 <%= container.max - container.min %> 件表示</div>
+    <div class="cell text-right">
+        <button type="button" id="checkAll">全選択</button>
+        <button type="button" id="uncheckAll">全解除</button>
+    </div>
+</div>
+
 <fieldset>
 <legend>画像のタグ一括更新</legend>
 <div style="display: table;">

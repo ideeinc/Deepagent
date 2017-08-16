@@ -3,10 +3,61 @@
 #include "logics/managedfilecontext.h"
 #include <QtCore>
 #include <functional>
+#include <TScheduler>
 
 const QString kTagImageListKey = "Tag_ImageListKey";
 const QString kTagImageTableInfo = "Tag_ImageTableInfo";
 const QString kTagImageFindKey = "Tag_ImageFindKey";
+
+namespace {
+    typedef std::function<void()> UpdateFunction;
+    class ImageUpdater : public TScheduler {
+    public:
+        ImageUpdater() : TScheduler() {
+            setSingleShot(true);
+        }
+        void addTag(const QStringList& images, const QString& tagName) {
+            QMutexLocker locker(&_mutex);
+            _functions << [=]{
+                const auto tag = TagRepository().findTag(tagName);
+                if (tag.exists()) {
+                    for (auto& img : images) {
+                        auto mngf = ManagedFile::fromFileName(img);
+                        mngf.addTag(tag, true);
+                    }
+                }
+            };
+            start(0);
+        }
+        void updateTag(const QStringList& images, const QList<Tag>& appendTags, const QList<TagGroup>& removalGroups) {
+            QMutexLocker locker(&_mutex);
+            _functions << [=]{
+                for (const auto& img : images) {
+                    ManagedFile::fromFileName(img).updateTag(appendTags, removalGroups);
+                }
+            };
+            start(0);
+        }
+    private:
+        void job() override {
+            tDebug() << "start job";
+            do {
+                QMutexLocker locker(&_mutex);
+                if (_functions.isEmpty()) break;
+                auto function = _functions.takeFirst();
+                locker.unlock();
+                if (nullptr != function) {
+                    function();
+                }
+            } while (true);
+            tDebug() << "end job";
+        }
+
+        QMutex _mutex;
+        QList<UpdateFunction> _functions;
+    };
+    static ImageUpdater sImageUpdater;
+};
 
 
 TagService::TagService()
@@ -205,9 +256,7 @@ TagService::batchUpdate(const THttpRequest& request)
                 }
             }
 
-            for (auto& img : images) {
-                ManagedFile::fromFileName(img).updateTag(addtags, rmgroups);
-            }
+            sImageUpdater.updateTag(images, addtags, rmgroups);
         }
     }
 }
@@ -243,11 +292,7 @@ UploadResultContainer TagService::uploadImages(THttpRequest& request)
 
         if (images.count() > 0) {
             // タグを更新: アップロードは新規ファイルのみなので「追加」のみ行う
-            const auto tag = TagRepository().findTag(tagName);
-            for (auto& img : images) {
-                auto mngf = ManagedFile::fromFileName(img);
-                mngf.addTag(tag, true);
-            }
+            sImageUpdater.addTag(images, tagName);
         }
 
         for (const auto& err : std::get<1>(results)) {
